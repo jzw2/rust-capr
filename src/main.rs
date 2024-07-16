@@ -16,7 +16,11 @@ struct AppState {
 #[post("/save")]
 async fn save(data: web::Json<SaveData>, state: web::Data<AppState>) -> HttpResponse {
     let mut saves = state.saves.lock().unwrap();
+    dbg!(&data);
+    println!("old length {}", saves.len() );
     saves.push(data.into_inner());
+    dbg!(&saves);
+    println!("new length {}", saves.len() );
 
 
     match write("saves.txt", serde_json::to_string(saves.as_slice()).unwrap()) {
@@ -36,13 +40,13 @@ async fn load(id: web::Path<usize>, state: web::Data<AppState>) -> HttpResponse 
 
     let saves = state.saves.lock().unwrap();
 
-    dbg!("{}", &saves);
+    dbg!(&saves);
     let get = saves.get(*id);
 
     if let Some(my_save) = get {
         HttpResponse::Ok().json(my_save)
     } else {
-        HttpResponse::NotFound().body("Save not found")
+        HttpResponse::NotFound().body(format!("Id {} not found", *id))
     }
 }
 
@@ -54,11 +58,12 @@ async fn get_saves(state: web::Data<AppState>) -> HttpResponse {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
-        App::new()
-            .app_data(web::Data::new(AppState {
+    let data = web::Data::new(AppState {
                 saves: Mutex::new(Vec::new()),
-            }))
+            });
+    HttpServer::new(move || {
+        App::new()
+            .app_data(data.clone())
             .service(save)
             .service(load)
             .service(get_saves)
