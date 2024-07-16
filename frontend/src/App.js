@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
-    const [columns, setColumns] = useState([['']]);
+    const [columns, setColumns] = useState([['','']]);
     const [saves, setSaves] = useState([]);
     const [currentSave, setCurrentSave] = useState(null);
 
@@ -23,15 +23,9 @@ function App() {
     };
 
     const addColumn = () => {
-        setColumns([...columns, ['']]);
+        setColumns([...columns, ['','']]);
     };
 
-    const addRow = (colIndex) => {
-        const newColumns = columns.map((col, index) =>
-            index === colIndex ? [...col, ''] : col
-        );
-        setColumns(newColumns);
-    };
 
     const saveData = async () => {
         const response = await fetch('/save', {
@@ -41,9 +35,9 @@ function App() {
             },
             body: JSON.stringify({ columns }),
         });
+        console.log("Saving" + columns);
         const data = await response.json();
         setSaves([...saves, { columns }]);
-        setColumns([['']]);
     };
 
     const loadData = async (index) => {
@@ -68,7 +62,6 @@ function App() {
                                     placeholder={`Column ${colIndex + 1}, Row ${rowIndex + 1}`}
                                 />
                             ))}
-                            <button onClick={() => addRow(colIndex)}>Add Row</button>
                         </div>
                     ))}
                 </div>
