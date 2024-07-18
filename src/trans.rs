@@ -59,11 +59,29 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_works() {
+    fn test_simple() {
         let law = vec![vec!["h".into(), "q".into()],
                        vec!["i".into(), "i".into()]
         ];
         let transduced = transduce_text(law, String::from("hi"));
         assert_eq!(transduced, "q i");
+    }
+
+
+    #[test]
+    fn test_no_duplicate() {
+        let law = vec![vec!["h".into(), "q".into()],
+        ];
+        let transduced = transduce_text(law, String::from("hi"));
+        assert_eq!(transduced, "q i");
+    }
+
+
+    #[test]
+    fn test_no_change() {
+        let law = vec![vec!["a".into(), "b".into()],
+        ];
+        let transduced = transduce_text(law, String::from("hi"));
+        assert_eq!(transduced, "h i");
     }
 }
