@@ -3,6 +3,8 @@ use actix_web::{web, App, HttpServer, HttpResponse, post, get};
 use serde::{Deserialize, Serialize};
 use std::{fs::write, sync::Mutex};
 
+mod trans;
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct SaveData {
     columns: Vec<Vec<String>>,
