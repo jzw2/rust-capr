@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
+    const [transduceGoal, setTransduceGoal] = useState("");
     const [columns, setColumns] = useState([['','']]);
     const [saves, setSaves] = useState([]);
     const [currentSave, setCurrentSave] = useState(null);
@@ -33,7 +34,7 @@ function App() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ columns }),
+            body: JSON.stringify({ columns, transduceGoal }),
         });
         console.log("Saving" + columns);
         const data = await response.json();
@@ -67,6 +68,7 @@ function App() {
                 </div>
                 <button onClick={addColumn}>Add Column</button>
                 <button onClick={saveData}>Save</button>
+              <input onChange={(e) => setTransduceGoal(e.target.value)} />
                 <div className="saves-list">
                     <h3>Saved Entries</h3>
                     {saves.map((save, index) => (

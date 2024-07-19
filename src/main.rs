@@ -3,11 +3,14 @@ use actix_web::{web, App, HttpServer, HttpResponse, post, get};
 use serde::{Deserialize, Serialize};
 use std::{fs::write, sync::Mutex};
 
+use crate::trans::transduce_text;
+
 mod trans;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct SaveData {
     columns: Vec<Vec<String>>,
+    transduceGoal: String,
 }
 
 #[derive(Debug)]
@@ -20,7 +23,9 @@ async fn save(data: web::Json<SaveData>, state: web::Data<AppState>) -> HttpResp
     let mut saves = state.saves.lock().unwrap();
     dbg!(&data);
     println!("old length {}", saves.len() );
-    saves.push(data.into_inner());
+
+    let save = data.into_inner();
+    saves.push(save.clone());
     dbg!(&saves);
     println!("new length {}", saves.len() );
 
@@ -33,6 +38,14 @@ async fn save(data: web::Json<SaveData>, state: web::Data<AppState>) -> HttpResp
             return HttpResponse::InternalServerError().body("Failed to save data");
         }
     }
+
+    println!("Received sound laws {:?}", save.clone());
+
+    let text = transduce_text(save.columns, save.transduceGoal);
+
+
+    println!("Resulted in {}", text);
+
 
     HttpResponse::Ok().json(saves.len() - 1)
 }
