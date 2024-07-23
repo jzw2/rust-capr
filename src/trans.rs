@@ -1,12 +1,12 @@
 
 use std::sync::Arc;
 
-use rustfst::{algorithms::compose, fst_impls::VectorFst, fst_traits::{Fst, MutableFst}, semirings::ProbabilityWeight, utils::acceptor, Semiring, SymbolTable, Tr};
+use rustfst::{fst_impls::VectorFst, fst_traits::{Fst, MutableFst}, semirings::ProbabilityWeight, utils::acceptor, Semiring, SymbolTable, Tr};
 use rustfst::algorithms::compose::compose;
 pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
 
     let mut fst = VectorFst::<ProbabilityWeight>::new();
-    let mut symbol_table = (SymbolTable::new());
+    let mut symbol_table = SymbolTable::new();
     let state = fst.add_state();
     fst.set_start(state).expect("Failed to set start state");
     for mut law in laws {
@@ -50,7 +50,7 @@ pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
 
 
 
-    return paths[0].ostring().expect("Error getting output string");
+    paths[0].ostring().expect("Error getting output string")
 }
 
 
