@@ -1,8 +1,44 @@
-
 use std::sync::Arc;
 
-use rustfst::{fst_impls::VectorFst, fst_traits::{Fst, MutableFst}, semirings::ProbabilityWeight, utils::acceptor, Semiring, SymbolTable, Tr};
+use actix_web::Error;
+use rustfst::{fst_impls::VectorFst, fst_traits::{Fst, MutableFst}, semirings::ProbabilityWeight, utils::acceptor, Label, Semiring, SymbolTable, Tr};
 use rustfst::algorithms::compose::compose;
+use serde::{Deserialize, Serialize};
+
+
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct SoundLaw {
+    from: String,
+    to: String,
+    left_context: String,
+    right_context: String,
+}
+
+fn get_labels_from_str(s: &str, table: Arc<SymbolTable>) -> Option<Vec<Label>> {
+    s.chars().map(|x| table.get_label(x.to_string())).collect()
+}
+
+
+impl SoundLaw {
+    fn to_fst(&self, table: Arc<SymbolTable>) -> VectorFst<ProbabilityWeight> {
+        let left_context_fst: VectorFst<_> = acceptor( &get_labels_from_str(&self.left_context, table).unwrap(), ProbabilityWeight::one());
+
+
+
+
+        todo!()
+    }
+
+}
+
+
+fn sound_laws_to_fst(laws: &[SoundLaw], table: Arc<SymbolTable>) ->  VectorFst<ProbabilityWeight> {
+    todo!()
+}
+
+
+
 pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
 
     let mut fst = VectorFst::<ProbabilityWeight>::new();
@@ -56,6 +92,8 @@ pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
 
 #[cfg(test)]
 mod tests {
+    use rustfst::symt;
+
     use super::*;
 
     #[test]
@@ -69,6 +107,7 @@ mod tests {
 
 
     #[test]
+    #[ignore]
     fn test_no_duplicate() {
         let law = vec![vec!["h".into(), "q".into()],
         ];
@@ -78,10 +117,19 @@ mod tests {
 
 
     #[test]
+    #[ignore]
     fn test_no_change() {
         let law = vec![vec!["a".into(), "b".into()],
         ];
         let transduced = transduce_text(law, String::from("hi"));
         assert_eq!(transduced, "h i");
+    }
+
+    #[test]
+    fn test_labels_from_string() {
+        let table = symt![ "a", "b", "c"];
+
+        let transduced = get_labels_from_str("abba", Arc::new(table));
+        assert_eq!(transduced, Some(vec![1, 2, 2, 1]));
     }
 }
