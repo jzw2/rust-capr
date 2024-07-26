@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use actix_web::Error;
-use rustfst::{fst_impls::VectorFst, fst_traits::{Fst, MutableFst}, semirings::ProbabilityWeight, utils::acceptor, Label, Semiring, SymbolTable, Tr};
+use rustfst::{algorithms::concat::concat, fst_impls::VectorFst, fst_traits::{Fst, MutableFst}, semirings::ProbabilityWeight, utils::{acceptor, transducer}, Label, Semiring, SymbolTable, Tr};
 use rustfst::algorithms::compose::compose;
 use serde::{Deserialize, Serialize};
 
@@ -15,19 +15,46 @@ pub struct SoundLaw {
     right_context: String,
 }
 
+#[derive(Debug)]
+struct SoundLawLabels {
+    from: Vec<Label>,
+    to: Vec<Label>,
+    left_context: Vec<Label>,
+    right_context: Vec<Label>,
+}
+
+
+
 fn get_labels_from_str(s: &str, table: Arc<SymbolTable>) -> Option<Vec<Label>> {
     s.chars().map(|x| table.get_label(x.to_string())).collect()
 }
 
 
 impl SoundLaw {
+    fn to_labels(&self, table: Arc<SymbolTable>) -> Option<SoundLawLabels> {
+        let left = get_labels_from_str(&self.left_context, Arc::clone(&table))?;
+        let right = get_labels_from_str(&self.right_context, Arc::clone(&table))?;
+        let from = get_labels_from_str(&self.from, Arc::clone(&table))?;
+        let to = get_labels_from_str(&self.to, Arc::clone(&table))?;
+
+        Some(SoundLawLabels { from, to, left_context: left, right_context: right })
+
+    }
+
     fn to_fst(&self, table: Arc<SymbolTable>) -> VectorFst<ProbabilityWeight> {
-        let left_context_fst: VectorFst<_> = acceptor( &get_labels_from_str(&self.left_context, table).unwrap(), ProbabilityWeight::one());
+        let SoundLawLabels { from, to, left_context, right_context } = self.to_labels(Arc::clone(&table)).unwrap();
+        let mut left_context_fst: VectorFst<_> = acceptor(&left_context, ProbabilityWeight::one());
+        let right_context_fst: VectorFst<_> = acceptor(&right_context, ProbabilityWeight::one());
 
+        let transform: VectorFst<_> = transducer(&from, &to, ProbabilityWeight::one());
 
+        concat(&mut left_context_fst, &transform).expect("concat failed");
+        concat(&mut left_context_fst, &right_context_fst).expect("concat failed");
 
+        left_context_fst.set_input_symbols(Arc::clone(&table));
+        left_context_fst.set_output_symbols(Arc::clone(&table));
 
-        todo!()
+        left_context_fst
     }
 
 }
@@ -132,4 +159,24 @@ mod tests {
         let transduced = get_labels_from_str("abba", Arc::new(table));
         assert_eq!(transduced, Some(vec![1, 2, 2, 1]));
     }
+
+    #[test]
+    fn test_no_context_soundlaw()  {
+        let table = symt![ "a", "b", "c"];
+        let table = Arc::new(table);
+        let law = SoundLaw {
+            from: "a".to_string(),
+            to: "b".to_string(),
+            left_context: "".to_string(),
+            right_context: "".to_string()
+        };
+        let fst = law.to_fst(table);
+        dbg!(&fst);
+        let paths: Vec<_> = fst.string_paths_iter().unwrap().collect();
+        assert_eq!(paths.len(), 1);
+        assert_eq!(paths[0].istring().unwrap(), "a");
+        assert_eq!(paths[0].ostring().unwrap(), "b");
+
+    }
+
 }
