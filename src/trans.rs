@@ -29,6 +29,24 @@ fn get_labels_from_str(s: &str, table: Arc<SymbolTable>) -> Option<Vec<Label>> {
     s.chars().map(|x| table.get_label(x.to_string())).collect()
 }
 
+// given t that actually does the replacement, creates a transuducer that makes sure
+// all substrings are repalced
+fn replace(t: VectorFst<ProbabilityWeight>, optional: bool, alphabet: &SymbolTable) -> Option<VectorFst<ProbabilityWeight>> {
+    todo!()
+}
+
+// calls replace, but first ignores brackets and makes sure replacement occures only in brackets
+fn replace_transducer(t: VectorFst<ProbabilityWeight>, left_marker: String, right_marker: &String, alphabet: SymbolTable) -> Option<VectorFst<ProbabilityWeight>> {
+    todo!()
+}
+
+// given t that does replacement, m1, m2 are the left and right context
+fn function_name(t: VectorFst<ProbabilityWeight>, left_marker: String, right_marker: &String, alphabet: SymbolTable) -> Option<VectorFst<ProbabilityWeight>> {
+    todo!()
+}
+
+
+
 
 impl SoundLaw {
     fn to_labels(&self, table: Arc<SymbolTable>) -> Option<SoundLawLabels> {
