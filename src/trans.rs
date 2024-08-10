@@ -3,6 +3,7 @@ use std::sync::Arc;
 use actix_web::Error;
 use rustfst::{algorithms::concat::concat, fst_impls::VectorFst, fst_traits::{Fst, MutableFst}, semirings::ProbabilityWeight, utils::{acceptor, transducer}, Label, Semiring, SymbolTable, Tr};
 use rustfst::algorithms::compose::compose;
+use rustfst::fst;
 use serde::{Deserialize, Serialize};
 
 
@@ -40,8 +41,8 @@ fn replace_transducer(t: VectorFst<ProbabilityWeight>, left_marker: String, righ
     todo!()
 }
 
-// given t that does replacement, m1, m2 are the left and right context
-fn function_name(t: VectorFst<ProbabilityWeight>, left_marker: String, right_marker: &String, alphabet: SymbolTable) -> Option<VectorFst<ProbabilityWeight>> {
+// given t that does replacement, m1, m2 are the contexts
+fn function_name(t: VectorFst<ProbabilityWeight>, left_context: String, right_context: &String, alphabet: SymbolTable) -> Option<VectorFst<ProbabilityWeight>> {
     todo!()
 }
 
@@ -213,4 +214,23 @@ mod tests {
         assert_eq!(paths[0].istring().unwrap(), "c a c");
         assert_eq!(paths[0].ostring().unwrap(), "c b c");
     }
+
+    #[test]
+    fn right_arrow_test1()  {
+        let symbol_tabl = symt!["a", "b", "c", "d"];
+        let mapping: VectorFst<ProbabilityWeight> = fst![3, 2 => 4];
+
+        let input1: VectorFst<ProbabilityWeight> = fst![3, 1, 3, 1, 3, 1, 3]; // "cacacac"
+
+        let replaced = replace(mapping, false, &symbol_tabl).unwrap();
+
+        let expected: VectorFst<ProbabilityWeight> = fst![3, 1, 3, 1, 3, 1 => 4, 4, 4];
+
+        let actual = compose(input1, replaced).unwrap();
+
+        assert_eq!(expected, actual);
+
+    }
+
+
 }
