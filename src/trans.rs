@@ -3,6 +3,9 @@ use std::sync::Arc;
 use actix_web::Error;
 use rustfst::algorithms::compose::compose;
 use rustfst::fst;
+use rustfst::algorithms::rm_epsilon::*;
+use rustfst::prelude::determinize::determinize;
+use rustfst::prelude::{determinize, tr_sort, CoreFst, ILabelCompare, OLabelCompare, StateIterator};
 use rustfst::{
     algorithms::{concat::concat, project},
     fst_impls::VectorFst,
@@ -43,6 +46,43 @@ fn any_star(st: &SymbolTable) -> SoundFst {
     return fst;
 }
 
+fn negate(fst: &SoundFst) -> SoundFst {
+    // assumet that the fst is deterministic, and also acceptor or whatever that is aka is a regex
+
+    // also destroys weights
+    let mut ret = fst.clone();
+
+    for state in fst.states_iter() {
+        if fst.is_final(state).unwrap() {
+            ret.set_final(state, ProbabilityWeight::zero());
+        } else {
+
+            ret.set_final(state, ProbabilityWeight::one());
+        }
+    }
+
+    ret
+}
+
+
+fn subtract(fst1: &SoundFst, fst2: &SoundFst) -> SoundFst {
+    // mostly translated from hfst's version
+    // in TroplicalWeightTransducer.cc
+    let mut new_fst1 = fst1.clone();
+    rm_epsilon(&mut new_fst1);
+    let mut new_fst2 = fst2.clone();
+    rm_epsilon(&mut new_fst2);
+
+    tr_sort(&mut new_fst1, OLabelCompare {}); // weird design syntax
+    tr_sort(&mut new_fst2, ILabelCompare {});
+
+
+    let fst2_det : SoundFst = determinize(&new_fst2).unwrap();
+
+    todo!()
+
+}
+
 // given t that actually does the replacement, creates a transuducer that makes sure
 // all substrings are repalced
 fn replace(
@@ -58,8 +98,6 @@ fn replace(
     let star = any_star(alphabet);
 
     let mut tc = star.clone();
-    concat(&mut tc, &projection);
-    concat(&mut tc, &star);
 
     todo!()
 }
@@ -121,6 +159,8 @@ impl SoundLaw {
     }
 }
 
+// I forgot what this is for
+/// - I don't think this approach is the most general approach
 fn sound_laws_to_fst(laws: &[SoundLaw], table: Arc<SymbolTable>) -> SoundFst {
     todo!()
 }
