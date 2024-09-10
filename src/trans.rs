@@ -165,6 +165,12 @@ fn sound_laws_to_fst(laws: &[SoundLaw], table: Arc<SymbolTable>) -> SoundFst {
     todo!()
 }
 
+fn accepts(fst: &SoundFst , string: &[Label]) -> bool {
+    let accept: SoundFst = acceptor(string, ProbabilityWeight::one());
+    let composed: SoundFst = compose(accept, fst.clone()).expect("Error in composition");
+    composed.paths_iter().next().is_some()
+}
+
 pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
     let mut fst = VectorFst::<ProbabilityWeight>::new();
     let mut symbol_table = SymbolTable::new();
@@ -214,6 +220,7 @@ pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
 
 #[cfg(test)]
 mod tests {
+    use actix_web::cookie::time::{formatting, macros};
     use rustfst::symt;
 
     use super::*;
@@ -300,4 +307,11 @@ mod tests {
 
         assert_eq!(expected, actual);
     }
+    #[test]
+    fn negate_test1() {
+        let fst = fst![1,2,3];
+
+        
+    }
+    
 }
