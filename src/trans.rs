@@ -2,10 +2,10 @@ use std::sync::Arc;
 
 use actix_web::Error;
 use rustfst::algorithms::compose::compose;
-use rustfst::fst;
+use rustfst::{fst, Trs};
 use rustfst::algorithms::rm_epsilon::*;
 use rustfst::prelude::determinize::determinize;
-use rustfst::prelude::{determinize, tr_sort, CoreFst, ILabelCompare, OLabelCompare, StateIterator};
+use rustfst::prelude::{determinize, tr_sort, CoreFst, FstIterator, ILabelCompare, OLabelCompare, SerializableFst, StateIterator};
 use rustfst::{
     algorithms::{concat::concat, project},
     fst_impls::VectorFst,
@@ -46,20 +46,37 @@ fn any_star(st: &SymbolTable) -> SoundFst {
     return fst;
 }
 
-fn negate(fst: &SoundFst) -> SoundFst {
+fn negate(fst: &SoundFst, alphabet: &[Label]) -> SoundFst {
     // assumet that the fst is deterministic, and also acceptor or whatever that is aka is a regex
 
     // also destroys weights
     let mut ret = fst.clone();
 
-    for state in fst.states_iter() {
+    let accept = ret.add_state();
+
+    let fst = ret.clone();
+
+    
+    dbg!(accept);
+
+    for state in ret.states_iter() {
+        dbg!(state);
         if fst.is_final(state).unwrap() {
             ret.set_final(state, ProbabilityWeight::zero());
         } else {
 
             ret.set_final(state, ProbabilityWeight::one());
         }
+        alphabet.iter().filter(|label| fst.get_trs(state).unwrap().iter().all(|tr| tr.ilabel != **label)).for_each(|label| 
+            {
+                dbg!(label);
+          ret.emplace_tr(state, *label, *label, ProbabilityWeight::one(), accept).expect("unable to add label");
+          dbg!(ret.get_trs(state).unwrap().len());
+            });
+
+        dbg!(state);
     }
+    ret.set_final(accept, ProbabilityWeight::one());
 
     ret
 }
@@ -168,6 +185,7 @@ fn sound_laws_to_fst(laws: &[SoundLaw], table: Arc<SymbolTable>) -> SoundFst {
 fn accepts(fst: &SoundFst , string: &[Label]) -> bool {
     let accept: SoundFst = acceptor(string, ProbabilityWeight::one());
     let composed: SoundFst = compose(accept, fst.clone()).expect("Error in composition");
+    composed.draw("accepts.out", &Default::default());
     composed.paths_iter().next().is_some()
 }
 
@@ -220,8 +238,10 @@ pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
 
 #[cfg(test)]
 mod tests {
+    use std::vec;
+
     use actix_web::cookie::time::{formatting, macros};
-    use rustfst::symt;
+    use rustfst::{prelude::{FstIterator, SerializableFst}, symt, DrawingConfig};
 
     use super::*;
 
@@ -310,8 +330,42 @@ mod tests {
     #[test]
     fn negate_test1() {
         let fst = fst![1,2,3];
+        
+        let negate = negate(&fst, &vec![1,2,3]);
 
+        let str = vec![1,2,3];
+        assert!(accepts(&fst, &str));
+        assert!(!accepts(&negate, &str));
         
     }
-    
+    #[test]
+    fn negate_test_multiple_strings() {
+        // FST that accepts [1,2,3] and [4,5,6]
+        let mut fst1: SoundFst = fst![1,2,3];
+        let mut fst2: SoundFst = fst!(4,5,6);
+        let alpha = vec![1,2,3,4,5,6];
+        let _ = rustfst::algorithms::union::union(&mut fst1, &mut fst2).unwrap();
+
+        let mut det_union_fst = determinize(&fst1).unwrap();
+        let _= rm_epsilon(&mut det_union_fst).unwrap();
+
+        let negate_fst = negate(&det_union_fst, &alpha);
+        //:dbg!(negate_fst.get_trs(8).unwrap().len());
+        negate_fst.draw("image.txt", &DrawingConfig::default());
+
+        let input1 = vec![1, 2, 3];
+        let input2 = vec![4, 5, 6];
+        let input3 = vec![3,2,1];
+
+        assert!(accepts(&det_union_fst, &input1));
+        assert!(accepts(&det_union_fst, &input2));
+        assert!(!accepts(&det_union_fst, &input3));
+
+        assert!(!accepts(&negate_fst, &input1));
+        assert!(!accepts(&negate_fst, &input2));
+
+
+        dbg!(&negate_fst);
+        assert!(accepts(&negate_fst, &input3));
+    }
 }
