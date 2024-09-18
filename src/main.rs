@@ -1,5 +1,5 @@
 use actix_files::Files;
-use actix_web::{web, App, HttpServer, HttpResponse, post, get};
+use actix_web::{get, post, web, App, HttpResponse, HttpServer};
 use serde::{Deserialize, Serialize};
 use std::{fs::write, sync::Mutex};
 
@@ -22,17 +22,18 @@ struct AppState {
 async fn save(data: web::Json<SaveData>, state: web::Data<AppState>) -> HttpResponse {
     let mut saves = state.saves.lock().unwrap();
     dbg!(&data);
-    println!("old length {}", saves.len() );
+    println!("old length {}", saves.len());
 
     let save = data.into_inner();
     saves.push(save.clone());
     dbg!(&saves);
-    println!("new length {}", saves.len() );
+    println!("new length {}", saves.len());
 
-
-    match write("saves.txt", serde_json::to_string(saves.as_slice()).unwrap()) {
-        Ok(_) => {
-        }
+    match write(
+        "saves.txt",
+        serde_json::to_string(saves.as_slice()).unwrap(),
+    ) {
+        Ok(_) => {}
         Err(e) => {
             eprintln!("Failed to open file: {}", e);
             return HttpResponse::InternalServerError().body("Failed to save data");
@@ -43,16 +44,13 @@ async fn save(data: web::Json<SaveData>, state: web::Data<AppState>) -> HttpResp
 
     let text = transduce_text(save.columns, save.transduceGoal);
 
-
     println!("Resulted in {}", text);
-
 
     HttpResponse::Ok().json(saves.len() - 1)
 }
 
 #[get("/load/{id}")]
 async fn load(id: web::Path<usize>, state: web::Data<AppState>) -> HttpResponse {
-
     let saves = state.saves.lock().unwrap();
 
     dbg!(&saves);
@@ -74,8 +72,8 @@ async fn get_saves(state: web::Data<AppState>) -> HttpResponse {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let data = web::Data::new(AppState {
-                saves: Mutex::new(Vec::new()),
-            });
+        saves: Mutex::new(Vec::new()),
+    });
     HttpServer::new(move || {
         App::new()
             .app_data(data.clone())
