@@ -1,11 +1,10 @@
 use std::sync::Arc;
 
-use actix_web::Error;
 use rustfst::algorithms::compose::compose;
-use rustfst::{fst, Trs};
 use rustfst::algorithms::rm_epsilon::*;
 use rustfst::prelude::determinize::determinize;
-use rustfst::prelude::{determinize, tr_sort, CoreFst, FstIterator, ILabelCompare, OLabelCompare, SerializableFst, StateIterator};
+use rustfst::fst;
+use rustfst::prelude::{tr_sort, CoreFst, ILabelCompare, OLabelCompare, SerializableFst, StateIterator};
 use rustfst::{
     algorithms::{concat::concat, project},
     fst_impls::VectorFst,
@@ -43,7 +42,7 @@ fn any_star(st: &SymbolTable) -> SoundFst {
     for label in st.labels() {
         let _ = fst.add_tr(0, Tr::new(label, label, ProbabilityWeight::one(), 0));
     }
-    return fst;
+    fst
 }
 
 fn negate(fst: &SoundFst, alphabet: &[Label]) -> SoundFst {
@@ -114,7 +113,7 @@ fn replace(
     ); // should be output in the lower level projection
     let star = any_star(alphabet);
 
-    let mut tc = star.clone();
+    let tc = star.clone();
 
     todo!()
 }
