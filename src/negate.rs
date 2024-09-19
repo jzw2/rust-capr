@@ -1,6 +1,12 @@
-use rustfst::{prelude::{compose::compose, CoreFst, Fst, MutableFst, ProbabilityWeight, SerializableFst, StateIterator}, utils::acceptor, Label, Semiring};
 use crate::trans::SoundFst;
-
+use rustfst::{
+    prelude::{
+        compose::compose, CoreFst, Fst, MutableFst, ProbabilityWeight, SerializableFst,
+        StateIterator,
+    },
+    utils::acceptor,
+    Label, Semiring,
+};
 
 pub fn negate(fst: &SoundFst, alphabet: &[Label]) -> SoundFst {
     // assumet that the fst is deterministic, and also acceptor or whatever that is aka is a regex
@@ -11,7 +17,6 @@ pub fn negate(fst: &SoundFst, alphabet: &[Label]) -> SoundFst {
     let accept = ret.add_state();
 
     let fst = ret.clone();
-
 
     for state in ret.states_iter() {
         dbg!(state);
@@ -46,7 +51,6 @@ pub fn negate(fst: &SoundFst, alphabet: &[Label]) -> SoundFst {
     ret
 }
 
-
 fn accepts(fst: &SoundFst, string: &[Label]) -> bool {
     let accept: SoundFst = acceptor(string, ProbabilityWeight::one());
     let composed: SoundFst = compose(accept, fst.clone()).expect("Error in composition");
@@ -55,10 +59,17 @@ fn accepts(fst: &SoundFst, string: &[Label]) -> bool {
 }
 #[cfg(test)]
 mod tests {
-    use rustfst::{fst, prelude::{determinize::determinize, rm_epsilon::rm_epsilon}, DrawingConfig};
+    use rustfst::{
+        fst,
+        prelude::{determinize::determinize, rm_epsilon::rm_epsilon},
+        DrawingConfig,
+    };
 
-    use crate::{negate::{accepts, negate}, trans::SoundFst};
-    
+    use crate::{
+        negate::{accepts, negate},
+        trans::SoundFst,
+    };
+
     use super::*;
 
     #[test]
@@ -100,8 +111,8 @@ mod tests {
         dbg!(&negate_fst);
         assert!(accepts(&negate_fst, &input3));
     }
-    
-        #[test]
+
+    #[test]
     fn negate_test_simple_string() {
         // FST that accepts [1,2,3]
         let fst: SoundFst = fst![1, 2, 3];
@@ -144,7 +155,7 @@ mod tests {
         assert!(!accepts(&negate_fst, &empty_input));
         assert!(accepts(&negate_fst, &non_empty_input));
     }
-#[test]
+    #[test]
     fn negate_test_all_strings() {
         // FST that accepts all strings over the alphabet
         let mut fst: SoundFst = SoundFst::new();
@@ -172,7 +183,7 @@ mod tests {
         assert!(!accepts(&negate_fst, &any_input));
         assert!(!accepts(&negate_fst, &empty_input));
     }
-  #[test]
+    #[test]
     fn negate_test_no_strings() {
         // FST that accepts no strings
         let mut fst: SoundFst = SoundFst::new();

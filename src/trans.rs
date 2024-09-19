@@ -3,9 +3,7 @@ use std::sync::Arc;
 use rustfst::algorithms::compose::compose;
 use rustfst::algorithms::rm_epsilon::*;
 use rustfst::prelude::determinize::determinize;
-use rustfst::prelude::{
-    tr_sort, ILabelCompare, OLabelCompare,
-};
+use rustfst::prelude::{tr_sort, ILabelCompare, OLabelCompare};
 use rustfst::{
     algorithms::{concat::concat, project},
     fst_impls::VectorFst,
@@ -17,7 +15,6 @@ use rustfst::{
 use serde::{Deserialize, Serialize};
 
 pub type SoundFst = VectorFst<ProbabilityWeight>;
-
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SoundLaw {
@@ -46,7 +43,6 @@ fn any_star(st: &SymbolTable) -> SoundFst {
     }
     fst
 }
-
 
 fn subtract(fst1: &SoundFst, fst2: &SoundFst) -> SoundFst {
     // mostly translated from hfst's version
@@ -146,7 +142,6 @@ fn sound_laws_to_fst(laws: &[SoundLaw], table: Arc<SymbolTable>) -> SoundFst {
     todo!()
 }
 
-
 pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
     let mut fst = VectorFst::<ProbabilityWeight>::new();
     let mut symbol_table = SymbolTable::new();
@@ -198,7 +193,6 @@ pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
 mod tests {
     use std::vec;
 
-    
     use rustfst::symt;
 
     use super::*;
