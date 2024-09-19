@@ -6,6 +6,7 @@ use std::{fs::write, sync::Mutex};
 use crate::trans::transduce_text;
 
 mod trans;
+mod negate;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct SaveData {
