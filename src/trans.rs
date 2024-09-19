@@ -2,10 +2,9 @@ use std::sync::Arc;
 
 use rustfst::algorithms::compose::compose;
 use rustfst::algorithms::rm_epsilon::*;
-use rustfst::fst;
 use rustfst::prelude::determinize::determinize;
 use rustfst::prelude::{
-    tr_sort, CoreFst, ILabelCompare, OLabelCompare, SerializableFst, StateIterator,
+    tr_sort, ILabelCompare, OLabelCompare,
 };
 use rustfst::{
     algorithms::{concat::concat, project},
@@ -199,11 +198,8 @@ pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
 mod tests {
     use std::vec;
 
-    use actix_web::cookie::time::{formatting, macros};
-    use rustfst::{
-        prelude::{FstIterator, SerializableFst},
-        symt, DrawingConfig,
-    };
+    
+    use rustfst::symt;
 
     use super::*;
 

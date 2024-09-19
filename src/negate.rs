@@ -1,12 +1,6 @@
 use rustfst::{prelude::{compose::compose, CoreFst, Fst, MutableFst, ProbabilityWeight, SerializableFst, StateIterator}, utils::acceptor, Label, Semiring};
 use crate::trans::SoundFst;
 
-use rustfst::{
-    algorithms::{concat::concat, project},
-    fst_impls::VectorFst,
-    utils::{ epsilon_machine, transducer},
-    SymbolTable, Tr,
-};
 
 pub fn negate(fst: &SoundFst, alphabet: &[Label]) -> SoundFst {
     // assumet that the fst is deterministic, and also acceptor or whatever that is aka is a regex
@@ -71,7 +65,7 @@ mod tests {
     fn negate_test1() {
         let fst = fst![1, 2, 3];
 
-        let negate = negate(&fst, &vec![1, 2, 3]);
+        let negate = negate(&fst, &[1, 2, 3]);
 
         let str = vec![1, 2, 3];
         assert!(accepts(&fst, &str));
@@ -83,10 +77,10 @@ mod tests {
         let mut fst1: SoundFst = fst![1, 2, 3];
         let mut fst2: SoundFst = fst!(4, 5, 6);
         let alpha = vec![1, 2, 3, 4, 5, 6];
-        let _ = rustfst::algorithms::union::union(&mut fst1, &mut fst2).unwrap();
+        rustfst::algorithms::union::union(&mut fst1, &mut fst2).unwrap();
 
         let mut det_union_fst = determinize(&fst1).unwrap();
-        let _ = rm_epsilon(&mut det_union_fst).unwrap();
+        rm_epsilon(&mut det_union_fst).unwrap();
 
         let negate_fst = negate(&det_union_fst, &alpha);
         //:dbg!(negate_fst.get_trs(8).unwrap().len());
@@ -110,7 +104,7 @@ mod tests {
         #[test]
     fn negate_test_simple_string() {
         // FST that accepts [1,2,3]
-        let mut fst: SoundFst = fst![1, 2, 3];
+        let fst: SoundFst = fst![1, 2, 3];
         let alpha = vec![1, 2, 3, 4, 5, 6];
 
         let mut det_fst = determinize(&fst).unwrap();
