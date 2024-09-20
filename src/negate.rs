@@ -68,8 +68,7 @@ fn accepts(fst: &SoundFst, string: &[Label]) -> bool {
 mod tests {
     use rustfst::{
         fst,
-        prelude::{determinize::determinize, rm_epsilon::rm_epsilon},
-        DrawingConfig, Tr,
+        prelude::{determinize::determinize, rm_epsilon::rm_epsilon}, Tr,
     };
 
     use crate::{

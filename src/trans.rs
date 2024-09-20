@@ -138,7 +138,7 @@ fn replace_context(
     insert_freely(&mut t_copy, left_context);
     insert_freely(&mut t_copy, right_context);
 
-    let pi_star = any_star(&alphabet);
+    let pi_star = any_star(alphabet);
     let mut arg1 = any_star(alphabet);
     concat(&mut arg1, &t_copy).unwrap();
 
@@ -149,7 +149,7 @@ fn replace_context(
     let m1_tr: SoundFst = fst![m1];
     let mut tmp = pi_star.clone();
     concat(&mut tmp, &m1_tr).unwrap();
-    let arg2 = negate_with_symbol_table(&tmp, &alphabet);
+    let arg2 = negate_with_symbol_table(&tmp, alphabet);
 
     let ct: SoundFst = compose(arg1, arg2).unwrap();
     let mut mt: SoundFst = fst![m2];
@@ -158,18 +158,18 @@ fn replace_context(
     concat(&mut mt, &pi_star).unwrap();
 
     // iff statement
-    let mut tmp2 = negate_with_symbol_table(&mt, &alphabet);
+    let tmp2 = negate_with_symbol_table(&mt, alphabet);
     let mut ct_neg_mt = ct.clone();
     concat(&mut ct_neg_mt, &tmp2).unwrap();
 
 
-    let mut neg_ct_mt = negate_with_symbol_table(&ct, &alphabet);
+    let mut neg_ct_mt = negate_with_symbol_table(&ct, alphabet);
     concat(&mut neg_ct_mt, &mt).unwrap();
 
 
     let mut disj = neg_ct_mt;
     union(&mut disj, &ct_neg_mt).unwrap();
-    let retval = negate_with_symbol_table(&disj, &alphabet);
+    let retval = negate_with_symbol_table(&disj, alphabet);
     
 
 

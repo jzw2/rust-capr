@@ -1,6 +1,6 @@
 use actix_files::Files;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer};
-use rustfst::{prelude::Fst, symt, SymbolTable};
+use rustfst::{symt, SymbolTable};
 use serde::{Deserialize, Serialize};
 use trans::SoundLaw;
 use std::{fs::write, sync::{Arc, Mutex}};
