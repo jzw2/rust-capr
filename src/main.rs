@@ -2,8 +2,11 @@ use actix_files::Files;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer};
 use rustfst::{symt, SymbolTable};
 use serde::{Deserialize, Serialize};
+use std::{
+    fs::write,
+    sync::{Arc, Mutex},
+};
 use trans::SoundLaw;
-use std::{fs::write, sync::{Arc, Mutex}};
 
 use crate::trans::transduce_text;
 
@@ -74,12 +77,11 @@ async fn get_saves(state: web::Data<AppState>) -> HttpResponse {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-
     let law = SoundLaw::new("x", "y", "a", "b");
     let table = symt!["x", "y", "a", "b"];
     let fst = law.to_fst(Arc::new(table));
     dbg!(fst);
-    
+
     let data = web::Data::new(AppState {
         saves: Mutex::new(Vec::new()),
     });

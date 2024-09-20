@@ -32,7 +32,10 @@ pub struct SoundLaw {
 impl SoundLaw {
     pub fn new(from: &str, to: &str, left_context: &str, right_context: &str) -> SoundLaw {
         SoundLaw {
-            from: from.to_string(), to: to.to_string(), left_context: left_context.into(),right_context: right_context.into()
+            from: from.to_string(),
+            to: to.to_string(),
+            left_context: left_context.into(),
+            right_context: right_context.into(),
         }
     }
 }
@@ -57,7 +60,6 @@ fn any_star(st: &SymbolTable) -> SoundFst {
     fst
 }
 
-
 //might be unneeded
 /* fn subtract(fst1: &SoundFst, fst2: &SoundFst) -> SoundFst {
     // mostly translated from hfst's version
@@ -77,11 +79,7 @@ fn any_star(st: &SymbolTable) -> SoundFst {
 
 // given t that actually does the replacement, creates a transuducer that makes sure
 // all substrings are repalced
-fn replace(
-    t: SoundFst,
-    optional: bool,
-    alphabet: &SymbolTable,
-) -> VectorFst<ProbabilityWeight> {
+fn replace(t: SoundFst, optional: bool, alphabet: &SymbolTable) -> VectorFst<ProbabilityWeight> {
     let mut projection = t.clone();
     project(
         &mut projection,
@@ -101,12 +99,11 @@ fn replace(
     closure(&mut retval, ClosureType::ClosureStar);
     concat(&mut retval, &tc_neg).unwrap();
 
-
     if optional {
         union(&mut retval, &star).unwrap();
     }
 
-retval
+    retval
 }
 
 // calls replace, but first ignores brackets and makes sure replacement occures only in brackets
@@ -117,7 +114,6 @@ fn replace_transducer(
     alphabet: SymbolTable,
 ) -> Option<VectorFst<ProbabilityWeight>> {
     todo!()
-
 }
 
 // allows s to be inputted anywhere inside the fst
@@ -132,10 +128,8 @@ fn replace_context(
     right_context: &str,
     alphabet: &SymbolTable,
 ) -> Option<VectorFst<ProbabilityWeight>> {
-
     // copied from hfst, ideally I'll refactor it so that it actually makes sense
     let mut t_copy = t.clone();
-    
 
     insert_freely(&mut t_copy, left_context);
     insert_freely(&mut t_copy, right_context);
@@ -145,7 +139,7 @@ fn replace_context(
     concat(&mut arg1, &t_copy).unwrap();
 
     let mut new_table = alphabet.clone(); // I think I might have to this above? I don't know
-    // assuming that it is not in the alphabet
+                                          // assuming that it is not in the alphabet
     let m1 = new_table.add_symbol(left_context);
     let m2 = new_table.add_symbol(right_context);
     let m1_tr: SoundFst = fst![m1];
@@ -164,21 +158,18 @@ fn replace_context(
     let mut ct_neg_mt = ct.clone();
     concat(&mut ct_neg_mt, &tmp2).unwrap();
 
-
     let mut neg_ct_mt = negate_with_symbol_table(&ct, alphabet);
     concat(&mut neg_ct_mt, &mt).unwrap();
-
 
     let mut disj = neg_ct_mt;
     union(&mut disj, &ct_neg_mt).unwrap();
     let retval = negate_with_symbol_table(&disj, alphabet);
-    
+
     // they optimize it, don't know what the equivalent is
     Some(retval)
 }
 
 impl SoundLaw {
-
     //might be unneeded if I want to refactor it completely with just labels, vs passing the string along always
     fn to_labels(&self, table: Arc<SymbolTable>) -> Option<SoundLawLabels> {
         let left = get_labels_from_str(&self.left_context, Arc::clone(&table))?;
@@ -213,11 +204,10 @@ impl SoundLaw {
         left_context_fst.set_input_symbols(Arc::clone(&table));
         left_context_fst.set_output_symbols(Arc::clone(&table));
 
-let ret = replace_context(&transform, &self.left_context, &self.right_context, &table);
-ret.unwrap()
+        let ret = replace_context(&transform, &self.left_context, &self.right_context, &table);
+        ret.unwrap()
     }
 }
-
 
 // old method to just transduce without paying attention to context, remove this later
 pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
