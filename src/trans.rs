@@ -207,8 +207,16 @@ impl SoundLaw {
         let ret = replace_context(&transform, &self.left_context, &self.right_context, &table);
         ret.unwrap()
     }
+
+    
 }
 
+
+pub fn replace_in_context(contex_left: &SoundFst, context_right: &SoundFst, t: SoundFst, optional: bool, alphabet: &SymbolTable) {
+    // the big function in hfst
+    // currently not supporting the replace type paramter
+    todo!()
+}
 // old method to just transduce without paying attention to context, remove this later
 pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
     let mut fst = VectorFst::<ProbabilityWeight>::new();
