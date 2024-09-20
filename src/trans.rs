@@ -28,6 +28,14 @@ pub struct SoundLaw {
     right_context: String,
 }
 
+impl SoundLaw {
+    fn new(from: &str, to: &str, left_context: &str, right_context: &str) -> SoundLaw {
+        SoundLaw {
+            from: from.to_string(), to: to.to_string(), left_context: left_context.into(),right_context: right_context.into()
+        }
+    }
+}
+
 #[derive(Debug)]
 struct SoundLawLabels {
     from: Vec<Label>,
@@ -52,9 +60,9 @@ fn subtract(fst1: &SoundFst, fst2: &SoundFst) -> SoundFst {
     // mostly translated from hfst's version
     // in TroplicalWeightTransducer.cc
     let mut new_fst1 = fst1.clone();
-    rm_epsilon(&mut new_fst1);
+    rm_epsilon(&mut new_fst1).unwrap();
     let mut new_fst2 = fst2.clone();
-    rm_epsilon(&mut new_fst2);
+    rm_epsilon(&mut new_fst2).unwrap();
 
     tr_sort(&mut new_fst1, OLabelCompare {}); // weird design syntax
     tr_sort(&mut new_fst2, ILabelCompare {});
