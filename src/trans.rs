@@ -59,7 +59,7 @@ fn any_star(st: &SymbolTable) -> SoundFst {
 
 
 //might be unneeded
-fn subtract(fst1: &SoundFst, fst2: &SoundFst) -> SoundFst {
+/* fn subtract(fst1: &SoundFst, fst2: &SoundFst) -> SoundFst {
     // mostly translated from hfst's version
     // in TroplicalWeightTransducer.cc
     let mut new_fst1 = fst1.clone();
@@ -73,7 +73,7 @@ fn subtract(fst1: &SoundFst, fst2: &SoundFst) -> SoundFst {
     let fst2_det: SoundFst = determinize(&new_fst2).unwrap();
 
     todo!()
-}
+} */
 
 // given t that actually does the replacement, creates a transuducer that makes sure
 // all substrings are repalced
@@ -112,13 +112,15 @@ retval
 // calls replace, but first ignores brackets and makes sure replacement occures only in brackets
 fn replace_transducer(
     t: SoundFst,
-    left_marker: String,
-    right_marker: &String,
+    left_marker: &str,
+    right_marker: &str,
     alphabet: SymbolTable,
 ) -> Option<VectorFst<ProbabilityWeight>> {
     todo!()
+
 }
 
+// allows s to be inputted anywhere inside the fst
 fn insert_freely(fst: &mut SoundFst, s: &str) {
     todo!();
 }
@@ -171,13 +173,13 @@ fn replace_context(
     union(&mut disj, &ct_neg_mt).unwrap();
     let retval = negate_with_symbol_table(&disj, alphabet);
     
-
-
     // they optimize it, don't know what the equivalent is
     Some(retval)
 }
 
 impl SoundLaw {
+
+    //might be unneeded if I want to refactor it completely with just labels, vs passing the string along always
     fn to_labels(&self, table: Arc<SymbolTable>) -> Option<SoundLawLabels> {
         let left = get_labels_from_str(&self.left_context, Arc::clone(&table))?;
         let right = get_labels_from_str(&self.right_context, Arc::clone(&table))?;
@@ -192,6 +194,7 @@ impl SoundLaw {
         })
     }
 
+    // right now it also adds the replace context
     pub fn to_fst(&self, table: Arc<SymbolTable>) -> SoundFst {
         let SoundLawLabels {
             from,
@@ -216,6 +219,7 @@ ret.unwrap()
 }
 
 
+// old method to just transduce without paying attention to context, remove this later
 pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
     let mut fst = VectorFst::<ProbabilityWeight>::new();
     let mut symbol_table = SymbolTable::new();
