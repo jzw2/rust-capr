@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use rustfst::algorithms::compose::compose;
 use rustfst::algorithms::rm_epsilon::*;
+use rustfst::fst;
 use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::determinize::determinize;
 use rustfst::prelude::union::union;
@@ -16,7 +17,7 @@ use rustfst::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::negate::negate;
+use crate::negate::{negate, negate_with_symbol_table};
 
 pub type SoundFst = VectorFst<ProbabilityWeight>;
 
@@ -56,6 +57,8 @@ fn any_star(st: &SymbolTable) -> SoundFst {
     fst
 }
 
+
+//might be unneeded
 fn subtract(fst1: &SoundFst, fst2: &SoundFst) -> SoundFst {
     // mostly translated from hfst's version
     // in TroplicalWeightTransducer.cc
@@ -116,6 +119,10 @@ fn replace_transducer(
     todo!()
 }
 
+fn insert_freely(fst: &mut SoundFst, s: &str) {
+    todo!();
+}
+
 // given t that does replacement, with contexyts
 fn replace_context(
     t: &SoundFst,
@@ -123,7 +130,51 @@ fn replace_context(
     right_context: &str,
     alphabet: &SymbolTable,
 ) -> Option<VectorFst<ProbabilityWeight>> {
-    todo!()
+
+    // copied from hfst, ideally I'll refactor it so that it actually makes sense
+    let mut t_copy = t.clone();
+    
+
+    insert_freely(&mut t_copy, left_context);
+    insert_freely(&mut t_copy, right_context);
+
+    let pi_star = any_star(&alphabet);
+    let mut arg1 = any_star(alphabet);
+    concat(&mut arg1, &t_copy).unwrap();
+
+    let mut new_table = alphabet.clone(); // I think I might have to this above? I don't know
+    // assuming that it is not in the alphabet
+    let m1 = new_table.add_symbol(left_context);
+    let m2 = new_table.add_symbol(right_context);
+    let m1_tr: SoundFst = fst![m1];
+    let mut tmp = pi_star.clone();
+    concat(&mut tmp, &m1_tr).unwrap();
+    let arg2 = negate_with_symbol_table(&tmp, &alphabet);
+
+    let ct: SoundFst = compose(arg1, arg2).unwrap();
+    let mut mt: SoundFst = fst![m2];
+    closure(&mut mt, ClosureType::ClosureStar);
+    concat(&mut mt, &m1_tr).unwrap();
+    concat(&mut mt, &pi_star).unwrap();
+
+    // iff statement
+    let mut tmp2 = negate_with_symbol_table(&mt, &alphabet);
+    let mut ct_neg_mt = ct.clone();
+    concat(&mut ct_neg_mt, &tmp2).unwrap();
+
+
+    let mut neg_ct_mt = negate_with_symbol_table(&ct, &alphabet);
+    concat(&mut neg_ct_mt, &mt).unwrap();
+
+
+    let mut disj = neg_ct_mt;
+    union(&mut disj, &ct_neg_mt).unwrap();
+    let retval = negate_with_symbol_table(&disj, &alphabet);
+    
+
+
+    // they optimize it, don't know what the equivalent is
+    Some(retval)
 }
 
 impl SoundLaw {
