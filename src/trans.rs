@@ -2,7 +2,9 @@ use std::sync::Arc;
 
 use rustfst::algorithms::compose::compose;
 use rustfst::algorithms::rm_epsilon::*;
+use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::determinize::determinize;
+use rustfst::prelude::union::union;
 use rustfst::prelude::{tr_sort, ILabelCompare, OLabelCompare};
 use rustfst::{
     algorithms::{concat::concat, project},
@@ -13,6 +15,8 @@ use rustfst::{
     Label, Semiring, SymbolTable, Tr,
 };
 use serde::{Deserialize, Serialize};
+
+use crate::negate::negate;
 
 pub type SoundFst = VectorFst<ProbabilityWeight>;
 
@@ -66,7 +70,7 @@ fn replace(
     t: SoundFst,
     optional: bool,
     alphabet: &SymbolTable,
-) -> Option<VectorFst<ProbabilityWeight>> {
+) -> VectorFst<ProbabilityWeight> {
     let mut projection = t.clone();
     project(
         &mut projection,
@@ -74,9 +78,24 @@ fn replace(
     ); // should be output in the lower level projection
     let star = any_star(alphabet);
 
-    let tc = star.clone();
+    let mut tc = star.clone();
 
-    todo!()
+    concat(&mut tc, &t).unwrap();
+    concat(&mut tc, &star).unwrap();
+
+    let tc_neg = negate(&tc, &alphabet.labels().collect::<Vec<_>>());
+
+    let mut retval = tc_neg.clone();
+    concat(&mut retval, &t).unwrap();
+    closure(&mut retval, ClosureType::ClosureStar);
+    concat(&mut retval, &tc_neg).unwrap();
+
+
+    if optional {
+        union(&mut retval, &star).unwrap();
+    }
+
+retval
 }
 
 // calls replace, but first ignores brackets and makes sure replacement occures only in brackets
