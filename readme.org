@@ -17,3 +17,6 @@ Ideally, the user should be able to input sound laws without having to learn the
 Using FSTs are quite general and is not restricted to the tree model. The wave model can also be used as long as the sound laws are at least somewhat regular.
 ** Non determinism in sound laws
 As long as there is some regularity, the FST should also be able to generate all output froms if a sound law can be specified. This will ideally be able to output doublets in romance.
+* Current Limitations
+- Parallel substitutions is not supported
+- Only upper, upper substitution is supported
