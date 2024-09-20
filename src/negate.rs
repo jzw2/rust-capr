@@ -57,12 +57,6 @@ pub fn negate(fst: &SoundFst, alphabet: &[Label]) -> SoundFst {
     ret
 }
 
-fn accepts(fst: &SoundFst, string: &[Label]) -> bool {
-    let accept: SoundFst = acceptor(string, ProbabilityWeight::one());
-    let composed: SoundFst = compose(accept, fst.clone()).expect("Error in composition");
-    composed.draw("accepts.out", &Default::default()).unwrap();
-    composed.paths_iter().next().is_some()
-}
 #[cfg(test)]
 mod tests {
     use rustfst::{
@@ -72,11 +66,18 @@ mod tests {
     };
 
     use crate::{
-        negate::{accepts, negate},
+        negate::{negate},
         trans::SoundFst,
     };
 
     use super::*;
+fn accepts(fst: &SoundFst, string: &[Label]) -> bool {
+    // might be easier to directly check if the path is included within the string
+    let accept: SoundFst = acceptor(string, ProbabilityWeight::one());
+    let composed: SoundFst = compose(accept, fst.clone()).expect("Error in composition");
+    composed.draw("accepts.out", &Default::default()).unwrap();
+    composed.paths_iter().next().is_some()
+}
 
     #[test]
     fn negate_test1() {
