@@ -212,7 +212,7 @@ pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
 mod tests {
     use std::vec;
 
-    use rustfst::symt;
+    use rustfst::{fst, symt};
 
     use super::*;
 
@@ -291,7 +291,7 @@ mod tests {
 
         let input1: SoundFst = fst![3, 1, 3, 1, 3, 1, 3]; // "cacacac"
 
-        let replaced = replace(mapping, false, &symbol_tabl).unwrap();
+        let replaced = replace(mapping, false, &symbol_tabl);
 
         let expected: SoundFst = fst![3, 1, 3, 1, 3, 1 => 4, 4, 4];
 

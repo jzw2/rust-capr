@@ -1,18 +1,25 @@
 use crate::trans::SoundFst;
 use rustfst::{
     prelude::{
-        compose::compose, CoreFst, Fst, MutableFst, ProbabilityWeight, SerializableFst,
-        StateIterator,
+        compose::compose, determinize::determinize, rm_epsilon::{self, rm_epsilon}, CoreFst, Fst, MutableFst, ProbabilityWeight, SerializableFst, StateIterator
     },
     utils::acceptor,
-    Label, Semiring,
+    Label, Semiring, SymbolTable,
 };
 
+pub fn negate_with_symbol_table(fst: &SoundFst, alphabet: &SymbolTable) -> SoundFst{
+    let label_vec: Vec<_> = alphabet.labels().collect();
+    negate(&fst, &label_vec)
+}
 pub fn negate(fst: &SoundFst, alphabet: &[Label]) -> SoundFst {
+
     // assumet that the fst is deterministic, and also acceptor or whatever that is aka is a regex
+
 
     // also destroys weights
     let mut ret = fst.clone();
+    rm_epsilon(&mut ret).unwrap();
+    let mut ret: SoundFst = determinize(&ret).unwrap();
 
     let accept = ret.add_state();
 
@@ -62,7 +69,7 @@ mod tests {
     use rustfst::{
         fst,
         prelude::{determinize::determinize, rm_epsilon::rm_epsilon},
-        DrawingConfig,
+        DrawingConfig, Tr,
     };
 
     use crate::{
