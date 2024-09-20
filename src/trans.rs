@@ -29,7 +29,7 @@ pub struct SoundLaw {
 }
 
 impl SoundLaw {
-    fn new(from: &str, to: &str, left_context: &str, right_context: &str) -> SoundLaw {
+    pub fn new(from: &str, to: &str, left_context: &str, right_context: &str) -> SoundLaw {
         SoundLaw {
             from: from.to_string(), to: to.to_string(), left_context: left_context.into(),right_context: right_context.into()
         }
@@ -116,12 +116,12 @@ fn replace_transducer(
     todo!()
 }
 
-// given t that does replacement, m1, m2 are the contexts
-fn function_name(
-    t: SoundFst,
-    left_context: String,
-    right_context: &String,
-    alphabet: SymbolTable,
+// given t that does replacement, with contexyts
+fn replace_context(
+    t: &SoundFst,
+    left_context: &str,
+    right_context: &str,
+    alphabet: &SymbolTable,
 ) -> Option<VectorFst<ProbabilityWeight>> {
     todo!()
 }
@@ -141,7 +141,7 @@ impl SoundLaw {
         })
     }
 
-    fn to_fst(&self, table: Arc<SymbolTable>) -> SoundFst {
+    pub fn to_fst(&self, table: Arc<SymbolTable>) -> SoundFst {
         let SoundLawLabels {
             from,
             to,
@@ -159,15 +159,11 @@ impl SoundLaw {
         left_context_fst.set_input_symbols(Arc::clone(&table));
         left_context_fst.set_output_symbols(Arc::clone(&table));
 
-        left_context_fst
+let ret = replace_context(&transform, &self.left_context, &self.right_context, &table);
+ret.unwrap()
     }
 }
 
-// I forgot what this is for
-/// - I don't think this approach is the most general approach
-fn sound_laws_to_fst(laws: &[SoundLaw], table: Arc<SymbolTable>) -> SoundFst {
-    todo!()
-}
 
 pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
     let mut fst = VectorFst::<ProbabilityWeight>::new();
