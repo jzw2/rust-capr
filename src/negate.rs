@@ -102,7 +102,7 @@ mod tests {
 
         let negate_fst = negate(&det_union_fst, &alpha);
         //:dbg!(negate_fst.get_trs(8).unwrap().len());
-        negate_fst.draw("image.txt", &DrawingConfig::default());
+        //negate_fst.draw("image.txt", &DrawingConfig::default());
 
         let input1 = vec![1, 2, 3];
         let input2 = vec![4, 5, 6];
@@ -205,7 +205,7 @@ mod tests {
         let negate_fst = negate(&det_fst, &alpha);
         dbg!(&negate_fst);
         dbg!(&det_fst);
-        negate_fst.draw("negate_test.txt", &DrawingConfig::default());
+        //negate_fst.draw("negate_test.txt", &DrawingConfig::default());
 
         let any_input = vec![1, 2, 3];
         let empty_input: Vec<Label> = vec![];
