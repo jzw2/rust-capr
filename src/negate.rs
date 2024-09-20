@@ -1,7 +1,7 @@
 use crate::trans::SoundFst;
 use rustfst::{
     prelude::{
-        compose::compose, determinize::determinize, rm_epsilon::{self, rm_epsilon}, CoreFst, Fst, MutableFst, ProbabilityWeight, SerializableFst, StateIterator
+        compose::compose, determinize::determinize, rm_epsilon::{rm_epsilon}, CoreFst, Fst, MutableFst, ProbabilityWeight, SerializableFst, StateIterator
     },
     utils::acceptor,
     Label, Semiring, SymbolTable,
@@ -9,7 +9,7 @@ use rustfst::{
 
 pub fn negate_with_symbol_table(fst: &SoundFst, alphabet: &SymbolTable) -> SoundFst{
     let label_vec: Vec<_> = alphabet.labels().collect();
-    negate(&fst, &label_vec)
+    negate(fst, &label_vec)
 }
 pub fn negate(fst: &SoundFst, alphabet: &[Label]) -> SoundFst {
 
