@@ -21,6 +21,13 @@ use crate::negate::{negate, negate_with_symbol_table};
 
 pub type SoundFst = VectorFst<ProbabilityWeight>;
 
+/// example we want x -> y / a _ b, ie x turns to y when it is in front of a and before b
+/// aka axb -> ayb
+/// a = b = x, in string xxxx,
+/// `from` is x
+/// `to` is y
+/// `left_context` is a
+/// `right_context` is b
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SoundLaw {
     from: String,
@@ -28,6 +35,7 @@ pub struct SoundLaw {
     left_context: String,
     right_context: String,
 }
+
 
 impl SoundLaw {
     pub fn new(from: &str, to: &str, left_context: &str, right_context: &str) -> SoundLaw {
@@ -79,7 +87,7 @@ fn any_star(st: &SymbolTable) -> SoundFst {
 
 // given t that actually does the replacement, creates a transuducer that makes sure
 // all substrings are repalced
-fn replace(t: SoundFst, optional: bool, alphabet: &SymbolTable) -> VectorFst<ProbabilityWeight> {
+fn replace(t: SoundFst, optional: bool, alphabet: &SymbolTable) -> SoundFst {
     let mut projection = t.clone();
     project(
         &mut projection,
@@ -108,24 +116,35 @@ fn replace(t: SoundFst, optional: bool, alphabet: &SymbolTable) -> VectorFst<Pro
 
 // calls replace, but first ignores brackets and makes sure replacement occures only in brackets
 fn replace_transducer(
-    t: SoundFst,
-    left_marker: &str,
-    right_marker: &str,
-    alphabet: SymbolTable,
-) -> Option<VectorFst<ProbabilityWeight>> {
-    todo!()
+    mut transducer: SoundFst,
+    left_marker: Label,
+    right_marker: Label,
+    alphabet: &SymbolTable,
+) -> SoundFst {
+    // ignore the opitmiaze because I don't know what it does
+    
+    insert_freely(&mut transducer, right_marker);
+    insert_freely(&mut transducer, left_marker);
+
+    let mut marker_transducer: SoundFst = fst![left_marker];
+    concat(&mut marker_transducer, &transducer).unwrap();
+    concat(&mut marker_transducer, &fst![right_marker]).unwrap();
+
+    replace(marker_transducer, false, alphabet)
 }
 
 // allows s to be inputted anywhere inside the fst
-fn insert_freely(fst: &mut SoundFst, s: &str) {
+fn insert_freely(fst: &mut SoundFst, s: Label) {
     todo!();
 }
 
+
+impl SoundLaw {
 // given t that does replacement, with contexyts
 fn replace_context(
     t: &SoundFst,
-    left_context: &str,
-    right_context: &str,
+    left_context: Label,
+    right_context: Label,
     alphabet: &SymbolTable,
 ) -> Option<VectorFst<ProbabilityWeight>> {
     // copied from hfst, ideally I'll refactor it so that it actually makes sense
@@ -138,10 +157,7 @@ fn replace_context(
     let mut arg1 = any_star(alphabet);
     concat(&mut arg1, &t_copy).unwrap();
 
-    let mut new_table = alphabet.clone(); // I think I might have to this above? I don't know
-                                          // assuming that it is not in the alphabet
-    let m1 = new_table.add_symbol(left_context);
-    let m2 = new_table.add_symbol(right_context);
+    let mut new_table = alphabet;
     let m1_tr: SoundFst = fst![m1];
     let mut tmp = pi_star.clone();
     concat(&mut tmp, &m1_tr).unwrap();
@@ -168,8 +184,6 @@ fn replace_context(
     // they optimize it, don't know what the equivalent is
     Some(retval)
 }
-
-impl SoundLaw {
     //might be unneeded if I want to refactor it completely with just labels, vs passing the string along always
     fn to_labels(&self, table: Arc<SymbolTable>) -> Option<SoundLawLabels> {
         let left = get_labels_from_str(&self.left_context, Arc::clone(&table))?;
@@ -186,13 +200,13 @@ impl SoundLaw {
     }
 
     // right now it also adds the replace context
-    pub fn to_fst(&self, table: Arc<SymbolTable>) -> SoundFst {
+    pub fn to_fst(&self, alphabet: Arc<SymbolTable>) -> SoundFst {
         let SoundLawLabels {
             from,
             to,
             left_context,
             right_context,
-        } = self.to_labels(Arc::clone(&table)).unwrap();
+        } = self.to_labels(Arc::clone(&alphabet)).unwrap();
         let mut left_context_fst: VectorFst<_> = acceptor(&left_context, ProbabilityWeight::one());
         let right_context_fst: VectorFst<_> = acceptor(&right_context, ProbabilityWeight::one());
 
@@ -201,11 +215,13 @@ impl SoundLaw {
         concat(&mut left_context_fst, &transform).expect("concat failed");
         concat(&mut left_context_fst, &right_context_fst).expect("concat failed");
 
-        left_context_fst.set_input_symbols(Arc::clone(&table));
-        left_context_fst.set_output_symbols(Arc::clone(&table));
+        left_context_fst.set_input_symbols(Arc::clone(&alphabet));
+        left_context_fst.set_output_symbols(Arc::clone(&alphabet));
 
-        let ret = replace_context(&transform, &self.left_context, &self.right_context, &table);
-        ret.unwrap()
+        //let ret = replace_context(&transform, left_context, right_context, &alphabet);
+        //ret.unwrap()
+
+        todo!()
     }
 
     
