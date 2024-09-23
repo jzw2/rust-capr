@@ -1,13 +1,11 @@
 use std::sync::Arc;
 
 use rustfst::algorithms::compose::compose;
-use rustfst::algorithms::rm_epsilon::*;
 use rustfst::fst;
 use rustfst::prelude::closure::{closure, ClosureType};
-use rustfst::prelude::determinize::determinize;
 use rustfst::prelude::union::union;
 use rustfst::prelude::{
-    tr_sort, AllocableFst, ExpandedFst, ILabelCompare, OLabelCompare, StateIterator,
+    AllocableFst, ExpandedFst,
 };
 use rustfst::{
     algorithms::{concat::concat, project},
@@ -75,7 +73,7 @@ pub trait SoundFstTrait: FstTraits + SoundFstNegateTrait {
         alphabet: &SymbolTable,
     ) -> Self {
         // copied from hfst, ideally I'll refactor it so that it actually makes sense
-        let mut transducer = self.clone();
+        let transducer = self.clone();
 
         transducer.insert_freely(left_context);
         transducer.insert_freely(right_context);

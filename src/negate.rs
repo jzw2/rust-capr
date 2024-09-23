@@ -1,10 +1,9 @@
-use crate::trans::{FstTraits, SoundFst, SoundFstTrait};
+use crate::trans::{FstTraits, SoundFst};
 use rustfst::{
     prelude::{
-        compose::compose, determinize::determinize, rm_epsilon::rm_epsilon, CoreFst, Fst,
-        MutableFst, ProbabilityWeight, SerializableFst, StateIterator, VectorFst,
+        determinize::determinize, rm_epsilon::rm_epsilon, CoreFst,
+        MutableFst, ProbabilityWeight, StateIterator,
     },
-    utils::acceptor,
     Label, Semiring, SymbolTable,
 };
 
