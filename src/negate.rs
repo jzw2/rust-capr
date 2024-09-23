@@ -1,8 +1,8 @@
 use crate::trans::{FstTraits, SoundFst};
 use rustfst::{
     prelude::{
-        determinize::determinize, rm_epsilon::rm_epsilon, CoreFst,
-        MutableFst, ProbabilityWeight, StateIterator,
+        determinize::determinize, rm_epsilon::rm_epsilon, CoreFst, MutableFst, ProbabilityWeight,
+        StateIterator,
     },
     Label, Semiring, SymbolTable,
 };
@@ -63,7 +63,11 @@ impl SoundFstNegateTrait for SoundFst {}
 mod tests {
     use rustfst::{
         fst,
-        prelude::{determinize::determinize, rm_epsilon::rm_epsilon},
+        prelude::{
+            compose::compose, determinize::determinize, rm_epsilon::rm_epsilon, Fst,
+            SerializableFst,
+        },
+        utils::acceptor,
         Tr,
     };
 

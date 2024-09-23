@@ -4,9 +4,7 @@ use rustfst::algorithms::compose::compose;
 use rustfst::fst;
 use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::union::union;
-use rustfst::prelude::{
-    AllocableFst, ExpandedFst,
-};
+use rustfst::prelude::{AllocableFst, ExpandedFst};
 use rustfst::{
     algorithms::{concat::concat, project},
     fst_impls::VectorFst,
