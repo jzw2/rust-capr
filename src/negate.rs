@@ -1,61 +1,64 @@
-use crate::trans::SoundFst;
+use crate::trans::{FstTraits, SoundFst, SoundFstTrait};
 use rustfst::{
     prelude::{
         compose::compose, determinize::determinize, rm_epsilon::rm_epsilon, CoreFst, Fst,
-        MutableFst, ProbabilityWeight, SerializableFst, StateIterator,
+        MutableFst, ProbabilityWeight, SerializableFst, StateIterator, VectorFst,
     },
     utils::acceptor,
     Label, Semiring, SymbolTable,
 };
 
-pub fn negate_with_symbol_table(fst: &SoundFst, alphabet: &SymbolTable) -> SoundFst {
-    let label_vec: Vec<_> = alphabet.labels().collect();
-    negate(fst, &label_vec)
-}
-pub fn negate(fst: &SoundFst, alphabet: &[Label]) -> SoundFst {
-    // assumet that the fst is deterministic, and also acceptor or whatever that is aka is a regex
+pub trait SoundFstNegateTrait: FstTraits + for<'a> StateIterator<'a> {
+    fn negate_with_symbol_table(&self, alphabet: &SymbolTable) -> Self {
+        self.negate(&alphabet.labels().collect::<Vec<_>>())
+    }
 
-    // also destroys weights
-    let mut ret = fst.clone();
-    rm_epsilon(&mut ret).unwrap();
-    let mut ret: SoundFst = determinize(&ret).unwrap();
+    fn negate(&self, alphabet: &[Label]) -> Self {
+        // assumet that the fst is deterministic, and also acceptor or whatever that is aka is a regex
 
-    let accept = ret.add_state();
+        // also destroys weights
+        let mut ret = self.clone();
+        rm_epsilon(&mut ret).unwrap();
+        let mut ret: Self = determinize(&ret).unwrap();
 
-    let fst = ret.clone();
+        let accept = ret.add_state();
 
-    for state in ret.states_iter() {
-        dbg!(state);
-        if fst.is_final(state).unwrap() {
-            let _ = ret.set_final(state, ProbabilityWeight::zero());
-        } else {
-            let _ = ret.set_final(state, ProbabilityWeight::one());
+        let fst = ret.clone();
+        for state in ret.clone().states_iter() {
+            dbg!(state);
+            if fst.is_final(state).unwrap() {
+                let _ = ret.set_final(state, ProbabilityWeight::zero());
+            } else {
+                let _ = ret.set_final(state, ProbabilityWeight::one());
+            }
+            alphabet
+                .iter()
+                .filter(|label| {
+                    fst.get_trs(state)
+                        .unwrap()
+                        .iter()
+                        .all(|tr| tr.ilabel != **label)
+                })
+                .for_each(|label| {
+                    dbg!(label);
+                    ret.emplace_tr(state, *label, *label, ProbabilityWeight::one(), accept)
+                        .expect("unable to add label");
+                    dbg!(ret.get_trs(state).unwrap().len());
+                });
+
+            dbg!(state);
         }
-        alphabet
-            .iter()
-            .filter(|label| {
-                fst.get_trs(state)
-                    .unwrap()
-                    .iter()
-                    .all(|tr| tr.ilabel != **label)
-            })
-            .for_each(|label| {
-                dbg!(label);
-                ret.emplace_tr(state, *label, *label, ProbabilityWeight::one(), accept)
-                    .expect("unable to add label");
-                dbg!(ret.get_trs(state).unwrap().len());
-            });
+        ret.set_final(accept, ProbabilityWeight::one()).unwrap();
 
-        dbg!(state);
+        if ret.start().is_none() {
+            ret.set_start(accept).unwrap();
+        }
+
+        ret
     }
-    ret.set_final(accept, ProbabilityWeight::one()).unwrap();
-
-    if ret.start().is_none() {
-        ret.set_start(accept).unwrap();
-    }
-
-    ret
 }
+
+impl SoundFstNegateTrait for SoundFst {}
 
 #[cfg(test)]
 mod tests {
@@ -65,25 +68,22 @@ mod tests {
         Tr,
     };
 
-    use crate::{
-        negate::{negate},
-        trans::SoundFst,
-    };
+    use crate::trans::SoundFst;
 
     use super::*;
-fn accepts(fst: &SoundFst, string: &[Label]) -> bool {
-    // might be easier to directly check if the path is included within the string
-    let accept: SoundFst = acceptor(string, ProbabilityWeight::one());
-    let composed: SoundFst = compose(accept, fst.clone()).expect("Error in composition");
-    composed.draw("accepts.out", &Default::default()).unwrap();
-    composed.paths_iter().next().is_some()
-}
+    fn accepts(fst: &SoundFst, string: &[Label]) -> bool {
+        // might be easier to directly check if the path is included within the string
+        let accept: SoundFst = acceptor(string, ProbabilityWeight::one());
+        let composed: SoundFst = compose(accept, fst.clone()).expect("Error in composition");
+        composed.draw("accepts.out", &Default::default()).unwrap();
+        composed.paths_iter().next().is_some()
+    }
 
     #[test]
     fn negate_test1() {
-        let fst = fst![1, 2, 3];
+        let fst: SoundFst = fst![1, 2, 3];
 
-        let negate = negate(&fst, &[1, 2, 3]);
+        let negate = fst.negate(&[1, 2, 3]);
 
         let str = vec![1, 2, 3];
         assert!(accepts(&fst, &str));
@@ -97,10 +97,10 @@ fn accepts(fst: &SoundFst, string: &[Label]) -> bool {
         let alpha = vec![1, 2, 3, 4, 5, 6];
         rustfst::algorithms::union::union(&mut fst1, &mut fst2).unwrap();
 
-        let mut det_union_fst = determinize(&fst1).unwrap();
+        let mut det_union_fst: SoundFst = determinize(&fst1).unwrap();
         rm_epsilon(&mut det_union_fst).unwrap();
 
-        let negate_fst = negate(&det_union_fst, &alpha);
+        let negate_fst = SoundFst::negate(&det_union_fst, &alpha);
         //:dbg!(negate_fst.get_trs(8).unwrap().len());
         //negate_fst.draw("image.txt", &DrawingConfig::default());
 
@@ -125,10 +125,10 @@ fn accepts(fst: &SoundFst, string: &[Label]) -> bool {
         let fst: SoundFst = fst![1, 2, 3];
         let alpha = vec![1, 2, 3, 4, 5, 6];
 
-        let mut det_fst = determinize(&fst).unwrap();
+        let mut det_fst: SoundFst = determinize(&fst).unwrap();
         rm_epsilon(&mut det_fst).unwrap();
 
-        let negate_fst = negate(&det_fst, &alpha);
+        let negate_fst = SoundFst::negate(&det_fst, &alpha);
 
         let input = vec![1, 2, 3];
         assert!(accepts(&det_fst, &input));
@@ -148,10 +148,10 @@ fn accepts(fst: &SoundFst, string: &[Label]) -> bool {
 
         let alpha = vec![1];
 
-        let mut det_fst = determinize(&fst).unwrap();
+        let mut det_fst: SoundFst = determinize(&fst).unwrap();
         rm_epsilon(&mut det_fst).unwrap();
 
-        let negate_fst = negate(&det_fst, &alpha);
+        let negate_fst = det_fst.negate(&alpha);
 
         let empty_input: Vec<Label> = vec![];
         let non_empty_input = vec![1];
@@ -176,10 +176,10 @@ fn accepts(fst: &SoundFst, string: &[Label]) -> bool {
                 .unwrap();
         }
 
-        let mut det_fst = determinize(&fst).unwrap();
+        let mut det_fst: SoundFst = determinize(&fst).unwrap();
         rm_epsilon(&mut det_fst).unwrap();
 
-        let negate_fst = negate(&det_fst, &alpha);
+        let negate_fst = det_fst.negate(&alpha);
 
         let any_input = vec![1, 2, 3];
         let empty_input: Vec<Label> = vec![];
@@ -199,10 +199,10 @@ fn accepts(fst: &SoundFst, string: &[Label]) -> bool {
         // No final states are set
         let alpha = vec![1, 2, 3];
 
-        let mut det_fst = determinize(&fst).unwrap();
+        let mut det_fst: SoundFst = determinize(&fst).unwrap();
         rm_epsilon(&mut det_fst).unwrap();
 
-        let negate_fst = negate(&det_fst, &alpha);
+        let negate_fst = det_fst.negate(&alpha);
         dbg!(&negate_fst);
         dbg!(&det_fst);
         //negate_fst.draw("negate_test.txt", &DrawingConfig::default());
