@@ -71,7 +71,7 @@ pub trait SoundFstTrait: FstTraits + SoundFstNegateTrait {
         alphabet: &SymbolTable,
     ) -> Self {
         // copied from hfst, ideally I'll refactor it so that it actually makes sense
-        let transducer = self.clone();
+        let mut transducer = self.clone();
 
         transducer.insert_freely(left_context);
         transducer.insert_freely(right_context);
@@ -114,7 +114,7 @@ pub trait SoundFstTrait: FstTraits + SoundFstNegateTrait {
     ) -> Self {
         // ignore the opitmiaze because I don't know what it does
 
-        let transducer = self.clone();
+        let mut transducer = self.clone();
         transducer.insert_freely(right_marker);
         transducer.insert_freely(left_marker);
 
@@ -127,8 +127,10 @@ pub trait SoundFstTrait: FstTraits + SoundFstNegateTrait {
     }
 
     // allows s to be inputted anywhere inside the fst
-    fn insert_freely(&self, s: Label) {
-        todo!();
+    fn insert_freely(&mut self, s: Label) {
+        for state in self.clone().states_iter() {
+            self.emplace_tr(state, s, s, ProbabilityWeight::one(), state);
+        }
     }
 }
 
@@ -171,22 +173,6 @@ fn get_labels_from_str(s: &str, table: Arc<SymbolTable>) -> Option<Vec<Label>> {
     s.chars().map(|x| table.get_label(x.to_string())).collect()
 }
 
-//might be unneeded
-/* fn subtract(fst1: &SoundFst, fst2: &SoundFst) -> SoundFst {
-    // mostly translated from hfst's version
-    // in TroplicalWeightTransducer.cc
-    let mut new_fst1 = fst1.clone();
-    rm_epsilon(&mut new_fst1).unwrap();
-    let mut new_fst2 = fst2.clone();
-    rm_epsilon(&mut new_fst2).unwrap();
-
-    tr_sort(&mut new_fst1, OLabelCompare {}); // weird design syntax
-    tr_sort(&mut new_fst2, ILabelCompare {});
-
-    let fst2_det: SoundFst = determinize(&new_fst2).unwrap();
-
-    todo!()
-} */
 
 // given t that actually does the replacement, creates a transuducer that makes sure
 // all substrings are repalced
@@ -234,17 +220,6 @@ impl SoundLaw {
     }
 }
 
-pub fn replaee_in_context(
-    contex_left: &SoundFst,
-    context_right: &SoundFst,
-    t: SoundFst,
-    optional: bool,
-    alphabet: &SymbolTable,
-) {
-    // the big function in hfst
-    // currently not supporting the replace type paramter
-    todo!()
-}
 // old method to just transduce without paying attention to context, remove this later
 pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
     let mut fst = VectorFst::<ProbabilityWeight>::new();
