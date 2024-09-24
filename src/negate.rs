@@ -23,7 +23,7 @@ pub trait SoundFstNegateTrait: FstTraits + for<'a> StateIterator<'a> {
         let accept = ret.add_state();
 
         let fst = ret.clone();
-        for state in ret.clone().states_iter() {
+        for state in fst.states_iter() {
             dbg!(state);
             if fst.is_final(state).unwrap() {
                 let _ = ret.set_final(state, ProbabilityWeight::zero());

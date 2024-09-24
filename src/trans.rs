@@ -215,8 +215,7 @@ impl SoundLaw {
         left_context_fst.set_input_symbols(Arc::clone(&alphabet));
         left_context_fst.set_output_symbols(Arc::clone(&alphabet));
 
-        // transform.replace_context(left_context, right_context, &alphabet);
-        todo!()
+left_context_fst
     }
 }
 
