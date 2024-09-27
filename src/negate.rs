@@ -1,10 +1,9 @@
 use crate::trans::{FstTraits, SoundFst};
 use rustfst::{
     prelude::{
-        determinize::determinize, rm_epsilon::rm_epsilon, CoreFst, MutableFst, ProbabilityWeight,
+        determinize::{determinize, determinize_with_config, DeterminizeConfig, DeterminizeType}, rm_epsilon::rm_epsilon, CoreFst, MutableFst, ProbabilityWeight,
         StateIterator,
-    },
-    Label, Semiring, SymbolTable,
+    }, DrawingConfig, Label, Semiring, SymbolTable
 };
 
 pub trait SoundFstNegateTrait: FstTraits + for<'a> StateIterator<'a> {
@@ -15,11 +14,17 @@ pub trait SoundFstNegateTrait: FstTraits + for<'a> StateIterator<'a> {
     fn negate(&self, alphabet: &[Label]) -> Self {
         // assumet that the fst is deterministic, and also acceptor or whatever that is aka is a regex
 
+        dbg!(&self);
         // also destroys weights
+        self.draw("image.txt", &DrawingConfig::default()).unwrap();
+        println!("draing text");
         let mut ret = self.clone();
+        dbg!(&ret);
         rm_epsilon(&mut ret).unwrap();
-        let mut ret: Self = determinize(&ret).unwrap();
-
+        println!("removed espslon");
+        self.draw("image_rm.txt", &DrawingConfig::default()).unwrap();
+        let mut ret: Self = determinize_with_config(&ret, DeterminizeConfig { det_type: DeterminizeType::DeterminizeNonFunctional, ..Default::default()} ).unwrap();
+        println!("determinized");
         let accept = ret.add_state();
 
         let fst = ret.clone();
@@ -219,4 +224,52 @@ mod tests {
         assert!(accepts(&negate_fst, &any_input));
         assert!(accepts(&negate_fst, &empty_input));
     }
+
+    #[test]
+    fn star_then_star() {
+        // FST that accepts no strings
+        let mut fst: SoundFst = fst![1];
+        let alpha = vec![1];
+        fst.emplace_tr(0, 1, 1, ProbabilityWeight::one(), 0).unwrap();
+        fst.emplace_tr(1, 1, 1, ProbabilityWeight::one(), 1).unwrap();
+
+
+        let negate_fst = fst.negate(&alpha);
+        dbg!(&negate_fst);
+        negate_fst.draw("negate_test.txt", &DrawingConfig::default()).unwrap();
+
+        let just1 = vec![1];
+        assert!(accepts(&fst, &just1));
+        assert!(!accepts(&negate_fst, &just1));
+        let nothing: Vec<u32> = vec![];
+        assert!(!accepts(&fst, &nothing));
+        assert!(accepts(&negate_fst, &nothing));
+    }
+
+    #[test]
+    fn star_then_star_2_alphabet() {
+        // FST that accepts no strings
+        let mut fst: SoundFst = fst![1];
+        let alpha = vec![1,2];
+        fst.emplace_tr(0, 1, 1, ProbabilityWeight::one(), 0).unwrap();
+        fst.emplace_tr(1, 1, 1, ProbabilityWeight::one(), 1).unwrap();
+
+
+        let negate_fst = fst.negate(&alpha);
+        dbg!(&negate_fst);
+        negate_fst.draw("negate_test.txt", &DrawingConfig::default()).unwrap();
+
+        let just1 = vec![1];
+        assert!(accepts(&fst, &just1));
+        assert!(!accepts(&negate_fst, &just1));
+        let nothing: Vec<u32> = vec![];
+        assert!(!accepts(&fst, &nothing));
+        assert!(accepts(&negate_fst, &nothing));
+        let just2: Vec<u32> = vec![2];
+        assert!(!accepts(&fst, &just2));
+        assert!(accepts(&negate_fst, &just2));
+    }
+
+
+
 }
