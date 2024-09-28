@@ -4,7 +4,9 @@ use rustfst::algorithms::compose::compose;
 use rustfst::fst;
 use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::union::union;
-use rustfst::prelude::{AllocableFst, BooleanWeight, ExpandedFst, LogWeight, SerializableFst, TropicalWeight};
+use rustfst::prelude::{
+    AllocableFst, BooleanWeight, ExpandedFst, LogWeight, SerializableFst, TropicalWeight,
+};
 use rustfst::{
     algorithms::{concat::concat, project},
     fst_impls::VectorFst,
@@ -50,7 +52,7 @@ pub trait SoundFstTrait: FstTraits + SoundFstNegateTrait {
 
         let mut tc = star.clone();
 
-        concat(&mut tc, self).unwrap();
+        concat(&mut tc, &projection).unwrap();
         concat(&mut tc, &star).unwrap();
 
         let tc_neg: Self = tc.negate(&alphabet.labels().collect::<Vec<_>>());
@@ -177,7 +179,6 @@ fn get_labels_from_str(s: &str, table: Arc<SymbolTable>) -> Option<Vec<Label>> {
     s.chars().map(|x| table.get_label(x.to_string())).collect()
 }
 
-
 // given t that actually does the replacement, creates a transuducer that makes sure
 // all substrings are repalced
 
@@ -219,7 +220,7 @@ impl SoundLaw {
         left_context_fst.set_input_symbols(Arc::clone(&alphabet));
         left_context_fst.set_output_symbols(Arc::clone(&alphabet));
 
-left_context_fst
+        left_context_fst
     }
 }
 
@@ -350,14 +351,13 @@ mod tests {
     fn simple_replace() {
         let mapping: SoundFst = fst![1 => 2];
 
+        let input1: SoundFst = fst![1, 2, 3];
 
-        let input1: SoundFst = fst![1,2,3]; 
-
-        let symbol_table = symt![1,2,3,4];
+        let symbol_table = symt![1, 2, 3, 4];
 
         let replaced = mapping.replace(false, &symbol_table);
 
-        let expected: SoundFst = fst![2,2,3];
+        let expected: SoundFst = fst![2, 2, 3];
 
         let actual = compose(input1, replaced).unwrap();
 

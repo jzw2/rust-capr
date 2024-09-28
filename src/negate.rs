@@ -1,9 +1,11 @@
 use crate::trans::{FstTraits, SoundFst, SoundWeight};
 use rustfst::{
     prelude::{
-        determinize::{determinize, determinize_with_config, DeterminizeConfig, DeterminizeType}, rm_epsilon::rm_epsilon, CoreFst, MutableFst, ProbabilityWeight,
-        StateIterator,
-    }, DrawingConfig, Label, Semiring, SymbolTable
+        determinize::{determinize, determinize_with_config, DeterminizeConfig, DeterminizeType},
+        rm_epsilon::rm_epsilon,
+        CoreFst, MutableFst, ProbabilityWeight, StateIterator,
+    },
+    DrawingConfig, Label, Semiring, SymbolTable,
 };
 
 pub trait SoundFstNegateTrait: FstTraits + for<'a> StateIterator<'a> {
@@ -16,14 +18,23 @@ pub trait SoundFstNegateTrait: FstTraits + for<'a> StateIterator<'a> {
 
         dbg!(&self);
         // also destroys weights
-        self.draw("images/image.txt", &DrawingConfig::default()).unwrap();
+        self.draw("images/image.txt", &DrawingConfig::default())
+            .unwrap();
         println!("draing text");
         let mut ret = self.clone();
         dbg!(&ret);
         rm_epsilon(&mut ret).unwrap();
         println!("removed espslon");
-        ret.draw("images/image_rm.txt", &DrawingConfig::default()).unwrap();
-        let mut ret: Self = determinize_with_config(&ret, DeterminizeConfig { det_type: DeterminizeType::DeterminizeNonFunctional, ..Default::default()} ).unwrap();
+        ret.draw("images/image_rm.txt", &DrawingConfig::default())
+            .unwrap();
+        let mut ret: Self = determinize_with_config(
+            &ret,
+            DeterminizeConfig {
+                det_type: DeterminizeType::DeterminizeNonFunctional,
+                ..Default::default()
+            },
+        )
+        .unwrap();
         println!("determinized");
         let accept = ret.add_state();
 
@@ -69,9 +80,10 @@ mod tests {
     use rustfst::{
         fst,
         prelude::{
-            compose::compose, concat::concat, determinize::determinize, rm_epsilon::rm_epsilon, Fst, SerializableFst
+            compose::compose, concat::concat, determinize::determinize, rm_epsilon::rm_epsilon,
+            Fst, SerializableFst,
         },
-        utils::{acceptor, epsilon_machine},
+        utils::{acceptor, epsilon_machine, transducer},
         Tr,
     };
 
@@ -82,7 +94,9 @@ mod tests {
         // might be easier to directly check if the path is included within the string
         let accept: SoundFst = acceptor(string, SoundWeight::one());
         let composed: SoundFst = compose(accept, fst.clone()).expect("Error in composition");
-        composed.draw("images/accepts.out", &Default::default()).unwrap();
+        composed
+            .draw("images/accepts.out", &Default::default())
+            .unwrap();
         composed.paths_iter().next().is_some()
     }
 
@@ -232,10 +246,11 @@ mod tests {
         fst.emplace_tr(0, 1, 1, SoundWeight::one(), 0).unwrap();
         fst.emplace_tr(1, 1, 1, SoundWeight::one(), 1).unwrap();
 
-
         let negate_fst = fst.negate(&alpha);
         dbg!(&negate_fst);
-        negate_fst.draw("images/negate_test.txt", &DrawingConfig::default()).unwrap();
+        negate_fst
+            .draw("images/negate_test.txt", &DrawingConfig::default())
+            .unwrap();
 
         let just1 = vec![1];
         assert!(accepts(&fst, &just1));
@@ -249,14 +264,15 @@ mod tests {
     fn star_then_star_2_alphabet() {
         // FST that accepts no strings
         let mut fst: SoundFst = fst![1];
-        let alpha = vec![1,2];
+        let alpha = vec![1, 2];
         fst.emplace_tr(0, 1, 1, SoundWeight::one(), 0).unwrap();
         fst.emplace_tr(1, 1, 1, SoundWeight::one(), 1).unwrap();
 
-
         let negate_fst = fst.negate(&alpha);
         dbg!(&negate_fst);
-        negate_fst.draw("images/negate_test.txt", &DrawingConfig::default()).unwrap();
+        negate_fst
+            .draw("images/negate_test.txt", &DrawingConfig::default())
+            .unwrap();
 
         let just1 = vec![1];
         assert!(accepts(&fst, &just1));
@@ -269,32 +285,33 @@ mod tests {
         assert!(accepts(&negate_fst, &just2));
     }
 
-
     #[test]
     fn star_then_star_4_alphabet() {
         // FST that accepts no strings
-        let mut fst: SoundFst = fst![1,2,3];
-        let alpha = vec![1,2,3,4];
+        let mut fst: SoundFst = fst![1, 2, 3];
+        let alpha = vec![1, 2, 3, 4];
         let mut star: SoundFst = epsilon_machine().unwrap();
         for letter in alpha.iter() {
             let letter = *letter;
-            star.emplace_tr(0, letter, letter, SoundWeight::one(), 0).unwrap();
+            star.emplace_tr(0, letter, letter, SoundWeight::one(), 0)
+                .unwrap();
         }
 
         let mut star2 = star.clone();
         concat(&mut star, &fst).unwrap();
         concat(&mut star, &star2).unwrap();
 
-
-
         let negate_fst = star.negate(&alpha);
         dbg!(&negate_fst);
-        negate_fst.draw("images/negate_test.txt", &DrawingConfig::default()).unwrap();
-        star.draw("images/original.txt", &DrawingConfig::default()).unwrap();
+        negate_fst
+            .draw("images/negate_test.txt", &DrawingConfig::default())
+            .unwrap();
+        star.draw("images/original.txt", &DrawingConfig::default())
+            .unwrap();
 
         let fst = star;
 
-        let just1 = vec![1,2,3];
+        let just1 = vec![1, 2, 3];
         assert!(accepts(&fst, &just1));
         assert!(!accepts(&negate_fst, &just1));
         let nothing: Vec<u32> = vec![];
@@ -304,7 +321,4 @@ mod tests {
         assert!(!accepts(&fst, &just2));
         assert!(accepts(&negate_fst, &just2));
     }
-
-
-
 }
