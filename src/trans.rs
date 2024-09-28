@@ -4,7 +4,7 @@ use rustfst::algorithms::compose::compose;
 use rustfst::fst;
 use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::union::union;
-use rustfst::prelude::{AllocableFst, ExpandedFst, SerializableFst};
+use rustfst::prelude::{AllocableFst, BooleanWeight, ExpandedFst, SerializableFst};
 use rustfst::{
     algorithms::{concat::concat, project},
     fst_impls::VectorFst,
@@ -17,23 +17,25 @@ use serde::{Deserialize, Serialize};
 
 use crate::negate::SoundFstNegateTrait;
 
-pub type SoundFst = VectorFst<ProbabilityWeight>;
+pub type SoundFst = VectorFst<SoundWeight>;
+
+pub type SoundWeight = ProbabilityWeight;
 
 impl FstTraits for SoundFst {}
 pub trait FstTraits:
     Clone
-    + Fst<ProbabilityWeight>
-    + MutableFst<ProbabilityWeight>
-    + AllocableFst<ProbabilityWeight>
-    + ExpandedFst<ProbabilityWeight>
-    + SerializableFst<ProbabilityWeight>
+    + Fst<SoundWeight>
+    + MutableFst<SoundWeight>
+    + AllocableFst<SoundWeight>
+    + ExpandedFst<SoundWeight>
+    + SerializableFst<SoundWeight>
 {
 }
 pub trait SoundFstTrait: FstTraits + SoundFstNegateTrait {
     fn any_star(st: &SymbolTable) -> Self {
         let mut fst: Self = epsilon_machine().unwrap();
         for label in st.labels() {
-            let _ = fst.add_tr(0, Tr::new(label, label, ProbabilityWeight::from(1.0 / st.len() as f32), 0));
+            let _ = fst.add_tr(0, Tr::new(label, label, SoundWeight::from(1.0 / st.len() as f32), 0));
         }
         fst
     }
@@ -130,7 +132,7 @@ pub trait SoundFstTrait: FstTraits + SoundFstNegateTrait {
     // allows s to be inputted anywhere inside the fst
     fn insert_freely(&mut self, s: Label) {
         for state in self.clone().states_iter() {
-            self.emplace_tr(state, s, s, ProbabilityWeight::one(), state);
+            self.emplace_tr(state, s, s, SoundWeight::one(), state);
         }
     }
 }
@@ -205,10 +207,10 @@ impl SoundLaw {
             left_context,
             right_context,
         } = self.to_labels(Arc::clone(&alphabet)).unwrap();
-        let mut left_context_fst: VectorFst<_> = acceptor(&left_context, ProbabilityWeight::one());
-        let right_context_fst: VectorFst<_> = acceptor(&right_context, ProbabilityWeight::one());
+        let mut left_context_fst: VectorFst<_> = acceptor(&left_context, SoundWeight::one());
+        let right_context_fst: VectorFst<_> = acceptor(&right_context, SoundWeight::one());
 
-        let transform: VectorFst<_> = transducer(&from, &to, ProbabilityWeight::one());
+        let transform: VectorFst<_> = transducer(&from, &to, SoundWeight::one());
 
         concat(&mut left_context_fst, &transform).expect("concat failed");
         concat(&mut left_context_fst, &right_context_fst).expect("concat failed");
@@ -222,7 +224,7 @@ left_context_fst
 
 // old method to just transduce without paying attention to context, remove this later
 pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
-    let mut fst = VectorFst::<ProbabilityWeight>::new();
+    let mut fst = VectorFst::<SoundWeight>::new();
     let mut symbol_table = SymbolTable::new();
     let state = fst.add_state();
     fst.set_start(state).expect("Failed to set start state");
@@ -252,7 +254,7 @@ pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
         .map(|x| symbol_table.get_label(x).unwrap())
         .collect();
 
-    let acceptor: VectorFst<_> = acceptor(&labels, ProbabilityWeight::one());
+    let acceptor: VectorFst<_> = acceptor(&labels, SoundWeight::one());
     dbg!(&labels);
     dbg!(&chars);
     dbg!(&fst);

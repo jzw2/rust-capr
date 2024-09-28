@@ -1,4 +1,4 @@
-use crate::trans::{FstTraits, SoundFst};
+use crate::trans::{FstTraits, SoundFst, SoundWeight};
 use rustfst::{
     prelude::{
         determinize::{determinize, determinize_with_config, DeterminizeConfig, DeterminizeType}, rm_epsilon::rm_epsilon, CoreFst, MutableFst, ProbabilityWeight,
@@ -31,9 +31,9 @@ pub trait SoundFstNegateTrait: FstTraits + for<'a> StateIterator<'a> {
         for state in fst.states_iter() {
             dbg!(state);
             if fst.is_final(state).unwrap() {
-                let _ = ret.set_final(state, ProbabilityWeight::zero());
+                let _ = ret.set_final(state, SoundWeight::zero());
             } else {
-                let _ = ret.set_final(state, ProbabilityWeight::one());
+                let _ = ret.set_final(state, SoundWeight::one());
             }
             alphabet
                 .iter()
@@ -45,14 +45,14 @@ pub trait SoundFstNegateTrait: FstTraits + for<'a> StateIterator<'a> {
                 })
                 .for_each(|label| {
                     dbg!(label);
-                    ret.emplace_tr(state, *label, *label, ProbabilityWeight::one(), accept)
+                    ret.emplace_tr(state, *label, *label, SoundWeight::one(), accept)
                         .expect("unable to add label");
                     dbg!(ret.get_trs(state).unwrap().len());
                 });
 
             dbg!(state);
         }
-        ret.set_final(accept, ProbabilityWeight::one()).unwrap();
+        ret.set_final(accept, SoundWeight::one()).unwrap();
 
         if ret.start().is_none() {
             ret.set_start(accept).unwrap();
@@ -76,12 +76,12 @@ mod tests {
         Tr,
     };
 
-    use crate::trans::SoundFst;
+    use crate::trans::{SoundFst, SoundWeight};
 
     use super::*;
     fn accepts(fst: &SoundFst, string: &[Label]) -> bool {
         // might be easier to directly check if the path is included within the string
-        let accept: SoundFst = acceptor(string, ProbabilityWeight::one());
+        let accept: SoundFst = acceptor(string, SoundWeight::one());
         let composed: SoundFst = compose(accept, fst.clone()).expect("Error in composition");
         composed.draw("images/accepts.out", &Default::default()).unwrap();
         composed.paths_iter().next().is_some()
@@ -152,7 +152,7 @@ mod tests {
         let mut fst: SoundFst = SoundFst::new();
         let s0 = fst.add_state();
         fst.set_start(s0).unwrap();
-        fst.set_final(s0, ProbabilityWeight::one()).unwrap();
+        fst.set_final(s0, SoundWeight::one()).unwrap();
 
         let alpha = vec![1];
 
@@ -176,11 +176,11 @@ mod tests {
         let mut fst: SoundFst = SoundFst::new();
         let s0 = fst.add_state();
         fst.set_start(s0).unwrap();
-        fst.set_final(s0, ProbabilityWeight::one()).unwrap();
+        fst.set_final(s0, SoundWeight::one()).unwrap();
         let alpha = vec![1, 2, 3];
 
         for &label in &alpha {
-            fst.add_tr(s0, Tr::new(label, label, ProbabilityWeight::one(), s0))
+            fst.add_tr(s0, Tr::new(label, label, SoundWeight::one(), s0))
                 .unwrap();
         }
 
@@ -230,8 +230,8 @@ mod tests {
         // FST that accepts no strings
         let mut fst: SoundFst = fst![1];
         let alpha = vec![1];
-        fst.emplace_tr(0, 1, 1, ProbabilityWeight::one(), 0).unwrap();
-        fst.emplace_tr(1, 1, 1, ProbabilityWeight::one(), 1).unwrap();
+        fst.emplace_tr(0, 1, 1, SoundWeight::one(), 0).unwrap();
+        fst.emplace_tr(1, 1, 1, SoundWeight::one(), 1).unwrap();
 
 
         let negate_fst = fst.negate(&alpha);
@@ -251,8 +251,8 @@ mod tests {
         // FST that accepts no strings
         let mut fst: SoundFst = fst![1];
         let alpha = vec![1,2];
-        fst.emplace_tr(0, 1, 1, ProbabilityWeight::one(), 0).unwrap();
-        fst.emplace_tr(1, 1, 1, ProbabilityWeight::one(), 1).unwrap();
+        fst.emplace_tr(0, 1, 1, SoundWeight::one(), 0).unwrap();
+        fst.emplace_tr(1, 1, 1, SoundWeight::one(), 1).unwrap();
 
 
         let negate_fst = fst.negate(&alpha);
