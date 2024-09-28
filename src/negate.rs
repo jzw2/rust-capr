@@ -22,7 +22,7 @@ pub trait SoundFstNegateTrait: FstTraits + for<'a> StateIterator<'a> {
         dbg!(&ret);
         rm_epsilon(&mut ret).unwrap();
         println!("removed espslon");
-        self.draw("images/image_rm.txt", &DrawingConfig::default()).unwrap();
+        ret.draw("images/image_rm.txt", &DrawingConfig::default()).unwrap();
         let mut ret: Self = determinize_with_config(&ret, DeterminizeConfig { det_type: DeterminizeType::DeterminizeNonFunctional, ..Default::default()} ).unwrap();
         println!("determinized");
         let accept = ret.add_state();
@@ -69,10 +69,9 @@ mod tests {
     use rustfst::{
         fst,
         prelude::{
-            compose::compose, determinize::determinize, rm_epsilon::rm_epsilon, Fst,
-            SerializableFst,
+            compose::compose, concat::concat, determinize::determinize, rm_epsilon::rm_epsilon, Fst, SerializableFst
         },
-        utils::acceptor,
+        utils::{acceptor, epsilon_machine},
         Tr,
     };
 
@@ -260,6 +259,42 @@ mod tests {
         negate_fst.draw("images/negate_test.txt", &DrawingConfig::default()).unwrap();
 
         let just1 = vec![1];
+        assert!(accepts(&fst, &just1));
+        assert!(!accepts(&negate_fst, &just1));
+        let nothing: Vec<u32> = vec![];
+        assert!(!accepts(&fst, &nothing));
+        assert!(accepts(&negate_fst, &nothing));
+        let just2: Vec<u32> = vec![2];
+        assert!(!accepts(&fst, &just2));
+        assert!(accepts(&negate_fst, &just2));
+    }
+
+
+    #[test]
+    fn star_then_star_4_alphabet() {
+        // FST that accepts no strings
+        let mut fst: SoundFst = fst![1,2,3];
+        let alpha = vec![1,2,3,4];
+        let mut star: SoundFst = epsilon_machine().unwrap();
+        for letter in alpha.iter() {
+            let letter = *letter;
+            star.emplace_tr(0, letter, letter, SoundWeight::one(), 0).unwrap();
+        }
+
+        let mut star2 = star.clone();
+        concat(&mut star, &fst).unwrap();
+        concat(&mut star, &star2).unwrap();
+
+
+
+        let negate_fst = star.negate(&alpha);
+        dbg!(&negate_fst);
+        negate_fst.draw("images/negate_test.txt", &DrawingConfig::default()).unwrap();
+        star.draw("images/original.txt", &DrawingConfig::default()).unwrap();
+
+        let fst = star;
+
+        let just1 = vec![1,2,3];
         assert!(accepts(&fst, &just1));
         assert!(!accepts(&negate_fst, &just1));
         let nothing: Vec<u32> = vec![];

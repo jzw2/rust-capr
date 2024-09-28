@@ -4,7 +4,7 @@ use rustfst::algorithms::compose::compose;
 use rustfst::fst;
 use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::union::union;
-use rustfst::prelude::{AllocableFst, BooleanWeight, ExpandedFst, SerializableFst};
+use rustfst::prelude::{AllocableFst, BooleanWeight, ExpandedFst, LogWeight, SerializableFst, TropicalWeight};
 use rustfst::{
     algorithms::{concat::concat, project},
     fst_impls::VectorFst,
@@ -19,7 +19,7 @@ use crate::negate::SoundFstNegateTrait;
 
 pub type SoundFst = VectorFst<SoundWeight>;
 
-pub type SoundWeight = ProbabilityWeight;
+pub type SoundWeight = TropicalWeight;
 
 impl FstTraits for SoundFst {}
 pub trait FstTraits:
@@ -35,7 +35,7 @@ pub trait SoundFstTrait: FstTraits + SoundFstNegateTrait {
     fn any_star(st: &SymbolTable) -> Self {
         let mut fst: Self = epsilon_machine().unwrap();
         for label in st.labels() {
-            let _ = fst.add_tr(0, Tr::new(label, label, SoundWeight::from(1.0 / st.len() as f32), 0));
+            let _ = fst.add_tr(0, Tr::new(label, label, SoundWeight::one(), 0));
         }
         fst
     }
@@ -109,6 +109,7 @@ pub trait SoundFstTrait: FstTraits + SoundFstNegateTrait {
         // they optimize it, don't know what the equivalent is
     }
 
+    // add left and right markers and makes sure left/right markers are ignored in oriignal fst
     fn replace_transducer(
         &self,
         left_marker: Label,
@@ -346,9 +347,31 @@ mod tests {
     }
 
     #[test]
+    fn simple_replace() {
+        let mapping: SoundFst = fst![1 => 2];
+
+
+        let input1: SoundFst = fst![1,2,3]; 
+
+        let symbol_table = symt![1,2,3,4];
+
+        let replaced = mapping.replace(false, &symbol_table);
+
+        let expected: SoundFst = fst![2,2,3];
+
+        let actual = compose(input1, replaced).unwrap();
+
+        assert_eq!(expected, actual);
+    }
+
+    #[ignore = "Ned to fix it to be replace in context"]
+    #[test]
     fn right_arrow_test1() {
         let symbol_tabl = symt!["a", "b", "c", "d"];
         let mapping: SoundFst = fst![3, 2 => 4];
+
+        let left: SoundFst = fst![3, 1];
+        let right: SoundFst = fst![3];
 
         let input1: SoundFst = fst![3, 1, 3, 1, 3, 1, 3]; // "cacacac"
 
