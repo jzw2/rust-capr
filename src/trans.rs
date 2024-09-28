@@ -4,7 +4,7 @@ use rustfst::algorithms::compose::compose;
 use rustfst::fst;
 use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::union::union;
-use rustfst::prelude::{AllocableFst, ExpandedFst};
+use rustfst::prelude::{AllocableFst, ExpandedFst, SerializableFst};
 use rustfst::{
     algorithms::{concat::concat, project},
     fst_impls::VectorFst,
@@ -26,13 +26,14 @@ pub trait FstTraits:
     + MutableFst<ProbabilityWeight>
     + AllocableFst<ProbabilityWeight>
     + ExpandedFst<ProbabilityWeight>
+    + SerializableFst<ProbabilityWeight>
 {
 }
 pub trait SoundFstTrait: FstTraits + SoundFstNegateTrait {
     fn any_star(st: &SymbolTable) -> Self {
         let mut fst: Self = epsilon_machine().unwrap();
         for label in st.labels() {
-            let _ = fst.add_tr(0, Tr::new(label, label, ProbabilityWeight::one(), 0));
+            let _ = fst.add_tr(0, Tr::new(label, label, ProbabilityWeight::from(1.0 / st.len() as f32), 0));
         }
         fst
     }
@@ -342,7 +343,6 @@ mod tests {
         assert_eq!(paths[0].ostring().unwrap(), "c b c");
     }
 
-    #[ignore]
     #[test]
     fn right_arrow_test1() {
         let symbol_tabl = symt!["a", "b", "c", "d"];
