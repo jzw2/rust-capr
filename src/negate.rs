@@ -16,13 +16,13 @@ pub trait SoundFstNegateTrait: FstTraits + for<'a> StateIterator<'a> {
 
         dbg!(&self);
         // also destroys weights
-        self.draw("image.txt", &DrawingConfig::default()).unwrap();
+        self.draw("images/image.txt", &DrawingConfig::default()).unwrap();
         println!("draing text");
         let mut ret = self.clone();
         dbg!(&ret);
         rm_epsilon(&mut ret).unwrap();
         println!("removed espslon");
-        self.draw("image_rm.txt", &DrawingConfig::default()).unwrap();
+        self.draw("images/image_rm.txt", &DrawingConfig::default()).unwrap();
         let mut ret: Self = determinize_with_config(&ret, DeterminizeConfig { det_type: DeterminizeType::DeterminizeNonFunctional, ..Default::default()} ).unwrap();
         println!("determinized");
         let accept = ret.add_state();
@@ -83,7 +83,7 @@ mod tests {
         // might be easier to directly check if the path is included within the string
         let accept: SoundFst = acceptor(string, ProbabilityWeight::one());
         let composed: SoundFst = compose(accept, fst.clone()).expect("Error in composition");
-        composed.draw("accepts.out", &Default::default()).unwrap();
+        composed.draw("images/accepts.out", &Default::default()).unwrap();
         composed.paths_iter().next().is_some()
     }
 
@@ -236,7 +236,7 @@ mod tests {
 
         let negate_fst = fst.negate(&alpha);
         dbg!(&negate_fst);
-        negate_fst.draw("negate_test.txt", &DrawingConfig::default()).unwrap();
+        negate_fst.draw("images/negate_test.txt", &DrawingConfig::default()).unwrap();
 
         let just1 = vec![1];
         assert!(accepts(&fst, &just1));
@@ -257,7 +257,7 @@ mod tests {
 
         let negate_fst = fst.negate(&alpha);
         dbg!(&negate_fst);
-        negate_fst.draw("negate_test.txt", &DrawingConfig::default()).unwrap();
+        negate_fst.draw("images/negate_test.txt", &DrawingConfig::default()).unwrap();
 
         let just1 = vec![1];
         assert!(accepts(&fst, &just1));
