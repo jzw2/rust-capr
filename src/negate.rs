@@ -29,10 +29,7 @@ pub trait SoundFstNegateTrait: FstTraits + for<'a> StateIterator<'a> {
             .unwrap();
         let mut ret: Self = determinize_with_config(
             &ret,
-            DeterminizeConfig {
-                det_type: DeterminizeType::DeterminizeNonFunctional,
-                ..Default::default()
-            },
+            DeterminizeConfig::default(),
         )
         .unwrap();
         println!("determinized");

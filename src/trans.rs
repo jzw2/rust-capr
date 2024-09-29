@@ -276,7 +276,7 @@ pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
 mod tests {
     use std::vec;
 
-    use rustfst::{fst, symt};
+    use rustfst::{fst, prelude::{determinize, minimize, minimize_with_config, rm_epsilon::{self, rm_epsilon}, MinimizeConfig}, symt, DrawingConfig};
 
     use super::*;
 
@@ -357,9 +357,19 @@ mod tests {
 
         let replaced = mapping.replace(false, &symbol_table);
 
-        let expected: SoundFst = fst![2, 2, 3];
+        let mut expected: SoundFst = fst![2, 2, 3];
 
-        let actual = compose(input1, replaced).unwrap();
+        let mut actual: SoundFst = compose(input1, replaced).unwrap();
+
+        // minimize_with_config(&mut expected, MinimizeConfig { allow_nondet: true, ..MinimizeConfig::default()}).unwrap();
+        // minimize_with_config(&mut actual, MinimizeConfig { allow_nondet: true, ..MinimizeConfig::default()}).unwrap();
+
+        rm_epsilon(&mut actual).unwrap();
+        //minimize(&mut actual).unwrap();
+        rm_epsilon(&mut actual).unwrap();
+
+        expected.draw("images/simple_replace_expected.dot", &DrawingConfig::default()).unwrap();
+        actual.draw("images/simple_actual_expected.dot", &DrawingConfig::default()).unwrap();
 
         assert_eq!(expected, actual);
     }
