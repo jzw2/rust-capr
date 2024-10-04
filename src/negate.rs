@@ -10,7 +10,6 @@ use rustfst::{
 
 pub trait SoundFstNegateTrait: FstTraits + for<'a> StateIterator<'a> {
     fn negate_with_symbol_table(&self, alphabet: &SymbolTable) -> Self {
-
         self.negate(&alphabet.labels().collect::<Vec<_>>())
     }
 
@@ -28,11 +27,7 @@ pub trait SoundFstNegateTrait: FstTraits + for<'a> StateIterator<'a> {
         println!("removed espslon");
         ret.draw("images/image_rm.txt", &DrawingConfig::default())
             .unwrap();
-        let mut ret: Self = determinize_with_config(
-            &ret,
-            DeterminizeConfig::default(),
-        )
-        .unwrap();
+        let mut ret: Self = determinize_with_config(&ret, DeterminizeConfig::default()).unwrap();
         println!("determinized");
         let accept = ret.add_state();
 
@@ -47,10 +42,12 @@ pub trait SoundFstNegateTrait: FstTraits + for<'a> StateIterator<'a> {
             alphabet
                 .iter()
                 .filter(|label| {
-                    **label != 0 && fst.get_trs(state)
-                        .unwrap()
-                        .iter()
-                        .all(|tr| tr.ilabel != **label)
+                    **label != 0
+                        && fst
+                            .get_trs(state)
+                            .unwrap()
+                            .iter()
+                            .all(|tr| tr.ilabel != **label)
                 })
                 .for_each(|label| {
                     dbg!(label);
@@ -163,7 +160,6 @@ mod tests {
         let fst: SoundFst = fst![1, 2, 3];
         let alpha = vec![1, 2, 3, 4, 5, 6];
         let alpha2 = vec![0, 1, 2, 3, 4, 5, 6];
-
 
         let negate_fst1 = SoundFst::negate(&fst, &alpha);
         let negate_fst2 = SoundFst::negate(&fst, &alpha2);

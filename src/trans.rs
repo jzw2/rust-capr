@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use rustfst::algorithms::compose::compose;
-use rustfst::{fst, DrawingConfig};
 use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::union::union;
 use rustfst::prelude::{
@@ -15,6 +14,7 @@ use rustfst::{
     utils::{acceptor, epsilon_machine, transducer},
     Label, Semiring, SymbolTable, Tr,
 };
+use rustfst::{fst, DrawingConfig};
 use serde::{Deserialize, Serialize};
 
 use crate::negate::SoundFstNegateTrait;
@@ -55,15 +55,14 @@ pub trait SoundFstTrait: FstTraits + SoundFstNegateTrait {
         concat(&mut tc, &projection).unwrap();
         concat(&mut tc, &star).unwrap();
 
-
         tc.negate(&alphabet.labels().collect::<Vec<_>>())
     }
 
-
     fn replace(&self, optional: bool, alphabet: &SymbolTable) -> Self {
-
         let tc_neg: Self = self.no_upper(alphabet);
-        tc_neg.draw("images/tc_neg.dot", &DrawingConfig::default()).unwrap();
+        tc_neg
+            .draw("images/tc_neg.dot", &DrawingConfig::default())
+            .unwrap();
         let star = Self::any_star(alphabet);
 
         let mut retval: Self = tc_neg.clone();
@@ -285,7 +284,16 @@ pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
 mod tests {
     use std::vec;
 
-    use rustfst::{algorithms::determinize::determinize, fst, prelude::{determinize, minimize, minimize_with_config, rm_epsilon::{self, rm_epsilon}, MinimizeConfig}, symt, DrawingConfig};
+    use rustfst::{
+        algorithms::determinize::determinize,
+        fst,
+        prelude::{
+            determinize, minimize, minimize_with_config,
+            rm_epsilon::{self, rm_epsilon},
+            MinimizeConfig,
+        },
+        symt, DrawingConfig,
+    };
 
     use super::*;
 
@@ -360,7 +368,7 @@ mod tests {
     fn simple_replace_multiple() {
         let mapping: SoundFst = fst![1, 2 => 3,4];
 
-        let input1: SoundFst = fst![1,1,1,2,3,1,2];
+        let input1: SoundFst = fst![1, 1, 1, 2, 3, 1, 2];
 
         let symbol_table = symt![1, 2, 3, 4];
 
@@ -371,16 +379,28 @@ mod tests {
         let mut actual: SoundFst = compose(input1, replaced).unwrap();
 
         // minimize_with_config(&mut expected, MinimizeConfig { allow_nondet: true, ..MinimizeConfig::default()}).unwrap();
-         // minimize_with_config(&mut actual, MinimizeConfig { allow_nondet: false, ..MinimizeConfig::default()}).unwrap();
+        // minimize_with_config(&mut actual, MinimizeConfig { allow_nondet: false, ..MinimizeConfig::default()}).unwrap();
         let mut actual: SoundFst = determinize(&actual).unwrap();
-        actual.draw("images/simple_actual_no_rm.dot", &DrawingConfig::default()).unwrap();
+        actual
+            .draw("images/simple_actual_no_rm.dot", &DrawingConfig::default())
+            .unwrap();
 
         rm_epsilon(&mut actual).unwrap();
         //minimize(&mut actual).unwrap();
         rm_epsilon(&mut actual).unwrap();
 
-        expected.draw("images/simple_replace_expected.dot", &DrawingConfig::default()).unwrap();
-        actual.draw("images/simple_actual_expected.dot", &DrawingConfig::default()).unwrap();
+        expected
+            .draw(
+                "images/simple_replace_expected.dot",
+                &DrawingConfig::default(),
+            )
+            .unwrap();
+        actual
+            .draw(
+                "images/simple_actual_expected.dot",
+                &DrawingConfig::default(),
+            )
+            .unwrap();
 
         assert_eq!(expected, actual);
     }
