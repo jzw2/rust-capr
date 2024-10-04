@@ -10,6 +10,7 @@ use rustfst::{
 
 pub trait SoundFstNegateTrait: FstTraits + for<'a> StateIterator<'a> {
     fn negate_with_symbol_table(&self, alphabet: &SymbolTable) -> Self {
+
         self.negate(&alphabet.labels().collect::<Vec<_>>())
     }
 
@@ -46,7 +47,7 @@ pub trait SoundFstNegateTrait: FstTraits + for<'a> StateIterator<'a> {
             alphabet
                 .iter()
                 .filter(|label| {
-                    fst.get_trs(state)
+                    **label != 0 && fst.get_trs(state)
                         .unwrap()
                         .iter()
                         .all(|tr| tr.ilabel != **label)
