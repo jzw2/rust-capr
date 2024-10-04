@@ -285,7 +285,7 @@ pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
 mod tests {
     use std::vec;
 
-    use rustfst::{fst, prelude::{determinize, minimize, minimize_with_config, rm_epsilon::{self, rm_epsilon}, MinimizeConfig}, symt, DrawingConfig};
+    use rustfst::{algorithms::determinize::determinize, fst, prelude::{determinize, minimize, minimize_with_config, rm_epsilon::{self, rm_epsilon}, MinimizeConfig}, symt, DrawingConfig};
 
     use super::*;
 
@@ -357,21 +357,22 @@ mod tests {
     }
 
     #[test]
-    fn simple_replace() {
-        let mapping: SoundFst = fst![1 => 2];
+    fn simple_replace_multiple() {
+        let mapping: SoundFst = fst![1, 2 => 3,4];
 
-        let input1: SoundFst = fst![1, 2, 3];
+        let input1: SoundFst = fst![1,1,1,2,3,1,2];
 
         let symbol_table = symt![1, 2, 3, 4];
 
         let replaced = mapping.replace(false, &symbol_table);
 
-        let mut expected: SoundFst = fst![1,2,3 => 2,2,3 ];
+        let mut expected: SoundFst = fst![1,1,1,2,3,1,2 => 1,1,3,4,3,3,4 ];
 
         let mut actual: SoundFst = compose(input1, replaced).unwrap();
 
         // minimize_with_config(&mut expected, MinimizeConfig { allow_nondet: true, ..MinimizeConfig::default()}).unwrap();
-        // minimize_with_config(&mut actual, MinimizeConfig { allow_nondet: true, ..MinimizeConfig::default()}).unwrap();
+         // minimize_with_config(&mut actual, MinimizeConfig { allow_nondet: false, ..MinimizeConfig::default()}).unwrap();
+        let mut actual: SoundFst = determinize(&actual).unwrap();
         actual.draw("images/simple_actual_no_rm.dot", &DrawingConfig::default()).unwrap();
 
         rm_epsilon(&mut actual).unwrap();
