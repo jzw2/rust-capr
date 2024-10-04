@@ -366,7 +366,7 @@ mod tests {
 
         let replaced = mapping.replace(false, &symbol_table);
 
-        let mut expected: SoundFst = fst![2, 2, 3];
+        let mut expected: SoundFst = fst![1,2,3 => 2,2,3 ];
 
         let mut actual: SoundFst = compose(input1, replaced).unwrap();
 
