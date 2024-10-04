@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use rustfst::algorithms::compose::compose;
+use rustfst::algorithms::ProjectType;
 use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::union::union;
 use rustfst::prelude::{
@@ -36,7 +37,10 @@ pub trait SoundFstTrait: FstTraits + SoundFstNegateTrait {
     fn any_star(st: &SymbolTable) -> Self {
         let mut fst: Self = epsilon_machine().unwrap();
         for label in st.labels() {
-            let _ = fst.add_tr(0, Tr::new(label, label, SoundWeight::one(), 0));
+            if label != 0 {
+
+                let _ = fst.add_tr(0, Tr::new(label, label, SoundWeight::one(), 0));
+            }
         }
         fst
     }
@@ -117,6 +121,58 @@ pub trait SoundFstTrait: FstTraits + SoundFstNegateTrait {
 
         // they optimize it, don't know what the equivalent is
     }
+
+    fn replace_in_context(&self, left_context: SoundFst, right_context: SoundFst, optional: bool, alphabet: &SymbolTable) -> SoundFst {
+        let mut t1_proj = left_context.clone();
+        project(&mut t1_proj, ProjectType::ProjectInput);
+        let mut t2_proj = right_context.clone();
+        project(&mut t2_proj, ProjectType::ProjectInput);
+
+
+        // they create some sort of left marker, but I think this is unecessary
+
+        let mut alphabet_with_marker = alphabet.clone();
+        let left_marker = alphabet_with_marker.add_symbol("left_marker");
+        let right_marker = alphabet_with_marker.add_symbol("right_marker");
+
+        let mut ibt: SoundFst = todo!(); // inserting the boundry markers
+        let mut rbt: SoundFst = todo!(); // remove boundry markers
+
+        let pi_star = Self::any_star(&alphabet_with_marker);
+
+
+        let cbt = todo!(); // constrain boudnry marker
+
+        let lct = left_context.replace_context(left_marker, right_marker, &alphabet_with_marker);
+
+        let right_rev: SoundFst = todo!();
+
+        let rct = right_rev.replace_context(right_marker, right_marker, &alphabet_with_marker);
+
+
+        let rt = self.replace_transducer(left_marker, right_marker, &alphabet_with_marker);
+
+
+        let mut result: SoundFst = compose(ibt, cbt).unwrap();
+        result = compose(result, rct).unwrap();
+        result = compose(result, lct).unwrap();
+        result = compose(result, rt).unwrap();
+        result = compose(result, rbt).unwrap();
+
+
+        if optional {
+            todo!()
+        }
+
+
+
+
+
+
+        result
+
+    }
+
 
     // add left and right markers and makes sure left/right markers are ignored in oriignal fst
     fn replace_transducer(
