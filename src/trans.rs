@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use rustfst::algorithms::compose::compose;
-use rustfst::fst;
+use rustfst::{fst, DrawingConfig};
 use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::union::union;
 use rustfst::prelude::{
@@ -42,7 +42,7 @@ pub trait SoundFstTrait: FstTraits + SoundFstNegateTrait {
         fst
     }
 
-    fn replace(&self, optional: bool, alphabet: &SymbolTable) -> Self {
+    fn no_upper(&self, alphabet: &SymbolTable) -> Self {
         let mut projection = self.clone();
         project(
             &mut projection,
@@ -55,7 +55,16 @@ pub trait SoundFstTrait: FstTraits + SoundFstNegateTrait {
         concat(&mut tc, &projection).unwrap();
         concat(&mut tc, &star).unwrap();
 
-        let tc_neg: Self = tc.negate(&alphabet.labels().collect::<Vec<_>>());
+
+        tc.negate(&alphabet.labels().collect::<Vec<_>>())
+    }
+
+
+    fn replace(&self, optional: bool, alphabet: &SymbolTable) -> Self {
+
+        let tc_neg: Self = self.no_upper(alphabet);
+        tc_neg.draw("images/tc_neg.dot", &DrawingConfig::default()).unwrap();
+        let star = Self::any_star(alphabet);
 
         let mut retval: Self = tc_neg.clone();
         concat(&mut retval, self).unwrap();
@@ -363,6 +372,7 @@ mod tests {
 
         // minimize_with_config(&mut expected, MinimizeConfig { allow_nondet: true, ..MinimizeConfig::default()}).unwrap();
         // minimize_with_config(&mut actual, MinimizeConfig { allow_nondet: true, ..MinimizeConfig::default()}).unwrap();
+        actual.draw("images/simple_actual_no_rm.dot", &DrawingConfig::default()).unwrap();
 
         rm_epsilon(&mut actual).unwrap();
         //minimize(&mut actual).unwrap();
