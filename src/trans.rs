@@ -142,7 +142,7 @@ pub trait SoundFstTrait: FstTraits + SoundFstNegateTrait {
     // allows s to be inputted anywhere inside the fst
     fn insert_freely(&mut self, s: Label) {
         for state in self.clone().states_iter() {
-            self.emplace_tr(state, s, s, SoundWeight::one(), state);
+            self.emplace_tr(state, s, s, SoundWeight::one(), state).unwrap();
         }
     }
 }

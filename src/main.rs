@@ -16,7 +16,7 @@ mod trans;
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct SaveData {
     columns: Vec<Vec<String>>,
-    transduceGoal: String,
+    transduce_goal: String,
 }
 
 #[derive(Debug)]
@@ -48,7 +48,7 @@ async fn save(data: web::Json<SaveData>, state: web::Data<AppState>) -> HttpResp
 
     println!("Received sound laws {:?}", save.clone());
 
-    let text = transduce_text(save.columns, save.transduceGoal);
+    let text = transduce_text(save.columns, save.transduce_goal);
 
     println!("Resulted in {}", text);
 
