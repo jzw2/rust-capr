@@ -158,6 +158,19 @@ mod tests {
         assert!(accepts(&negate_fst, &other_input));
     }
     #[test]
+    fn negate_test_ignore_0_label() {
+        // FST that accepts [1,2,3]
+        let fst: SoundFst = fst![1, 2, 3];
+        let alpha = vec![1, 2, 3, 4, 5, 6];
+        let alpha2 = vec![0, 1, 2, 3, 4, 5, 6];
+
+
+        let negate_fst1 = SoundFst::negate(&fst, &alpha);
+        let negate_fst2 = SoundFst::negate(&fst, &alpha2);
+
+        assert_eq!(negate_fst1, negate_fst2)
+    }
+    #[test]
     fn negate_test_empty_string() {
         // FST that accepts the empty string
         let mut fst: SoundFst = SoundFst::new();
