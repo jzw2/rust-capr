@@ -1,9 +1,9 @@
 use crate::trans::{FstTraits, SoundFst, SoundWeight};
 use rustfst::{
     prelude::{
-        determinize::{determinize, determinize_with_config, DeterminizeConfig, DeterminizeType},
+        determinize::{determinize_with_config, DeterminizeConfig},
         rm_epsilon::rm_epsilon,
-        CoreFst, MutableFst, ProbabilityWeight, StateIterator,
+        CoreFst, MutableFst, StateIterator,
     },
     DrawingConfig, Label, Semiring, SymbolTable,
 };
@@ -78,7 +78,7 @@ mod tests {
             compose::compose, concat::concat, determinize::determinize, rm_epsilon::rm_epsilon,
             Fst, SerializableFst,
         },
-        utils::{acceptor, epsilon_machine, transducer},
+        utils::{acceptor, epsilon_machine},
         Tr,
     };
 
@@ -295,7 +295,7 @@ mod tests {
     #[test]
     fn star_then_star_4_alphabet() {
         // FST that accepts no strings
-        let mut fst: SoundFst = fst![1, 2, 3];
+        let fst: SoundFst = fst![1, 2, 3];
         let alpha = vec![1, 2, 3, 4];
         let mut star: SoundFst = epsilon_machine().unwrap();
         for letter in alpha.iter() {
@@ -304,7 +304,7 @@ mod tests {
                 .unwrap();
         }
 
-        let mut star2 = star.clone();
+        let star2 = star.clone();
         concat(&mut star, &fst).unwrap();
         concat(&mut star, &star2).unwrap();
 

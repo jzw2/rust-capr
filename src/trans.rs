@@ -4,13 +4,12 @@ use rustfst::algorithms::compose::compose;
 use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::union::union;
 use rustfst::prelude::{
-    AllocableFst, BooleanWeight, ExpandedFst, LogWeight, SerializableFst, TropicalWeight,
+    AllocableFst, ExpandedFst, SerializableFst, TropicalWeight,
 };
 use rustfst::{
     algorithms::{concat::concat, project},
     fst_impls::VectorFst,
     fst_traits::{Fst, MutableFst},
-    semirings::ProbabilityWeight,
     utils::{acceptor, epsilon_machine, transducer},
     Label, Semiring, SymbolTable, Tr,
 };
@@ -287,11 +286,7 @@ mod tests {
     use rustfst::{
         algorithms::determinize::determinize,
         fst,
-        prelude::{
-            determinize, minimize, minimize_with_config,
-            rm_epsilon::{self, rm_epsilon},
-            MinimizeConfig,
-        },
+        prelude::rm_epsilon::{rm_epsilon},
         symt, DrawingConfig,
     };
 
@@ -374,9 +369,9 @@ mod tests {
 
         let replaced = mapping.replace(false, &symbol_table);
 
-        let mut expected: SoundFst = fst![1,1,1,2,3,1,2 => 1,1,3,4,3,3,4 ];
+        let expected: SoundFst = fst![1,1,1,2,3,1,2 => 1,1,3,4,3,3,4 ];
 
-        let mut actual: SoundFst = compose(input1, replaced).unwrap();
+        let actual: SoundFst = compose(input1, replaced).unwrap();
 
         // minimize_with_config(&mut expected, MinimizeConfig { allow_nondet: true, ..MinimizeConfig::default()}).unwrap();
         // minimize_with_config(&mut actual, MinimizeConfig { allow_nondet: false, ..MinimizeConfig::default()}).unwrap();
