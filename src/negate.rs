@@ -1,33 +1,32 @@
-use crate::trans::{FstTraits, SoundFst, SoundWeight};
+use crate::trans::{SoundFst, SoundWeight};
 use rustfst::{
-    prelude::{
+    fst_impls::VectorFst, fst_traits::SerializableFst, prelude::{
         determinize::{determinize_with_config, DeterminizeConfig},
         rm_epsilon::rm_epsilon,
         CoreFst, MutableFst, StateIterator,
-    },
-    DrawingConfig, Label, Semiring, SymbolTable,
+    }, semirings::TropicalWeight, DrawingConfig, Label, Semiring, SymbolTable
 };
 
-pub trait SoundFstNegateTrait: FstTraits + for<'a> StateIterator<'a> {
-    fn negate_with_symbol_table(&self, alphabet: &SymbolTable) -> Self {
+impl SoundFst {
+    pub fn negate_with_symbol_table(&self, alphabet: &SymbolTable) -> Self {
         self.negate(&alphabet.labels().collect::<Vec<_>>())
     }
 
-    fn negate(&self, alphabet: &[Label]) -> Self {
+    pub fn negate(&self, alphabet: &[Label]) -> Self {
         // assumet that the fst is deterministic, and also acceptor or whatever that is aka is a regex
 
         dbg!(&self);
         // also destroys weights
-        self.draw("images/image.txt", &DrawingConfig::default())
+        self.0.draw("images/image.txt", &DrawingConfig::default())
             .unwrap();
         println!("draing text");
-        let mut ret = self.clone();
+        let mut ret = self.0.clone();
         dbg!(&ret);
         rm_epsilon(&mut ret).unwrap();
         println!("removed espslon");
         ret.draw("images/image_rm.txt", &DrawingConfig::default())
             .unwrap();
-        let mut ret: Self = determinize_with_config(&ret, DeterminizeConfig::default()).unwrap();
+        let mut ret: VectorFst<SoundWeight> = determinize_with_config(&ret, DeterminizeConfig::default()).unwrap();
         println!("determinized");
         let accept = ret.add_state();
 
@@ -52,7 +51,7 @@ pub trait SoundFstNegateTrait: FstTraits + for<'a> StateIterator<'a> {
                 .for_each(|label| {
                     dbg!(label);
                     ret.emplace_tr(state, *label, *label, SoundWeight::one(), accept)
-                        .expect("unable to add label");
+                       .expect("unable to add label");
                     dbg!(ret.get_trs(state).unwrap().len());
                 });
 
@@ -64,22 +63,18 @@ pub trait SoundFstNegateTrait: FstTraits + for<'a> StateIterator<'a> {
             ret.set_start(accept).unwrap();
         }
 
-        ret
+        ret.into()
     }
 }
 
-impl SoundFstNegateTrait for SoundFst {}
 
 #[cfg(test)]
 mod tests {
     use rustfst::{
-        fst,
-        prelude::{
+        fst, fst_impls::VectorFst, prelude::{
             compose::compose, concat::concat, determinize::determinize, rm_epsilon::rm_epsilon,
             Fst, SerializableFst,
-        },
-        utils::{acceptor, epsilon_machine},
-        Tr,
+        }, utils::{acceptor, epsilon_machine}, Tr
     };
 
     use crate::trans::{SoundFst, SoundWeight};
@@ -87,8 +82,8 @@ mod tests {
     use super::*;
     fn accepts(fst: &SoundFst, string: &[Label]) -> bool {
         // might be easier to directly check if the path is included within the string
-        let accept: SoundFst = acceptor(string, SoundWeight::one());
-        let composed: SoundFst = compose(accept, fst.clone()).expect("Error in composition");
+        let accept: VectorFst<SoundWeight> = acceptor(string, SoundWeight::one());
+        let composed: VectorFst<SoundWeight> = compose(accept, fst.0.clone()).expect("Error in composition");
         composed
             .draw("images/accepts.out", &Default::default())
             .unwrap();
@@ -256,7 +251,7 @@ mod tests {
         let negate_fst = fst.negate(&alpha);
         dbg!(&negate_fst);
         negate_fst
-            .draw("images/negate_test.txt", &DrawingConfig::default())
+            .0.draw("images/negate_test.txt", &DrawingConfig::default())
             .unwrap();
 
         let just1 = vec![1];
@@ -278,7 +273,7 @@ mod tests {
         let negate_fst = fst.negate(&alpha);
         dbg!(&negate_fst);
         negate_fst
-            .draw("images/negate_test.txt", &DrawingConfig::default())
+            .0.draw("images/negate_test.txt", &DrawingConfig::default())
             .unwrap();
 
         let just1 = vec![1];
@@ -311,9 +306,9 @@ mod tests {
         let negate_fst = star.negate(&alpha);
         dbg!(&negate_fst);
         negate_fst
-            .draw("images/negate_test.txt", &DrawingConfig::default())
+            .0.draw("images/negate_test.txt", &DrawingConfig::default())
             .unwrap();
-        star.draw("images/original.txt", &DrawingConfig::default())
+        star.0.draw("images/original.txt", &DrawingConfig::default())
             .unwrap();
 
         let fst = star;

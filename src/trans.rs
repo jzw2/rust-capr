@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use rustfst::algorithms::compose::compose;
 use rustfst::algorithms::ProjectType;
+use rustfst::fst_traits::StateIterator;
 use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::union::union;
 use rustfst::prelude::{
@@ -17,67 +18,93 @@ use rustfst::{
 use rustfst::{fst, DrawingConfig};
 use serde::{Deserialize, Serialize};
 
-use crate::negate::SoundFstNegateTrait;
 
-pub type SoundFst = VectorFst<SoundWeight>;
 
+#[derive(Clone, Debug)]
+pub struct SoundFst(pub SoundVec);
+
+pub type SoundVec = VectorFst<SoundWeight>;
+
+impl From<VectorFst<SoundWeight>> for SoundFst {
+    fn from(value: VectorFst<SoundWeight>) -> Self  {
+        SoundFst(value)
+    }
+}
+
+impl From<SoundFst> for VectorFst<SoundWeight> {
+    fn from(value: SoundFst) -> Self  {
+        value.0
+    }
+}
 pub type SoundWeight = TropicalWeight;
 
-impl FstTraits for SoundFst {}
-pub trait FstTraits:
-    Clone
-    + Fst<SoundWeight>
-    + MutableFst<SoundWeight>
-    + AllocableFst<SoundWeight>
-    + ExpandedFst<SoundWeight>
-    + SerializableFst<SoundWeight>
-{
-}
-pub trait SoundFstTrait: FstTraits + SoundFstNegateTrait {
+impl SoundFst {
+
+    fn from_single_label(l: Label) -> Self {
+        let v: SoundVec = fst![l];
+        SoundFst(v)
+    }
+
+
+    fn input_project(&mut self) {
+        project(&mut self.0, ProjectType::ProjectInput)
+    }
+
     fn any_star(st: &SymbolTable) -> Self {
-        let mut fst: Self = epsilon_machine().unwrap();
+        let mut fst: SoundVec = epsilon_machine().unwrap();
         for label in st.labels() {
             if label != 0 {
 
                 let _ = fst.add_tr(0, Tr::new(label, label, SoundWeight::one(), 0));
             }
         }
-        fst
+        fst.into()
     }
 
+    fn compose(&mut self, other: &SoundFst) {
+        let composed: SoundVec = compose(self.0.clone(), other.0.clone()).unwrap();
+        self.0 = composed;
+
+    }
+
+    fn concatenate(&mut self, other: &SoundFst) {
+        concat(&mut self.0, &other.0).unwrap()
+    }
+
+
     fn no_upper(&self, alphabet: &SymbolTable) -> Self {
-        let mut projection = self.clone();
+        let mut projection = self.0.clone();
         project(
             &mut projection,
             rustfst::algorithms::ProjectType::ProjectInput,
         ); // should be output in the lower level projection
         let star = Self::any_star(alphabet);
 
-        let mut tc = star.clone();
+        let mut tc = star.clone().0;
 
         concat(&mut tc, &projection).unwrap();
-        concat(&mut tc, &star).unwrap();
+        concat(&mut tc, &star.0).unwrap();
 
-        tc.negate(&alphabet.labels().collect::<Vec<_>>())
+        SoundFst::from(tc).negate(&alphabet.labels().collect::<Vec<_>>()).into()
     }
 
     fn replace(&self, optional: bool, alphabet: &SymbolTable) -> Self {
         let tc_neg: Self = self.no_upper(alphabet);
         tc_neg
-            .draw("images/tc_neg.dot", &DrawingConfig::default())
+            .0.draw("images/tc_neg.dot", &DrawingConfig::default())
             .unwrap();
         let star = Self::any_star(alphabet);
 
-        let mut retval: Self = tc_neg.clone();
-        concat(&mut retval, self).unwrap();
+        let mut retval: SoundVec = tc_neg.clone().0;
+        concat(&mut retval, &self.0).unwrap();
         closure(&mut retval, ClosureType::ClosureStar);
-        concat(&mut retval, &tc_neg).unwrap();
+        concat(&mut retval, &tc_neg.0).unwrap();
 
         if optional {
-            union(&mut retval, &star).unwrap();
+            union(&mut retval, &star.0).unwrap();
         }
 
-        retval
+        retval.into()
     }
 
     fn replace_context(
@@ -93,30 +120,30 @@ pub trait SoundFstTrait: FstTraits + SoundFstNegateTrait {
         transducer.insert_freely(right_context);
 
         let pi_star = Self::any_star(alphabet);
-        let mut pi_star_free_mark = Self::any_star(alphabet);
-        concat(&mut pi_star_free_mark, &transducer).unwrap();
+        let mut pi_star_free_mark = Self::any_star(alphabet).0;
+        concat(&mut pi_star_free_mark, &transducer.0).unwrap();
 
-        let left_transducer: Self = fst![left_context];
+        let left_transducer: SoundVec = fst![left_context];
         let mut pi_star_copy = pi_star.clone();
-        concat(&mut pi_star_copy, &left_transducer).unwrap();
-        let pi_star_neg = pi_star_copy.negate_with_symbol_table(alphabet);
+        concat(&mut pi_star_copy.0, &left_transducer).unwrap();
+        let pi_star_neg = pi_star_copy.negate_with_symbol_table(alphabet).0;
 
-        let composed_transducer: Self = compose(pi_star_free_mark, pi_star_neg).unwrap();
-        let mut full_trans: Self = fst![right_context];
+        let composed_transducer: SoundVec = compose(pi_star_free_mark, pi_star_neg).unwrap();
+        let mut full_trans: SoundVec = fst![right_context];
         closure(&mut full_trans, ClosureType::ClosureStar);
         concat(&mut full_trans, &left_transducer).unwrap();
-        concat(&mut full_trans, &pi_star).unwrap();
+        concat(&mut full_trans, &pi_star.0).unwrap();
 
         // iff statement
-        let neg_full = full_trans.negate_with_symbol_table(alphabet);
+        let neg_full = SoundFst::from(full_trans.clone()).negate_with_symbol_table(alphabet);
         let mut composed_neg_full = composed_transducer.clone();
-        concat(&mut composed_neg_full, &neg_full).unwrap();
+        concat(&mut composed_neg_full, &neg_full.0).unwrap();
 
-        let mut neg_composed_full = composed_transducer.negate_with_symbol_table(alphabet);
-        concat(&mut neg_composed_full, &full_trans).unwrap();
+        let mut neg_composed_full = SoundFst::from(composed_transducer).negate_with_symbol_table(alphabet);
+        concat(&mut neg_composed_full.0, &full_trans).unwrap();
 
         let mut disjunction = neg_composed_full;
-        union(&mut disjunction, &composed_neg_full).unwrap();
+        union(&mut disjunction.0, &composed_neg_full).unwrap();
         disjunction.negate_with_symbol_table(alphabet)
 
         // they optimize it, don't know what the equivalent is
@@ -124,9 +151,9 @@ pub trait SoundFstTrait: FstTraits + SoundFstNegateTrait {
 
     fn replace_in_context(&self, left_context: SoundFst, right_context: SoundFst, optional: bool, alphabet: &SymbolTable) -> SoundFst {
         let mut t1_proj = left_context.clone();
-        project(&mut t1_proj, ProjectType::ProjectInput);
+        t1_proj.input_project();
         let mut t2_proj = right_context.clone();
-        project(&mut t2_proj, ProjectType::ProjectInput);
+        t2_proj.input_project();
 
 
         // they create some sort of left marker, but I think this is unecessary
@@ -153,18 +180,17 @@ pub trait SoundFstTrait: FstTraits + SoundFstNegateTrait {
         let rt = self.replace_transducer(left_marker, right_marker, &alphabet_with_marker);
 
 
-        let mut result: SoundFst = compose(ibt, cbt).unwrap();
-        result = compose(result, rct).unwrap();
-        result = compose(result, lct).unwrap();
-        result = compose(result, rt).unwrap();
-        result = compose(result, rbt).unwrap();
+        let mut result: SoundFst = ibt.clone();
+        result.compose(&cbt);
+        result. compose(&rct);
+        result. compose(&lct);
+        result. compose(&rt);
+        result. compose(&rbt);
 
 
         if optional {
             todo!()
         }
-
-
 
 
 
@@ -187,23 +213,22 @@ pub trait SoundFstTrait: FstTraits + SoundFstNegateTrait {
         transducer.insert_freely(right_marker);
         transducer.insert_freely(left_marker);
 
-        let mut marker_transducer: Self = fst![left_marker];
-        let right_fst: Self = fst![right_marker];
-        concat(&mut marker_transducer, &transducer).unwrap();
-        concat(&mut marker_transducer, &right_fst).unwrap();
+        let mut marker_transducer: SoundFst = SoundFst::from_single_label(left_marker);
+        let right_fst: Self = SoundFst::from_single_label(right_marker);
+        marker_transducer.concatenate(&transducer);
+        marker_transducer.concatenate(&right_fst);
 
         marker_transducer.replace(false, alphabet)
     }
 
     // allows s to be inputted anywhere inside the fst
     fn insert_freely(&mut self, s: Label) {
-        for state in self.clone().states_iter() {
-            self.emplace_tr(state, s, s, SoundWeight::one(), state).unwrap();
+        for state in self.clone().0.states_iter() {
+            self.0.emplace_tr(state, s, s, SoundWeight::one(), state).unwrap();
         }
     }
 }
 
-impl SoundFstTrait for SoundFst {}
 /// example we want x -> y / a _ b, ie x turns to y when it is in front of a and before b
 /// aka axb -> ayb
 /// a = b = x, in string xxxx,
@@ -283,7 +308,7 @@ impl SoundLaw {
         left_context_fst.set_input_symbols(Arc::clone(&alphabet));
         left_context_fst.set_output_symbols(Arc::clone(&alphabet));
 
-        left_context_fst
+        left_context_fst.into()
     }
 }
 
@@ -433,7 +458,7 @@ mod tests {
         // minimize_with_config(&mut actual, MinimizeConfig { allow_nondet: false, ..MinimizeConfig::default()}).unwrap();
         let mut actual: SoundFst = determinize(&actual).unwrap();
         actual
-            .draw("images/simple_actual_no_rm.dot", &DrawingConfig::default())
+            .0.draw("images/simple_actual_no_rm.dot", &DrawingConfig::default())
             .unwrap();
 
         rm_epsilon(&mut actual).unwrap();
@@ -441,13 +466,13 @@ mod tests {
         rm_epsilon(&mut actual).unwrap();
 
         expected
-            .draw(
+            .0.draw(
                 "images/simple_replace_expected.dot",
                 &DrawingConfig::default(),
             )
             .unwrap();
         actual
-            .draw(
+            .0.draw(
                 "images/simple_actual_expected.dot",
                 &DrawingConfig::default(),
             )
