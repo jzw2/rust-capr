@@ -5,9 +5,7 @@ use rustfst::algorithms::ProjectType;
 use rustfst::fst_traits::StateIterator;
 use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::union::union;
-use rustfst::prelude::{
-    AllocableFst, ExpandedFst, SerializableFst, TropicalWeight,
-};
+use rustfst::prelude::{AllocableFst, ExpandedFst, SerializableFst, TropicalWeight};
 use rustfst::{
     algorithms::{concat::concat, project},
     fst_impls::VectorFst,
@@ -18,35 +16,31 @@ use rustfst::{
 use rustfst::{fst, DrawingConfig};
 use serde::{Deserialize, Serialize};
 
-
-
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct SoundFst(pub SoundVec);
 
 pub type SoundVec = VectorFst<SoundWeight>;
 
 impl From<VectorFst<SoundWeight>> for SoundFst {
-    fn from(value: VectorFst<SoundWeight>) -> Self  {
+    fn from(value: VectorFst<SoundWeight>) -> Self {
         SoundFst(value)
     }
 }
 
 impl From<SoundFst> for VectorFst<SoundWeight> {
-    fn from(value: SoundFst) -> Self  {
+    fn from(value: SoundFst) -> Self {
         value.0
     }
 }
 pub type SoundWeight = TropicalWeight;
 
 impl SoundFst {
-
     fn from_single_label(l: Label) -> Self {
         let v: SoundVec = fst![l];
         SoundFst(v)
     }
 
-
-    fn input_project(&mut self) {
+    pub fn input_project(&mut self) {
         project(&mut self.0, ProjectType::ProjectInput)
     }
 
@@ -54,24 +48,24 @@ impl SoundFst {
         let mut fst: SoundVec = epsilon_machine().unwrap();
         for label in st.labels() {
             if label != 0 {
-
                 let _ = fst.add_tr(0, Tr::new(label, label, SoundWeight::one(), 0));
             }
         }
         fst.into()
     }
 
-    fn compose(&mut self, other: &SoundFst) {
+    pub fn compose(&mut self, other: &SoundFst) {
         let composed: SoundVec = compose(self.0.clone(), other.0.clone()).unwrap();
         self.0 = composed;
-
     }
 
     fn concatenate(&mut self, other: &SoundFst) {
         concat(&mut self.0, &other.0).unwrap()
     }
 
-
+    pub fn union(&mut self, other: &SoundFst) {
+        union(&mut self.0, &other.0).unwrap()
+    }
     fn no_upper(&self, alphabet: &SymbolTable) -> Self {
         let mut projection = self.0.clone();
         project(
@@ -85,13 +79,16 @@ impl SoundFst {
         concat(&mut tc, &projection).unwrap();
         concat(&mut tc, &star.0).unwrap();
 
-        SoundFst::from(tc).negate(&alphabet.labels().collect::<Vec<_>>()).into()
+        SoundFst::from(tc)
+            .negate(&alphabet.labels().collect::<Vec<_>>())
+            .into()
     }
 
     fn replace(&self, optional: bool, alphabet: &SymbolTable) -> Self {
         let tc_neg: Self = self.no_upper(alphabet);
         tc_neg
-            .0.draw("images/tc_neg.dot", &DrawingConfig::default())
+            .0
+            .draw("images/tc_neg.dot", &DrawingConfig::default())
             .unwrap();
         let star = Self::any_star(alphabet);
 
@@ -139,7 +136,8 @@ impl SoundFst {
         let mut composed_neg_full = composed_transducer.clone();
         concat(&mut composed_neg_full, &neg_full.0).unwrap();
 
-        let mut neg_composed_full = SoundFst::from(composed_transducer).negate_with_symbol_table(alphabet);
+        let mut neg_composed_full =
+            SoundFst::from(composed_transducer).negate_with_symbol_table(alphabet);
         concat(&mut neg_composed_full.0, &full_trans).unwrap();
 
         let mut disjunction = neg_composed_full;
@@ -149,12 +147,17 @@ impl SoundFst {
         // they optimize it, don't know what the equivalent is
     }
 
-    fn replace_in_context(&self, left_context: SoundFst, right_context: SoundFst, optional: bool, alphabet: &SymbolTable) -> SoundFst {
+    fn replace_in_context(
+        &self,
+        left_context: SoundFst,
+        right_context: SoundFst,
+        optional: bool,
+        alphabet: &SymbolTable,
+    ) -> SoundFst {
         let mut t1_proj = left_context.clone();
         t1_proj.input_project();
         let mut t2_proj = right_context.clone();
         t2_proj.input_project();
-
 
         // they create some sort of left marker, but I think this is unecessary
 
@@ -167,7 +170,6 @@ impl SoundFst {
 
         let pi_star = Self::any_star(&alphabet_with_marker);
 
-
         let cbt = todo!(); // constrain boudnry marker
 
         let lct = left_context.replace_context(left_marker, right_marker, &alphabet_with_marker);
@@ -176,29 +178,21 @@ impl SoundFst {
 
         let rct = right_rev.replace_context(right_marker, right_marker, &alphabet_with_marker);
 
-
         let rt = self.replace_transducer(left_marker, right_marker, &alphabet_with_marker);
-
 
         let mut result: SoundFst = ibt.clone();
         result.compose(&cbt);
-        result. compose(&rct);
-        result. compose(&lct);
-        result. compose(&rt);
-        result. compose(&rbt);
-
+        result.compose(&rct);
+        result.compose(&lct);
+        result.compose(&rt);
+        result.compose(&rbt);
 
         if optional {
             todo!()
         }
 
-
-
-
         result
-
     }
-
 
     // add left and right markers and makes sure left/right markers are ignored in oriignal fst
     fn replace_transducer(
@@ -224,7 +218,9 @@ impl SoundFst {
     // allows s to be inputted anywhere inside the fst
     fn insert_freely(&mut self, s: Label) {
         for state in self.clone().0.states_iter() {
-            self.0.emplace_tr(state, s, s, SoundWeight::one(), state).unwrap();
+            self.0
+                .emplace_tr(state, s, s, SoundWeight::one(), state)
+                .unwrap();
         }
     }
 }
@@ -365,10 +361,8 @@ mod tests {
     use std::vec;
 
     use rustfst::{
-        algorithms::determinize::determinize,
-        fst,
-        prelude::rm_epsilon::{rm_epsilon},
-        symt, DrawingConfig,
+        algorithms::determinize::determinize, fst, prelude::rm_epsilon::rm_epsilon, symt,
+        DrawingConfig,
     };
 
     use super::*;
@@ -416,7 +410,7 @@ mod tests {
         };
         let fst = law.to_fst(table);
         dbg!(&fst);
-        let paths: Vec<_> = fst.string_paths_iter().unwrap().collect();
+        let paths: Vec<_> = fst.0.string_paths_iter().unwrap().collect();
         assert_eq!(paths.len(), 1);
         assert_eq!(paths[0].istring().unwrap(), "a");
         assert_eq!(paths[0].ostring().unwrap(), "b");
@@ -434,7 +428,7 @@ mod tests {
         };
         let fst = law.to_fst(table);
         dbg!(&fst);
-        let paths: Vec<_> = fst.string_paths_iter().unwrap().collect();
+        let paths: Vec<_> = fst.0.string_paths_iter().unwrap().collect();
         assert_eq!(paths.len(), 1);
         assert_eq!(paths[0].istring().unwrap(), "c a c");
         assert_eq!(paths[0].ostring().unwrap(), "c b c");
@@ -442,62 +436,61 @@ mod tests {
 
     #[test]
     fn simple_replace_multiple() {
-        let mapping: SoundFst = fst![1, 2 => 3,4];
+        let mapping: SoundVec = fst![1, 2 => 3,4];
 
-        let input1: SoundFst = fst![1, 1, 1, 2, 3, 1, 2];
+        let input1: SoundVec = fst![1, 1, 1, 2, 3, 1, 2];
 
         let symbol_table = symt![1, 2, 3, 4];
 
-        let replaced = mapping.replace(false, &symbol_table);
+        let replaced = SoundFst(mapping).replace(false, &symbol_table);
 
-        let expected: SoundFst = fst![1,1,1,2,3,1,2 => 1,1,3,4,3,3,4 ];
+        let expected: SoundVec = fst![1,1,1,2,3,1,2 => 1,1,3,4,3,3,4 ];
 
-        let actual: SoundFst = compose(input1, replaced).unwrap();
+        let actual = SoundFst(input1).replace(false, &symbol_table);
 
         // minimize_with_config(&mut expected, MinimizeConfig { allow_nondet: true, ..MinimizeConfig::default()}).unwrap();
         // minimize_with_config(&mut actual, MinimizeConfig { allow_nondet: false, ..MinimizeConfig::default()}).unwrap();
-        let mut actual: SoundFst = determinize(&actual).unwrap();
+        let mut actual: SoundFst = actual;
         actual
-            .0.draw("images/simple_actual_no_rm.dot", &DrawingConfig::default())
+            .0
+            .draw("images/simple_actual_no_rm.dot", &DrawingConfig::default())
             .unwrap();
 
-        rm_epsilon(&mut actual).unwrap();
-        //minimize(&mut actual).unwrap();
-        rm_epsilon(&mut actual).unwrap();
-
         expected
-            .0.draw(
+            .draw(
                 "images/simple_replace_expected.dot",
                 &DrawingConfig::default(),
             )
             .unwrap();
         actual
-            .0.draw(
+            .0
+            .draw(
                 "images/simple_actual_expected.dot",
                 &DrawingConfig::default(),
             )
             .unwrap();
 
-        assert_eq!(expected, actual);
+        assert_eq!(expected, actual.0);
     }
 
     #[ignore = "Ned to fix it to be replace in context"]
     #[test]
     fn right_arrow_test1() {
         let symbol_tabl = symt!["a", "b", "c", "d"];
-        let mapping: SoundFst = fst![3, 2 => 4];
+        let mapping: SoundVec = fst![3, 2 => 4];
 
-        let left: SoundFst = fst![3, 1];
-        let right: SoundFst = fst![3];
+        let left: SoundVec = fst![3, 1];
+        let right: SoundVec = fst![3];
 
-        let input1: SoundFst = fst![3, 1, 3, 1, 3, 1, 3]; // "cacacac"
+        let input1: SoundVec = fst![3, 1, 3, 1, 3, 1, 3]; // "cacacac"
 
-        let replaced = mapping.replace(false, &symbol_tabl);
+        let replaced = SoundFst(mapping).replace(false, &symbol_tabl);
 
-        let expected: SoundFst = fst![3, 1, 3, 1, 3, 1 => 4, 4, 4];
+        let expected: SoundVec = fst![3, 1, 3, 1, 3, 1 => 4, 4, 4];
 
-        let actual = compose(input1, replaced).unwrap();
+        let mut actual = SoundFst(input1);
+        actual.compose(&replaced);
 
-        assert_eq!(expected, actual);
+        assert_eq!(expected, actual.0);
     }
 }
