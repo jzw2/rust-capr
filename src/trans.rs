@@ -2,11 +2,11 @@ use std::sync::Arc;
 
 use rustfst::algorithms::compose::compose;
 use rustfst::algorithms::determinize::determinize;
-use rustfst::algorithms::{determinize, ProjectType};
+use rustfst::algorithms::ProjectType;
 use rustfst::fst_traits::StateIterator;
 use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::union::union;
-use rustfst::prelude::{AllocableFst, ExpandedFst, SerializableFst, TropicalWeight};
+use rustfst::prelude::{SerializableFst, TropicalWeight};
 use rustfst::{
     algorithms::{concat::concat, project},
     fst_impls::VectorFst,
@@ -86,7 +86,6 @@ impl SoundFst {
 
         SoundFst::from(tc)
             .negate(&alphabet.labels().collect::<Vec<_>>())
-            .into()
     }
 
     fn replace(&self, optional: bool, alphabet: &SymbolTable) -> Self {
@@ -366,7 +365,7 @@ mod tests {
     use std::vec;
 
     use rustfst::{
-        algorithms::determinize::determinize, fst, prelude::rm_epsilon::rm_epsilon, symt,
+        fst, prelude::rm_epsilon::rm_epsilon, symt,
         DrawingConfig,
     };
 

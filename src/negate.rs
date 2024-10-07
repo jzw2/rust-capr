@@ -7,7 +7,6 @@ use rustfst::{
         rm_epsilon::rm_epsilon,
         CoreFst, MutableFst, StateIterator,
     },
-    semirings::TropicalWeight,
     DrawingConfig, Label, Semiring, SymbolTable,
 };
 
@@ -79,7 +78,7 @@ mod tests {
         fst,
         fst_impls::VectorFst,
         prelude::{
-            compose::compose, concat::concat, determinize::determinize, rm_epsilon::rm_epsilon,
+            compose::compose, concat::concat,
             Fst, SerializableFst,
         },
         utils::{acceptor, epsilon_machine},
@@ -114,11 +113,11 @@ mod tests {
     fn negate_test_multiple_strings() {
         // FST that accepts [1,2,3] and [4,5,6]
         let mut fst1: SoundFst = SoundFst(fst![1, 2, 3]);
-        let mut fst2: SoundFst = SoundFst(fst!(4, 5, 6));
+        let fst2: SoundFst = SoundFst(fst!(4, 5, 6));
         let alpha = vec![1, 2, 3, 4, 5, 6];
         fst1.union(&fst2);
 
-        let mut det_union_fst: SoundFst = fst1;
+        let det_union_fst: SoundFst = fst1;
 
         let negate_fst = SoundFst::negate(&det_union_fst, &alpha);
         //:dbg!(negate_fst.get_trs(8).unwrap().len());
@@ -145,7 +144,7 @@ mod tests {
         let fst: SoundVec = fst![1, 2, 3];
         let alpha = vec![1, 2, 3, 4, 5, 6];
 
-        let mut det_fst: SoundFst = SoundFst(fst);
+        let det_fst: SoundFst = SoundFst(fst);
 
         let negate_fst = SoundFst::negate(&det_fst, &alpha);
 
@@ -180,7 +179,7 @@ mod tests {
 
         let alpha = vec![1];
 
-        let mut det_fst: SoundFst = SoundFst(fst);
+        let det_fst: SoundFst = SoundFst(fst);
 
         let negate_fst = det_fst.negate(&alpha);
 
@@ -207,7 +206,7 @@ mod tests {
                 .unwrap();
         }
 
-        let mut det_fst: SoundFst = SoundFst(fst);
+        let det_fst: SoundFst = SoundFst(fst);
 
         let negate_fst = det_fst.negate(&alpha);
 
@@ -229,7 +228,7 @@ mod tests {
         // No final states are set
         let alpha = vec![1, 2, 3];
 
-        let mut det_fst: SoundFst = SoundFst(fst);
+        let det_fst: SoundFst = SoundFst(fst);
 
         let negate_fst = det_fst.negate(&alpha);
         dbg!(&negate_fst);
