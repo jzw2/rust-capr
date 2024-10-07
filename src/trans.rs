@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
 use rustfst::algorithms::compose::compose;
-use rustfst::algorithms::ProjectType;
+use rustfst::algorithms::determinize::determinize;
+use rustfst::algorithms::{determinize, ProjectType};
 use rustfst::fst_traits::StateIterator;
 use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::union::union;
@@ -65,6 +66,10 @@ impl SoundFst {
 
     pub fn union(&mut self, other: &SoundFst) {
         union(&mut self.0, &other.0).unwrap()
+    }
+
+    pub fn determinize(&mut self) {
+        self.0 = determinize(&self.0).unwrap();
     }
     fn no_upper(&self, alphabet: &SymbolTable) -> Self {
         let mut projection = self.0.clone();
@@ -446,11 +451,12 @@ mod tests {
 
         let expected: SoundVec = fst![1,1,1,2,3,1,2 => 1,1,3,4,3,3,4 ];
 
-        let actual = SoundFst(input1).replace(false, &symbol_table);
-
         // minimize_with_config(&mut expected, MinimizeConfig { allow_nondet: true, ..MinimizeConfig::default()}).unwrap();
         // minimize_with_config(&mut actual, MinimizeConfig { allow_nondet: false, ..MinimizeConfig::default()}).unwrap();
-        let mut actual: SoundFst = actual;
+        let mut actual: SoundFst = SoundFst(input1);
+        actual.compose(&replaced);
+        actual.determinize();
+        rm_epsilon(&mut actual.0);
         actual
             .0
             .draw("images/simple_actual_no_rm.dot", &DrawingConfig::default())
