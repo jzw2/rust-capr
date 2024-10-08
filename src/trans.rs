@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use rustfst::algorithms::compose::compose;
 use rustfst::algorithms::determinize::determinize;
-use rustfst::algorithms::ProjectType;
-use rustfst::fst_traits::StateIterator;
+use rustfst::algorithms::{reverse, ProjectType};
+use rustfst::fst_traits::{AllocableFst, StateIterator};
 use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::union::union;
 use rustfst::prelude::{SerializableFst, TropicalWeight};
@@ -70,6 +70,10 @@ impl SoundFst {
 
     pub fn determinize(&mut self) {
         self.0 = determinize(&self.0).unwrap();
+    }
+
+    pub fn reverse(&mut self) {
+        self.0 = reverse(&self.0).unwrap();
     }
     fn no_upper(&self, alphabet: &SymbolTable) -> Self {
         let mut projection = self.0.clone();
@@ -150,6 +154,30 @@ impl SoundFst {
         // they optimize it, don't know what the equivalent is
     }
 
+    fn insert_boundry_markers(alphabet: &SymbolTable, left: Label, right: Label) -> SoundFst {
+        let mut pi = Self::any_star(alphabet);
+        pi.0.emplace_tr(0, 0, left, SoundWeight::one(), 0).unwrap();
+        pi.0.emplace_tr(0, 0, right, SoundWeight::one(), 0).unwrap();
+        pi
+    }
+    fn remove_boundry_markers(alphabet: &SymbolTable, left: Label, right: Label) -> SoundFst {
+        let mut pi = Self::any_star(alphabet);
+        pi.0.emplace_tr(0, left, 0, SoundWeight::one(), 0).unwrap();
+        pi.0.emplace_tr(0, right, 0, SoundWeight::one(), 0).unwrap();
+        pi
+    }
+
+    fn constrain_boundry_markers(alphabet: &SymbolTable, left: Label, right: Label) -> SoundFst {
+        let left_to_left = Self::from_single_label(left);
+        let right_to_right = Self::from_single_label(right);
+        let mut star = Self::any_star(alphabet);
+        star.concatenate(&left_to_left);
+        star.concatenate(&right_to_right);
+        star.concatenate(&Self::any_star(alphabet));
+        star.negate_with_symbol_table(alphabet);
+        star
+    }
+
     fn replace_in_context(
         &self,
         left_context: SoundFst,
@@ -168,18 +196,17 @@ impl SoundFst {
         let left_marker = alphabet_with_marker.add_symbol("left_marker");
         let right_marker = alphabet_with_marker.add_symbol("right_marker");
 
-        let mut ibt: SoundFst = todo!(); // inserting the boundry markers
-        let mut rbt: SoundFst = todo!(); // remove boundry markers
+        let mut ibt: SoundFst = Self::insert_boundry_markers(&alphabet, left_marker, right_marker);
+        let mut rbt: SoundFst = Self::remove_boundry_markers(&alphabet, left_marker, right_marker); // remove boundry markers
 
-        let pi_star = Self::any_star(&alphabet_with_marker);
-
-        let cbt = todo!(); // constrain boudnry marker
+        let cbt = Self::constrain_boundry_markers(&alphabet_with_marker, left_marker, right_marker);
 
         let lct = left_context.replace_context(left_marker, right_marker, &alphabet_with_marker);
 
-        let right_rev: SoundFst = todo!();
-
-        let rct = right_rev.replace_context(right_marker, right_marker, &alphabet_with_marker);
+        let mut right_rev: SoundFst = right_context;
+        right_rev.reverse();
+        let mut rct = right_rev.replace_context(right_marker, left_marker, &alphabet_with_marker);
+        rct.reverse();
 
         let rt = self.replace_transducer(left_marker, right_marker, &alphabet_with_marker);
 
