@@ -394,21 +394,20 @@ mod tests {
     fn test_labels_from_string() {
         let table = symt!["a", "b", "c"];
 
-        let transduced = get_labels_from_str("abba", Arc::new(table));
+        let transduced = get_labels_from_str("abba", &table);
         assert_eq!(transduced, Some(vec![1, 2, 2, 1]));
     }
 
     #[test]
     fn test_no_context_soundlaw() {
         let table = symt!["a", "b", "c"];
-        let table = Arc::new(table);
         let law = SoundLaw {
             from: "a".to_string(),
             to: "b".to_string(),
             left_context: "".to_string(),
             right_context: "".to_string(),
         };
-        let fst = law.to_fst(table);
+        let fst = law.to_fst(&table);
         dbg!(&fst);
         let paths: Vec<_> = fst.0.string_paths_iter().unwrap().collect();
         assert_eq!(paths.len(), 1);
@@ -419,14 +418,13 @@ mod tests {
     #[test]
     fn test_some_context_soundlaw() {
         let table = symt!["a", "b", "c"];
-        let table = Arc::new(table);
         let law = SoundLaw {
             from: "a".to_string(),
             to: "b".to_string(),
             left_context: "c".to_string(),
             right_context: "c".to_string(),
         };
-        let fst = law.to_fst(table);
+        let fst = law.to_fst(&table);
         dbg!(&fst);
         let paths: Vec<_> = fst.0.string_paths_iter().unwrap().collect();
         assert_eq!(paths.len(), 1);

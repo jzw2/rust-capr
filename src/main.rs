@@ -4,7 +4,7 @@ use rustfst::{symt, SymbolTable};
 use serde::{Deserialize, Serialize};
 use std::{
     fs::write,
-    sync::{Arc, Mutex},
+    sync::Mutex,
 };
 use trans::SoundLaw;
 
