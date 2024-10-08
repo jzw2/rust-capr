@@ -79,7 +79,7 @@ async fn get_saves(state: web::Data<AppState>) -> HttpResponse {
 async fn main() -> std::io::Result<()> {
     let law = SoundLaw::new("x", "y", "a", "b");
     let table = symt!["x", "y", "a", "b"];
-    let fst = law.to_fst(Arc::new(table));
+    let fst = law.to_fst(&table);
     dbg!(fst);
 
     let data = web::Data::new(AppState {

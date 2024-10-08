@@ -84,8 +84,7 @@ impl SoundFst {
         concat(&mut tc, &projection).unwrap();
         concat(&mut tc, &star.0).unwrap();
 
-        SoundFst::from(tc)
-            .negate(&alphabet.labels().collect::<Vec<_>>())
+        SoundFst::from(tc).negate(&alphabet.labels().collect::<Vec<_>>())
     }
 
     fn replace(&self, optional: bool, alphabet: &SymbolTable) -> Self {
@@ -263,7 +262,7 @@ struct SoundLawLabels {
     right_context: Vec<Label>,
 }
 
-fn get_labels_from_str(s: &str, table: Arc<SymbolTable>) -> Option<Vec<Label>> {
+fn get_labels_from_str(s: &str, table: &SymbolTable) -> Option<Vec<Label>> {
     s.chars().map(|x| table.get_label(x.to_string())).collect()
 }
 
@@ -275,11 +274,11 @@ fn get_labels_from_str(s: &str, table: Arc<SymbolTable>) -> Option<Vec<Label>> {
 impl SoundLaw {
     // given t that does replacement, with contexyts
     //might be unneeded if I want to refactor it completely with just labels, vs passing the string along always
-    fn to_labels(&self, table: Arc<SymbolTable>) -> Option<SoundLawLabels> {
-        let left = get_labels_from_str(&self.left_context, Arc::clone(&table))?;
-        let right = get_labels_from_str(&self.right_context, Arc::clone(&table))?;
-        let from = get_labels_from_str(&self.from, Arc::clone(&table))?;
-        let to = get_labels_from_str(&self.to, Arc::clone(&table))?;
+    fn to_labels(&self, table: &SymbolTable) -> Option<SoundLawLabels> {
+        let left = get_labels_from_str(&self.left_context, table)?;
+        let right = get_labels_from_str(&self.right_context, table)?;
+        let from = get_labels_from_str(&self.from, table)?;
+        let to = get_labels_from_str(&self.to, table)?;
 
         Some(SoundLawLabels {
             from,
@@ -290,25 +289,25 @@ impl SoundLaw {
     }
 
     // right now it also adds the replace context
-    pub fn to_fst(&self, alphabet: Arc<SymbolTable>) -> SoundFst {
+    pub fn to_fst(&self, alphabet: &SymbolTable) -> SoundFst {
         let SoundLawLabels {
             from,
             to,
             left_context,
             right_context,
-        } = self.to_labels(Arc::clone(&alphabet)).unwrap();
+        } = self.to_labels(alphabet).unwrap();
         let mut left_context_fst: VectorFst<_> = acceptor(&left_context, SoundWeight::one());
         let right_context_fst: VectorFst<_> = acceptor(&right_context, SoundWeight::one());
 
         let transform: VectorFst<_> = transducer(&from, &to, SoundWeight::one());
+        let transform = SoundFst(transform);
 
-        concat(&mut left_context_fst, &transform).expect("concat failed");
-        concat(&mut left_context_fst, &right_context_fst).expect("concat failed");
-
-        left_context_fst.set_input_symbols(Arc::clone(&alphabet));
-        left_context_fst.set_output_symbols(Arc::clone(&alphabet));
-
-        left_context_fst.into()
+        transform.replace_in_context(
+            left_context_fst.into(),
+            right_context_fst.into(),
+            false,
+            alphabet,
+        )
     }
 }
 
@@ -364,10 +363,7 @@ pub fn transduce_text(laws: Vec<Vec<String>>, text: String) -> String {
 mod tests {
     use std::vec;
 
-    use rustfst::{
-        fst, prelude::rm_epsilon::rm_epsilon, symt,
-        DrawingConfig,
-    };
+    use rustfst::{fst, prelude::rm_epsilon::rm_epsilon, symt, DrawingConfig};
 
     use super::*;
 
