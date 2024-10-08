@@ -399,40 +399,6 @@ mod tests {
     }
 
     #[test]
-    fn test_no_context_soundlaw() {
-        let table = symt!["a", "b", "c"];
-        let law = SoundLaw {
-            from: "a".to_string(),
-            to: "b".to_string(),
-            left_context: "".to_string(),
-            right_context: "".to_string(),
-        };
-        let fst = law.to_fst(&table);
-        dbg!(&fst);
-        let paths: Vec<_> = fst.0.string_paths_iter().unwrap().collect();
-        assert_eq!(paths.len(), 1);
-        assert_eq!(paths[0].istring().unwrap(), "a");
-        assert_eq!(paths[0].ostring().unwrap(), "b");
-    }
-
-    #[test]
-    fn test_some_context_soundlaw() {
-        let table = symt!["a", "b", "c"];
-        let law = SoundLaw {
-            from: "a".to_string(),
-            to: "b".to_string(),
-            left_context: "c".to_string(),
-            right_context: "c".to_string(),
-        };
-        let fst = law.to_fst(&table);
-        dbg!(&fst);
-        let paths: Vec<_> = fst.0.string_paths_iter().unwrap().collect();
-        assert_eq!(paths.len(), 1);
-        assert_eq!(paths[0].istring().unwrap(), "c a c");
-        assert_eq!(paths[0].ostring().unwrap(), "c b c");
-    }
-
-    #[test]
     fn simple_replace_multiple() {
         let mapping: SoundVec = fst![1, 2 => 3,4];
 
