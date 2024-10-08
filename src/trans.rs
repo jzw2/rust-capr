@@ -3,7 +3,7 @@ use std::sync::Arc;
 use rustfst::algorithms::compose::compose;
 use rustfst::algorithms::determinize::determinize;
 use rustfst::algorithms::{reverse, ProjectType};
-use rustfst::fst_traits::{AllocableFst, StateIterator};
+use rustfst::fst_traits::StateIterator;
 use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::union::union;
 use rustfst::prelude::{SerializableFst, TropicalWeight};
@@ -196,8 +196,8 @@ impl SoundFst {
         let left_marker = alphabet_with_marker.add_symbol("left_marker");
         let right_marker = alphabet_with_marker.add_symbol("right_marker");
 
-        let mut ibt: SoundFst = Self::insert_boundry_markers(&alphabet, left_marker, right_marker);
-        let mut rbt: SoundFst = Self::remove_boundry_markers(&alphabet, left_marker, right_marker); // remove boundry markers
+        let ibt: SoundFst = Self::insert_boundry_markers(alphabet, left_marker, right_marker);
+        let rbt: SoundFst = Self::remove_boundry_markers(alphabet, left_marker, right_marker); // remove boundry markers
 
         let cbt = Self::constrain_boundry_markers(&alphabet_with_marker, left_marker, right_marker);
 
@@ -323,7 +323,7 @@ impl SoundLaw {
             left_context,
             right_context,
         } = self.to_labels(alphabet).unwrap();
-        let mut left_context_fst: VectorFst<_> = acceptor(&left_context, SoundWeight::one());
+        let left_context_fst: VectorFst<_> = acceptor(&left_context, SoundWeight::one());
         let right_context_fst: VectorFst<_> = acceptor(&right_context, SoundWeight::one());
 
         let transform: VectorFst<_> = transducer(&from, &to, SoundWeight::one());
