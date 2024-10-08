@@ -465,7 +465,6 @@ mod tests {
         assert_eq!(expected, actual.0);
     }
 
-    #[ignore = "Ned to fix it to be replace in context"]
     #[test]
     fn right_arrow_test1() {
         let symbol_tabl = symt!["a", "b", "c", "d"];
@@ -476,7 +475,8 @@ mod tests {
 
         let input1: SoundVec = fst![3, 1, 3, 1, 3, 1, 3]; // "cacacac"
 
-        let replaced = SoundFst(mapping).replace(false, &symbol_tabl);
+        let replaced =
+            SoundFst(mapping).replace_in_context(left.into(), right.into(), false, &symbol_tabl);
 
         let expected: SoundVec = fst![3, 1, 3, 1, 3, 1 => 4, 4, 4];
 
