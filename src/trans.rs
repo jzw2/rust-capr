@@ -75,6 +75,11 @@ impl SoundFst {
     pub fn reverse(&mut self) {
         self.0 = reverse(&self.0).unwrap();
     }
+    fn d(&self, line: u32) {
+        self.0
+            .draw(format!("images/{}.dot", line), &DrawingConfig::default())
+            .unwrap()
+    }
     fn no_upper(&self, alphabet: &SymbolTable) -> Self {
         let mut projection = self.0.clone();
         project(
@@ -477,6 +482,7 @@ mod tests {
 
         let replaced =
             SoundFst(mapping).replace_in_context(left.into(), right.into(), false, &symbol_tabl);
+        replaced.d(line!());
 
         let expected: SoundVec = fst![3, 1, 3, 1, 3, 1 => 4, 4, 4];
 
