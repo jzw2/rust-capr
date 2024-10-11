@@ -2,7 +2,9 @@ use std::sync::Arc;
 
 use rustfst::algorithms::compose::compose;
 use rustfst::algorithms::determinize::determinize;
-use rustfst::algorithms::{minimize, reverse, tr_sort, ProjectType};
+use rustfst::algorithms::{
+    minimize, minimize_with_config, reverse, tr_sort, MinimizeConfig, ProjectType,
+};
 use rustfst::fst_traits::StateIterator;
 use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::union::union;
@@ -56,7 +58,14 @@ impl SoundFst {
     }
 
     pub fn optimize(&mut self) {
-        minimize(&mut self.0).unwrap()
+        minimize_with_config(
+            &mut self.0,
+            MinimizeConfig {
+                allow_nondet: true,
+                ..Default::default()
+            },
+        )
+        .unwrap()
     }
 
     pub fn compose(&mut self, other: &SoundFst) {

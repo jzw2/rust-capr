@@ -1,13 +1,11 @@
 use crate::trans::{SoundFst, SoundWeight};
 use rustfst::{
     fst_impls::VectorFst,
-    fst_traits::SerializableFst,
     prelude::{
         determinize::{determinize_with_config, DeterminizeConfig},
-        rm_epsilon::rm_epsilon,
         CoreFst, MutableFst, StateIterator,
     },
-    DrawingConfig, Label, Semiring, SymbolTable,
+    Label, Semiring, SymbolTable,
 };
 
 impl SoundFst {
@@ -24,7 +22,7 @@ impl SoundFst {
         //.draw("images/image.txt", &DrawingConfig::default())
         //.unwrap();
         //println!("draing text");
-        let mut ret = self.0.clone();
+        let ret = self.0.clone();
         //dbg!(&ret);
         //rm_epsilon(&mut ret).unwrap();
         //println!("removed espslon");
@@ -254,10 +252,6 @@ mod tests {
 
         let negate_fst = fst.negate(&alpha);
         dbg!(&negate_fst);
-        negate_fst
-            .0
-            .draw("images/negate_test.txt", &DrawingConfig::default())
-            .unwrap();
 
         let just1 = vec![1];
         assert!(accepts(&fst, &just1));
@@ -279,10 +273,6 @@ mod tests {
 
         let negate_fst = fst.negate(&alpha);
         dbg!(&negate_fst);
-        negate_fst
-            .0
-            .draw("images/negate_test.txt", &DrawingConfig::default())
-            .unwrap();
 
         let just1 = vec![1];
         assert!(accepts(&fst, &just1));
@@ -315,13 +305,6 @@ mod tests {
 
         let negate_fst = star.negate(&alpha);
         dbg!(&negate_fst);
-        negate_fst
-            .0
-            .draw("images/negate_test.txt", &DrawingConfig::default())
-            .unwrap();
-        star.0
-            .draw("images/original.txt", &DrawingConfig::default())
-            .unwrap();
 
         let fst = star;
 
