@@ -2,11 +2,11 @@ use std::sync::Arc;
 
 use rustfst::algorithms::compose::compose;
 use rustfst::algorithms::determinize::determinize;
-use rustfst::algorithms::{reverse, ProjectType};
+use rustfst::algorithms::{minimize, reverse, tr_sort, ProjectType};
 use rustfst::fst_traits::StateIterator;
 use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::union::union;
-use rustfst::prelude::{SerializableFst, TropicalWeight};
+use rustfst::prelude::{ILabelCompare, OLabelCompare, SerializableFst, TropicalWeight};
 use rustfst::{
     algorithms::{concat::concat, project},
     fst_impls::VectorFst,
@@ -55,9 +55,16 @@ impl SoundFst {
         fst.into()
     }
 
+    pub fn optimize(&mut self) {
+        minimize(&mut self.0).unwrap()
+    }
+
     pub fn compose(&mut self, other: &SoundFst) {
+        tr_sort(&mut self.0, OLabelCompare {});
         let composed: SoundVec = compose(self.0.clone(), other.0.clone()).unwrap();
+
         self.0 = composed;
+        self.optimize();
     }
 
     fn concatenate(&mut self, other: &SoundFst) {
@@ -135,8 +142,16 @@ impl SoundFst {
         let left_transducer: SoundVec = fst![left_context];
         let mut pi_star_copy = pi_star.clone();
         concat(&mut pi_star_copy.0, &left_transducer).unwrap();
-        let pi_star_neg = pi_star_copy.negate_with_symbol_table(alphabet).0;
+        let mut pi_star_neg = pi_star_copy.negate_with_symbol_table(alphabet).0;
 
+        pi_star_neg.compute_and_update_properties_all().unwrap();
+
+        pi_star_free_mark
+            .compute_and_update_properties_all()
+            .unwrap();
+        // SoundFst(pi_star_free_mark.clone()).d(line!());
+        // SoundFst(pi_star_neg.clone()).d(line!());
+        tr_sort(&mut pi_star_neg, ILabelCompare {});
         let composed_transducer: SoundVec = compose(pi_star_free_mark, pi_star_neg).unwrap();
         let mut full_trans: SoundVec = fst![right_context];
         closure(&mut full_trans, ClosureType::ClosureStar);
@@ -154,9 +169,10 @@ impl SoundFst {
 
         let mut disjunction = neg_composed_full;
         union(&mut disjunction.0, &composed_neg_full).unwrap();
-        disjunction.negate_with_symbol_table(alphabet)
+        let mut ret = disjunction.negate_with_symbol_table(alphabet);
 
-        // they optimize it, don't know what the equivalent is
+        ret.optimize();
+        ret
     }
 
     fn insert_boundry_markers(alphabet: &SymbolTable, left: Label, right: Label) -> SoundFst {
@@ -180,6 +196,7 @@ impl SoundFst {
         star.concatenate(&right_to_right);
         star.concatenate(&Self::any_star(alphabet));
         star.negate_with_symbol_table(alphabet);
+        star.optimize();
         star
     }
 
@@ -201,26 +218,49 @@ impl SoundFst {
         let left_marker = alphabet_with_marker.add_symbol("left_marker");
         let right_marker = alphabet_with_marker.add_symbol("right_marker");
 
+        println!("inserting boundry markers");
         let ibt: SoundFst = Self::insert_boundry_markers(alphabet, left_marker, right_marker);
+        println!("removing boundry markers");
         let rbt: SoundFst = Self::remove_boundry_markers(alphabet, left_marker, right_marker); // remove boundry markers
 
+        println!("constriaingin boundry markers");
         let cbt = Self::constrain_boundry_markers(&alphabet_with_marker, left_marker, right_marker);
 
-        let lct = left_context.replace_context(left_marker, right_marker, &alphabet_with_marker);
+        println!("left context");
+        let mut lct =
+            left_context.replace_context(left_marker, right_marker, &alphabet_with_marker);
+        lct.optimize();
 
+        println!("right context");
         let mut right_rev: SoundFst = right_context;
         right_rev.reverse();
+        right_rev.optimize();
+
         let mut rct = right_rev.replace_context(right_marker, left_marker, &alphabet_with_marker);
         rct.reverse();
+        rct.optimize();
 
-        let rt = self.replace_transducer(left_marker, right_marker, &alphabet_with_marker);
+        println!("create replace tranducer");
+        let mut rt = self.replace_transducer(left_marker, right_marker, &alphabet_with_marker);
+        rt.optimize();
 
         let mut result: SoundFst = ibt.clone();
+        println!("composing cbt");
+        result.d(line!());
         result.compose(&cbt);
+        println!("composing rct");
+        result.d(line!());
         result.compose(&rct);
+        println!("composing lct");
+        result.d(line!());
         result.compose(&lct);
+        println!("composing lt");
+        result.d(line!());
         result.compose(&rt);
+        println!("composing rbt");
+        result.d(line!());
         result.compose(&rbt);
+        println!("done");
 
         if optional {
             todo!()
@@ -236,9 +276,8 @@ impl SoundFst {
         right_marker: Label,
         alphabet: &SymbolTable,
     ) -> Self {
-        // ignore the opitmiaze because I don't know what it does
-
         let mut transducer = self.clone();
+        transducer.optimize();
         transducer.insert_freely(right_marker);
         transducer.insert_freely(left_marker);
 
@@ -246,8 +285,11 @@ impl SoundFst {
         let right_fst: Self = SoundFst::from_single_label(right_marker);
         marker_transducer.concatenate(&transducer);
         marker_transducer.concatenate(&right_fst);
+        marker_transducer.optimize();
 
-        marker_transducer.replace(false, alphabet)
+        let mut ret = marker_transducer.replace(false, alphabet);
+        ret.optimize();
+        ret
     }
 
     // allows s to be inputted anywhere inside the fst
@@ -488,6 +530,7 @@ mod tests {
 
         let mut actual = SoundFst(input1);
         actual.compose(&replaced);
+        actual.d(line!());
 
         assert_eq!(expected, actual.0);
     }

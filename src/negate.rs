@@ -18,18 +18,18 @@ impl SoundFst {
     pub fn negate(&self, alphabet: &[Label]) -> Self {
         // assumet that the fst is deterministic, and also acceptor or whatever that is aka is a regex
 
-        dbg!(&self);
+        //dbg!(&self);
         // also destroys weights
-        self.0
-            .draw("images/image.txt", &DrawingConfig::default())
-            .unwrap();
-        println!("draing text");
+        //self.0
+        //.draw("images/image.txt", &DrawingConfig::default())
+        //.unwrap();
+        //println!("draing text");
         let mut ret = self.0.clone();
-        dbg!(&ret);
-        rm_epsilon(&mut ret).unwrap();
-        println!("removed espslon");
-        ret.draw("images/image_rm.txt", &DrawingConfig::default())
-            .unwrap();
+        //dbg!(&ret);
+        //rm_epsilon(&mut ret).unwrap();
+        //println!("removed espslon");
+        //ret.draw("images/image_rm.txt", &DrawingConfig::default())
+        //.unwrap();
         let mut ret: VectorFst<SoundWeight> =
             determinize_with_config(&ret, DeterminizeConfig::default()).unwrap();
         println!("determinized");
@@ -37,7 +37,7 @@ impl SoundFst {
 
         let fst = ret.clone();
         for state in fst.states_iter() {
-            dbg!(state);
+            //dbg!(state);
             if fst.is_final(state).unwrap() {
                 let _ = ret.set_final(state, SoundWeight::zero());
             } else {
@@ -54,13 +54,13 @@ impl SoundFst {
                             .all(|tr| tr.ilabel != **label)
                 })
                 .for_each(|label| {
-                    dbg!(label);
+                    //dbg!(label);
                     ret.emplace_tr(state, *label, *label, SoundWeight::one(), accept)
                         .expect("unable to add label");
-                    dbg!(ret.get_trs(state).unwrap().len());
+                    //dbg!(ret.get_trs(state).unwrap().len());
                 });
 
-            dbg!(state);
+            //dbg!(state);
         }
         ret.set_final(accept, SoundWeight::one()).unwrap();
 
@@ -77,10 +77,7 @@ mod tests {
     use rustfst::{
         fst,
         fst_impls::VectorFst,
-        prelude::{
-            compose::compose, concat::concat,
-            Fst, SerializableFst,
-        },
+        prelude::{compose::compose, concat::concat, Fst, SerializableFst},
         utils::{acceptor, epsilon_machine},
         Tr,
     };
