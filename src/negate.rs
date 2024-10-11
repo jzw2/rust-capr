@@ -1,5 +1,6 @@
 use crate::trans::{SoundFst, SoundWeight};
 use rustfst::{
+    algorithms::rm_epsilon::rm_epsilon,
     fst_impls::VectorFst,
     prelude::{
         determinize::{determinize_with_config, DeterminizeConfig},
@@ -22,9 +23,9 @@ impl SoundFst {
         //.draw("images/image.txt", &DrawingConfig::default())
         //.unwrap();
         //println!("draing text");
-        let ret = self.0.clone();
+        let mut ret = self.0.clone();
         //dbg!(&ret);
-        //rm_epsilon(&mut ret).unwrap();
+        rm_epsilon(&mut ret).unwrap();
         //println!("removed espslon");
         //ret.draw("images/image_rm.txt", &DrawingConfig::default())
         //.unwrap();
