@@ -3,8 +3,8 @@ use rustfst::{
     algorithms::rm_epsilon::rm_epsilon,
     fst_impls::VectorFst,
     prelude::{
-        determinize::{determinize_with_config, DeterminizeConfig},
-        CoreFst, MutableFst, StateIterator,
+        determinize::{determinize, determinize_with_config, DeterminizeConfig},
+        minimize, CoreFst, MutableFst, StateIterator,
     },
     Label, Semiring, SymbolTable,
 };
@@ -15,38 +15,29 @@ impl SoundFst {
     }
 
     pub fn negate(&self, alphabet: &[Label]) -> Self {
-        // assumet that the fst is deterministic, and also acceptor or whatever that is aka is a regex
-
-        //dbg!(&self);
-        // also destroys weights
-        //self.0
-        //.draw("images/image.txt", &DrawingConfig::default())
-        //.unwrap();
-        //println!("draing text");
-        let mut ret = self.0.clone();
-        //dbg!(&ret);
-        rm_epsilon(&mut ret).unwrap();
-        //println!("removed espslon");
-        //ret.draw("images/image_rm.txt", &DrawingConfig::default())
-        //.unwrap();
-        let mut ret: VectorFst<SoundWeight> =
-            determinize_with_config(&ret, DeterminizeConfig::default()).unwrap();
-        println!("determinized");
-        let accept = ret.add_state();
+        self.d(line!());
+        let mut ret = self.clone();
+        rm_epsilon(&mut ret.0).unwrap();
+        let mut ret: SoundFst = SoundFst(determinize(&ret.0).unwrap());
+        ret.d(line!());
+        minimize(&mut ret.0).unwrap();
+        ret.d(line!());
+        let accept = ret.0.add_state();
 
         let fst = ret.clone();
-        for state in fst.states_iter() {
+        for state in fst.0.states_iter() {
             //dbg!(state);
-            if fst.is_final(state).unwrap() {
-                let _ = ret.set_final(state, SoundWeight::zero());
+            if fst.0.is_final(state).unwrap() {
+                let _ = ret.0.set_final(state, SoundWeight::zero());
             } else {
-                let _ = ret.set_final(state, SoundWeight::one());
+                let _ = ret.0.set_final(state, SoundWeight::one());
             }
             alphabet
                 .iter()
                 .filter(|label| {
                     **label != 0
                         && fst
+                            .0
                             .get_trs(state)
                             .unwrap()
                             .iter()
@@ -54,17 +45,18 @@ impl SoundFst {
                 })
                 .for_each(|label| {
                     //dbg!(label);
-                    ret.emplace_tr(state, *label, *label, SoundWeight::one(), accept)
+                    ret.0
+                        .emplace_tr(state, *label, *label, SoundWeight::one(), accept)
                         .expect("unable to add label");
                     //dbg!(ret.get_trs(state).unwrap().len());
                 });
 
             //dbg!(state);
         }
-        ret.set_final(accept, SoundWeight::one()).unwrap();
+        ret.0.set_final(accept, SoundWeight::one()).unwrap();
 
-        if ret.start().is_none() {
-            ret.set_start(accept).unwrap();
+        if ret.0.start().is_none() {
+            ret.0.set_start(accept).unwrap();
         }
 
         ret.into()
@@ -118,6 +110,7 @@ mod tests {
         let negate_fst = SoundFst::negate(&det_union_fst, &alpha);
         //:dbg!(negate_fst.get_trs(8).unwrap().len());
         //negate_fst.draw("image.txt", &DrawingConfig::default());
+        negate_fst.d(line!());
 
         let input1 = vec![1, 2, 3];
         let input2 = vec![4, 5, 6];

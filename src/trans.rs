@@ -91,7 +91,7 @@ impl SoundFst {
     pub fn reverse(&mut self) {
         self.0 = reverse(&self.0).unwrap();
     }
-    fn d(&self, line: u32) {
+    pub fn d(&self, line: u32) {
         self.0
             .draw(format!("images/{}.dot", line), &DrawingConfig::default())
             .unwrap()
@@ -119,7 +119,6 @@ impl SoundFst {
             .draw("images/tc_neg.dot", &DrawingConfig::default())
             .unwrap();
         let star = Self::any_star(alphabet);
-
         let mut retval: SoundVec = tc_neg.clone().0;
         concat(&mut retval, &self.0).unwrap();
         closure(&mut retval, ClosureType::ClosureStar);
@@ -138,28 +137,33 @@ impl SoundFst {
         right_context: Label,
         alphabet: &SymbolTable,
     ) -> Self {
+        println!("starting replace context");
+        self.d(line!());
         // copied from hfst, ideally I'll refactor it so that it actually makes sense
         let mut transducer = self.clone();
 
         transducer.insert_freely(left_context);
         transducer.insert_freely(right_context);
+        println!("{}", line!());
 
         let pi_star = Self::any_star(alphabet);
         let mut pi_star_free_mark = Self::any_star(alphabet).0;
         concat(&mut pi_star_free_mark, &transducer.0).unwrap();
 
+        println!("{}", line!());
         let left_transducer: SoundVec = fst![left_context];
         let mut pi_star_copy = pi_star.clone();
         concat(&mut pi_star_copy.0, &left_transducer).unwrap();
         let mut pi_star_neg = pi_star_copy.negate_with_symbol_table(alphabet).0;
 
-        pi_star_neg.compute_and_update_properties_all().unwrap();
+        // pi_star_neg.compute_and_update_properties_all().unwrap();
 
-        pi_star_free_mark
-            .compute_and_update_properties_all()
-            .unwrap();
-        // SoundFst(pi_star_free_mark.clone()).d(line!());
-        // SoundFst(pi_star_neg.clone()).d(line!());
+        println!("{}", line!());
+        // pi_star_free_mark
+        //     .compute_and_update_properties_all()
+        //     .unwrap();
+        // SoundFst(pi_star_free_mark.clone()).d("{}",line!());
+        // SoundFst(pi_star_neg.clone()).d("{}",line!());
         tr_sort(&mut pi_star_neg, ILabelCompare {});
         let composed_transducer: SoundVec = compose(pi_star_free_mark, pi_star_neg).unwrap();
         let mut full_trans: SoundVec = fst![right_context];
@@ -167,20 +171,28 @@ impl SoundFst {
         concat(&mut full_trans, &left_transducer).unwrap();
         concat(&mut full_trans, &pi_star.0).unwrap();
 
+        println!("{}", line!());
         // iff statement
         let neg_full = SoundFst::from(full_trans.clone()).negate_with_symbol_table(alphabet);
         let mut composed_neg_full = composed_transducer.clone();
         concat(&mut composed_neg_full, &neg_full.0).unwrap();
 
+        println!("{}", line!());
         let mut neg_composed_full =
             SoundFst::from(composed_transducer).negate_with_symbol_table(alphabet);
         concat(&mut neg_composed_full.0, &full_trans).unwrap();
 
+        println!("{}", line!());
         let mut disjunction = neg_composed_full;
         union(&mut disjunction.0, &composed_neg_full).unwrap();
+        println!("{}", line!());
+        disjunction.d(line!());
         let mut ret = disjunction.negate_with_symbol_table(alphabet);
+        println!("{}", line!());
 
+        println!("{}", line!());
         ret.optimize();
+        println!("Finished replace context");
         ret
     }
 
@@ -234,10 +246,12 @@ impl SoundFst {
 
         println!("constriaingin boundry markers");
         let cbt = Self::constrain_boundry_markers(&alphabet_with_marker, left_marker, right_marker);
+        cbt.d(line!());
 
         println!("left context");
         let mut lct =
             left_context.replace_context(left_marker, right_marker, &alphabet_with_marker);
+        lct.d(line!());
         lct.optimize();
 
         println!("right context");
