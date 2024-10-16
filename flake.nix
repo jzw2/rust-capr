@@ -14,7 +14,7 @@
       {
         defaultPackage = naersk-lib.buildPackage ./.;
         devShell = with pkgs; mkShell {
-          buildInputs = [ nodejs cargo rustc rustfmt pre-commit rustPackages.clippy ];
+          buildInputs = [ nodejs cargo rustc rustfmt pre-commit rustPackages.clippy rust-analyzer cargo-flamegraph xdot];
           RUST_SRC_PATH = rustPlatform.rustLibSrc;
 
         shellHook = ''
