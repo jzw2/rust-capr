@@ -1,9 +1,8 @@
 use crate::trans::{SoundFst, SoundWeight};
 use rustfst::{
     algorithms::rm_epsilon::rm_epsilon,
-    fst_impls::VectorFst,
     prelude::{
-        determinize::{determinize, determinize_with_config, DeterminizeConfig},
+        determinize::determinize,
         minimize, CoreFst, MutableFst, StateIterator,
     },
     Label, Semiring, SymbolTable,
@@ -64,7 +63,7 @@ impl SoundFst {
             ret.0.set_start(accept).unwrap();
         }
 
-        ret.into()
+        ret
     }
 }
 

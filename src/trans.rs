@@ -3,7 +3,7 @@ use std::sync::Arc;
 use rustfst::algorithms::compose::compose;
 use rustfst::algorithms::determinize::determinize;
 use rustfst::algorithms::{
-    minimize, minimize_with_config, reverse, tr_sort, MinimizeConfig, ProjectType,
+    minimize_with_config, reverse, tr_sort, MinimizeConfig, ProjectType,
 };
 use rustfst::fst_traits::StateIterator;
 use rustfst::prelude::closure::{closure, ClosureType};
@@ -193,7 +193,7 @@ impl SoundFst {
 
         println!("{}", line!());
         // iff statement
-        let neg_full = SoundFst::from(full_trans.clone()).negate_with_symbol_table(alphabet);
+        let neg_full = full_trans.clone().negate_with_symbol_table(alphabet);
         let mut composed_neg_full = composed_transducer.clone();
         concat(&mut composed_neg_full.0, &neg_full.0).unwrap();
 
@@ -203,7 +203,7 @@ impl SoundFst {
 
         println!("{}", line!());
         let mut neg_composed_full =
-            SoundFst::from(composed_transducer).negate_with_symbol_table(alphabet);
+            composed_transducer.negate_with_symbol_table(alphabet);
         concat(&mut neg_composed_full.0, &full_trans.0).unwrap();
 
         let l = line!();
