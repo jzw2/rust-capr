@@ -17,9 +17,14 @@ impl SoundFst {
     pub fn negate(&self, alphabet: &[Label]) -> Self {
         self.d(line!());
         let mut ret = self.clone();
+        ret.d(line!());
+        println!("{} Removing epsilons", line!());
         rm_epsilon(&mut ret.0).unwrap();
+        ret.d(line!());
+        println!("{} Determinizing", line!());
         let mut ret: SoundFst = SoundFst(determinize(&ret.0).unwrap());
         ret.d(line!());
+        println!("{} Minimizing", line!());
         minimize(&mut ret.0).unwrap();
         ret.d(line!());
         let accept = ret.0.add_state();

@@ -131,15 +131,13 @@ impl SoundFst {
         retval.into()
     }
 
-    fn replace_context(
+    fn end_in_string(
         &self,
         left_context: Label,
         right_context: Label,
         alphabet: &SymbolTable,
     ) -> Self {
-        println!("starting replace context");
-        self.d(line!());
-        // copied from hfst, ideally I'll refactor it so that it actually makes sense
+        // any string that ends in the current transducer, ignoring brackts except for a final <
         let mut transducer = self.clone();
 
         transducer.insert_freely(left_context);
@@ -166,26 +164,55 @@ impl SoundFst {
         // SoundFst(pi_star_neg.clone()).d("{}",line!());
         tr_sort(&mut pi_star_neg, ILabelCompare {});
         let composed_transducer: SoundVec = compose(pi_star_free_mark, pi_star_neg).unwrap();
+
+        SoundFst(composed_transducer)
+    }
+
+    fn begin_bracket(left_context: Label, right_context: Label, alphabet: &SymbolTable) -> Self {
+        let left_transducer: SoundVec = fst![left_context];
+        let pi_star = Self::any_star(alphabet);
         let mut full_trans: SoundVec = fst![right_context];
         closure(&mut full_trans, ClosureType::ClosureStar);
         concat(&mut full_trans, &left_transducer).unwrap();
         concat(&mut full_trans, &pi_star.0).unwrap();
+        full_trans.into()
+    }
+
+    fn replace_context(
+        &self,
+        left_context: Label,
+        right_context: Label,
+        alphabet: &SymbolTable,
+    ) -> Self {
+        println!("starting replace context");
+        self.d(line!());
+        // copied from hfst, ideally I'll refactor it so that it actually makes sense
+
+        let composed_transducer = self.end_in_string(left_context, right_context, alphabet);
+        let full_trans = Self::begin_bracket(left_context, right_context, alphabet);
 
         println!("{}", line!());
         // iff statement
         let neg_full = SoundFst::from(full_trans.clone()).negate_with_symbol_table(alphabet);
         let mut composed_neg_full = composed_transducer.clone();
-        concat(&mut composed_neg_full, &neg_full.0).unwrap();
+        concat(&mut composed_neg_full.0, &neg_full.0).unwrap();
+
+        let l = line!();
+        SoundFst(composed_neg_full.0.clone()).d(l);
+        println!("composed neg full {}", line!());
 
         println!("{}", line!());
         let mut neg_composed_full =
             SoundFst::from(composed_transducer).negate_with_symbol_table(alphabet);
-        concat(&mut neg_composed_full.0, &full_trans).unwrap();
+        concat(&mut neg_composed_full.0, &full_trans.0).unwrap();
 
-        println!("{}", line!());
+        let l = line!();
+        neg_composed_full.d(l);
+        println!("neg composed full{}", line!());
+
         let mut disjunction = neg_composed_full;
-        union(&mut disjunction.0, &composed_neg_full).unwrap();
-        println!("{}", line!());
+        union(&mut disjunction.0, &composed_neg_full.0).unwrap();
+        println!("disjunction {}", line!());
         disjunction.d(line!());
         let mut ret = disjunction.negate_with_symbol_table(alphabet);
         println!("{}", line!());
