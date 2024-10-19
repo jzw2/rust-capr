@@ -2,9 +2,7 @@ use std::sync::Arc;
 
 use rustfst::algorithms::compose::compose;
 use rustfst::algorithms::determinize::determinize;
-use rustfst::algorithms::{
-    minimize_with_config, reverse, tr_sort, MinimizeConfig, ProjectType,
-};
+use rustfst::algorithms::{minimize_with_config, reverse, tr_sort, MinimizeConfig, ProjectType};
 use rustfst::fst_traits::StateIterator;
 use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::union::union;
@@ -90,6 +88,11 @@ impl SoundFst {
 
     pub fn reverse(&mut self) {
         self.0 = reverse(&self.0).unwrap();
+    }
+    pub fn df(&self, s: &str) {
+        self.0
+            .draw(format!("images/{}.dot", s), &DrawingConfig::default())
+            .unwrap()
     }
     pub fn d(&self, line: u32) {
         self.0
@@ -189,7 +192,9 @@ impl SoundFst {
         // copied from hfst, ideally I'll refactor it so that it actually makes sense
 
         let composed_transducer = self.end_in_string(left_context, right_context, alphabet);
+        composed_transducer.df("replace_context_end_left");
         let full_trans = Self::begin_bracket(left_context, right_context, alphabet);
+        full_trans.df("replace_context_begin_left_marker");
 
         println!("{}", line!());
         // iff statement
@@ -202,8 +207,7 @@ impl SoundFst {
         println!("composed neg full {}", line!());
 
         println!("{}", line!());
-        let mut neg_composed_full =
-            composed_transducer.negate_with_symbol_table(alphabet);
+        let mut neg_composed_full = composed_transducer.negate_with_symbol_table(alphabet);
         concat(&mut neg_composed_full.0, &full_trans.0).unwrap();
 
         let l = line!();
@@ -560,6 +564,14 @@ mod tests {
             .unwrap();
 
         //assert_eq!(expected, actual.0);
+    }
+    #[test]
+    fn replace_left_test() {
+        let left: SoundVec = fst![3, 1];
+        let left: SoundFst = left.into();
+        let symbol_tabl = symt!["a", "b", "c", "d", "<", ">"];
+        let fst = left.replace_context(5, 6, &symbol_tabl);
+        fst.df("replace_left_out");
     }
 
     #[test]
