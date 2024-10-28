@@ -3,6 +3,7 @@ use rustfst::{
     algorithms::rm_epsilon::rm_epsilon,
     prelude::{
         determinize::determinize,
+        encode::{decode, encode},
         minimize, CoreFst, MutableFst, StateIterator,
     },
     Label, Semiring, SymbolTable,
@@ -21,10 +22,17 @@ impl SoundFst {
         rm_epsilon(&mut ret.0).unwrap();
         ret.d(line!());
         println!("{} Determinizing", line!());
+        let encoded = encode(
+            &mut ret.0,
+            rustfst::prelude::encode::EncodeType::EncodeLabels,
+        )
+        .unwrap();
+
         let mut ret: SoundFst = SoundFst(determinize(&ret.0).unwrap());
-        ret.d(line!());
+        //ret.d(line!());
         println!("{} Minimizing", line!());
         minimize(&mut ret.0).unwrap();
+        decode(&mut ret.0, encoded).unwrap();
         ret.d(line!());
         let accept = ret.0.add_state();
 
