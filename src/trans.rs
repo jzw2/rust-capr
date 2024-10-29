@@ -5,6 +5,7 @@ use rustfst::algorithms::determinize::determinize;
 use rustfst::algorithms::{minimize_with_config, reverse, tr_sort, MinimizeConfig, ProjectType};
 use rustfst::fst_traits::StateIterator;
 use rustfst::prelude::closure::{closure, ClosureType};
+use rustfst::prelude::rm_epsilon::rm_epsilon;
 use rustfst::prelude::union::union;
 use rustfst::prelude::{ILabelCompare, OLabelCompare, SerializableFst, TropicalWeight};
 use rustfst::{
@@ -160,25 +161,32 @@ impl SoundFst {
         pi_star_neg.df("arg2");
 
         println!("{}", line!());
-        tr_sort(&mut pi_star_neg.0, ILabelCompare {});
         // let composed_transducer: SoundVec = compose(pi_star_free_mark, pi_star_neg).unwrap();
         pi_star_free_mark.compose(&pi_star_neg);
 
-        let ret = pi_star_free_mark;
-        ret.df("composed_transducer");
+        let mut ret = pi_star_free_mark;
+        ret.optimize();
+        ret.df("composed_transducer_with_eps");
+        rm_epsilon(&mut ret.0).unwrap();
+        ret.df("composed_transducer_rm_eps");
+        ret.determinize();
+        ret.optimize();
+        ret.df("composed_transducer_rm_eps_then_opt");
         ret
     }
 
     fn begin_bracket(left_context: Label, right_context: Label, alphabet: &SymbolTable) -> Self {
-        let left_transducer: SoundVec = fst![left_context];
+        // let left_transducer: SoundVec = fst![left_context];
+        let left_transducer = Self::from_single_label(left_context);
         let pi_star = Self::any_star(alphabet);
-        let mut full_trans: SoundVec = fst![right_context];
-        closure(&mut full_trans, ClosureType::ClosureStar);
-        concat(&mut full_trans, &left_transducer).unwrap();
-        concat(&mut full_trans, &pi_star.0).unwrap();
-        let ret: SoundFst = full_trans.into();
-        ret.df("begin_bracket");
-        ret
+        // let mut full_trans: SoundVec = fst![right_context];
+        let mut full_trans = Self::from_single_label(right_context);
+        closure(&mut full_trans.0, ClosureType::ClosureStar);
+        // concat(&mut full_trans, &left_transducer).unwrap();
+        full_trans.concatenate(&left_transducer);
+        // concat(&mut full_trans, &pi_star.0).unwrap();
+        full_trans.concatenate(&pi_star);
+        full_trans
     }
 
     // take all contexts and replace it with a left marker
@@ -200,7 +208,7 @@ impl SoundFst {
         // iff statement
         let neg_full = full_trans.clone().negate_with_symbol_table(alphabet);
         let mut composed_neg_full = end_in_transducer.clone();
-        composed_neg_full.compose(&neg_full);
+        composed_neg_full.concatenate(&neg_full);
         composed_neg_full.df("composed_neg_full");
 
         let l = line!();
@@ -569,6 +577,19 @@ mod tests {
 
         //assert_eq!(expected, actual.0);
     }
+
+    #[test]
+    fn end_in_string() {
+        let left: SoundVec = fst![2, 1];
+        let left: SoundFst = left.into();
+        let input: SoundVec = fst![2, 2, 2, 1];
+        let symbol_tabl = symt!["a", "c", "d", "<", ">"];
+        let fst = left.end_in_string(4, 5, &symbol_tabl);
+
+        let output: SoundVec = compose(input, fst.0).unwrap();
+        assert!(output.paths_iter().count() == 1);
+    }
+
     #[test]
     fn replace_left_test() {
         let left: SoundVec = fst![2, 1];
