@@ -5,9 +5,11 @@ use rustfst::algorithms::determinize::determinize;
 use rustfst::algorithms::{minimize_with_config, reverse, tr_sort, MinimizeConfig, ProjectType};
 use rustfst::fst_traits::StateIterator;
 use rustfst::prelude::closure::{closure, ClosureType};
-use rustfst::prelude::rm_epsilon::rm_epsilon;
+use rustfst::prelude::rm_epsilon::{self, rm_epsilon};
 use rustfst::prelude::union::union;
-use rustfst::prelude::{ILabelCompare, OLabelCompare, SerializableFst, TropicalWeight};
+use rustfst::prelude::{
+    minimize, rm_final_epsilon, ILabelCompare, OLabelCompare, SerializableFst, TropicalWeight,
+};
 use rustfst::{
     algorithms::{concat::concat, project},
     fst_impls::VectorFst,
@@ -57,14 +59,8 @@ impl SoundFst {
     }
 
     pub fn optimize(&mut self) {
-        minimize_with_config(
-            &mut self.0,
-            MinimizeConfig {
-                allow_nondet: true,
-                ..Default::default()
-            },
-        )
-        .unwrap()
+        self.determinize();
+        minimize(&mut self.0).unwrap()
     }
 
     pub fn compose(&mut self, other: &SoundFst) {
@@ -84,6 +80,7 @@ impl SoundFst {
     }
 
     pub fn determinize(&mut self) {
+        rm_epsilon(&mut self.0).unwrap();
         self.0 = determinize(&self.0).unwrap();
     }
 
@@ -189,6 +186,20 @@ impl SoundFst {
         full_trans
     }
 
+    fn if_end_then_start(start: &SoundFst, end: &SoundFst, alphabet: &SymbolTable) -> SoundFst {
+        let mut start = start.clone();
+        let negated = end.negate_with_symbol_table(alphabet);
+        negated.df("negated_end");
+        start.concatenate(&negated);
+        start
+    }
+
+    fn if_start_then_end(start: &SoundFst, end: &SoundFst, alphabet: &SymbolTable) -> SoundFst {
+        let mut negated = start.negate_with_symbol_table(alphabet);
+        negated.df("negated_ct");
+        negated.concatenate(&end);
+        negated
+    }
     // take all contexts and replace it with a left marker
     fn replace_context(
         &self,
@@ -201,40 +212,37 @@ impl SoundFst {
         let mut end_in_transducer =
             self.end_in_string(left_context_marker, right_context_marker, alphabet);
         end_in_transducer.df("replace_context_end_left");
-        let full_trans = Self::begin_bracket(left_context_marker, right_context_marker, alphabet);
-        full_trans.df("replace_context_begin_left_marker");
+        let start_bracket =
+            Self::begin_bracket(left_context_marker, right_context_marker, alphabet);
+        start_bracket.df("replace_context_begin_left_marker");
 
         println!("{}", line!());
         // iff statement
-        let neg_full = full_trans.clone().negate_with_symbol_table(alphabet);
-        let mut composed_neg_full = end_in_transducer.clone();
-        composed_neg_full.concatenate(&neg_full);
-        composed_neg_full.df("composed_neg_full");
+        let mut start_then_end =
+            Self::if_start_then_end(&end_in_transducer, &start_bracket, alphabet);
+        //start_then_end.optimize();
+        rm_epsilon(&mut start_then_end.0).unwrap();
+        start_then_end.determinize();
+        start_then_end.df("neg_ct_mt_det");
+        minimize(&mut start_then_end.0);
+        start_then_end.df("neg_ct_mt_min");
 
-        let l = line!();
-        SoundFst(composed_neg_full.0.clone()).d(l);
-        println!("composed neg full {}", line!());
+        let mut end_ten_start =
+            Self::if_end_then_start(&end_in_transducer, &start_bracket, alphabet);
+        //end_ten_start.optimize();
+        end_ten_start.df("ct_neg_mt");
 
-        println!("{}", line!());
-        let mut neg_composed_full = end_in_transducer.negate_with_symbol_table(alphabet);
-        concat(&mut neg_composed_full.0, &full_trans.0).unwrap();
-        neg_composed_full.df("neg_composed_full");
+        let mut disjunction = start_then_end;
+        disjunction.union(&end_ten_start);
 
-        let l = line!();
-        neg_composed_full.d(l);
-        println!("neg composed full{}", line!());
-
-        let mut disjunction = neg_composed_full;
-        union(&mut disjunction.0, &composed_neg_full.0).unwrap();
         println!("disjunction {}", line!());
-        disjunction.d(line!());
+        disjunction.optimize();
+        disjunction.df("disjunction");
         let mut ret = disjunction.negate_with_symbol_table(alphabet);
-        ret.d(line!());
-        println!("{}", line!());
 
-        println!("{}", line!());
         ret.optimize();
         ret.d(line!());
+        ret.df("replace_context");
         println!("Finished replace context");
         ret
     }
@@ -578,6 +586,15 @@ mod tests {
         //assert_eq!(expected, actual.0);
     }
 
+    #[test]
+    fn begin_bracket_test() {
+        let input: SoundVec = fst![4];
+        let symbol_tabl = symt!["a", "c", "d", "<", ">"];
+        let fst = SoundFst::begin_bracket(4, 5, &symbol_tabl);
+
+        let output: SoundVec = compose(input, fst.0).unwrap();
+        assert!(output.paths_iter().count() == 1);
+    }
     #[test]
     fn end_in_string() {
         let left: SoundVec = fst![2, 1];

@@ -40,7 +40,7 @@ impl SoundFst {
         for state in fst.0.states_iter() {
             //dbg!(state);
             if fst.0.is_final(state).unwrap() {
-                let _ = ret.0.set_final(state, SoundWeight::zero());
+                let _ = ret.0.delete_final_weight(state);
             } else {
                 let _ = ret.0.set_final(state, SoundWeight::one());
             }
