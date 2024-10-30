@@ -2,15 +2,13 @@ use std::sync::Arc;
 
 use rustfst::algorithms::compose::compose;
 use rustfst::algorithms::determinize::determinize;
-use rustfst::algorithms::{minimize_with_config, reverse, tr_sort, MinimizeConfig, ProjectType};
+use rustfst::algorithms::{reverse, tr_sort, ProjectType};
 use rustfst::fst_traits::StateIterator;
 use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::encode::{decode, encode};
-use rustfst::prelude::rm_epsilon::{self, rm_epsilon};
+use rustfst::prelude::rm_epsilon::rm_epsilon;
 use rustfst::prelude::union::union;
-use rustfst::prelude::{
-    minimize, rm_final_epsilon, ILabelCompare, OLabelCompare, SerializableFst, TropicalWeight,
-};
+use rustfst::prelude::{minimize, OLabelCompare, SerializableFst, TropicalWeight};
 use rustfst::{
     algorithms::{concat::concat, project},
     fst_impls::VectorFst,
@@ -162,7 +160,7 @@ impl SoundFst {
         let left_transducer: SoundFst = Self::from_single_label(left_context);
         let mut pi_star_copy = pi_star.clone();
         pi_star_copy.concatenate(&left_transducer);
-        let mut pi_star_neg = pi_star_copy.negate_with_symbol_table(alphabet);
+        let pi_star_neg = pi_star_copy.negate_with_symbol_table(alphabet);
         pi_star_neg.df("arg2");
 
         println!("{}", line!());
@@ -205,7 +203,7 @@ impl SoundFst {
     fn if_start_then_end(start: &SoundFst, end: &SoundFst, alphabet: &SymbolTable) -> SoundFst {
         let mut negated = start.negate_with_symbol_table(alphabet);
         negated.df("negated_ct");
-        negated.concatenate(&end);
+        negated.concatenate(end);
         negated
     }
     // take all contexts and replace it with a left marker
@@ -217,7 +215,7 @@ impl SoundFst {
     ) -> Self {
         println!("starting replace context");
         self.d(line!());
-        let mut end_in_transducer =
+        let end_in_transducer =
             self.end_in_string(left_context_marker, right_context_marker, alphabet);
         end_in_transducer.df("replace_context_end_left");
         let start_bracket =
@@ -228,15 +226,8 @@ impl SoundFst {
         // iff statement
         let mut start_then_end =
             Self::if_start_then_end(&end_in_transducer, &start_bracket, alphabet);
-        //start_then_end.optimize();
-        rm_epsilon(&mut start_then_end.0).unwrap();
-        start_then_end.determinize();
-        start_then_end.df("neg_ct_mt_det");
-        minimize(&mut start_then_end.0);
-        start_then_end.df("neg_ct_mt_min");
 
-        let mut end_ten_start =
-            Self::if_end_then_start(&end_in_transducer, &start_bracket, alphabet);
+        let end_ten_start = Self::if_end_then_start(&end_in_transducer, &start_bracket, alphabet);
         //end_ten_start.optimize();
         end_ten_start.df("ct_neg_mt");
 
@@ -631,7 +622,7 @@ mod tests {
         let mapping: SoundFst = mapping.into();
 
         let input1: SoundVec = fst![3, 1, 3, 1, 3, 1, 3]; // "cacacac"
-        let mut rt = mapping.replace_transducer(4, 5, &symbol_tabl);
+        let rt = mapping.replace_transducer(4, 5, &symbol_tabl);
     }
 
     #[test]
