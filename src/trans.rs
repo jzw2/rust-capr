@@ -5,6 +5,7 @@ use rustfst::algorithms::determinize::determinize;
 use rustfst::algorithms::{minimize_with_config, reverse, tr_sort, MinimizeConfig, ProjectType};
 use rustfst::fst_traits::StateIterator;
 use rustfst::prelude::closure::{closure, ClosureType};
+use rustfst::prelude::encode::{decode, encode};
 use rustfst::prelude::rm_epsilon::{self, rm_epsilon};
 use rustfst::prelude::union::union;
 use rustfst::prelude::{
@@ -59,8 +60,15 @@ impl SoundFst {
     }
 
     pub fn optimize(&mut self) {
-        self.determinize();
-        minimize(&mut self.0).unwrap()
+        rm_epsilon(&mut self.0).unwrap();
+        let table = encode(
+            &mut self.0,
+            rustfst::prelude::encode::EncodeType::EncodeLabels,
+        )
+        .unwrap();
+        self.0 = determinize(&self.0).unwrap();
+        minimize(&mut self.0).unwrap();
+        decode(&mut self.0, table).unwrap();
     }
 
     pub fn compose(&mut self, other: &SoundFst) {
@@ -267,7 +275,7 @@ impl SoundFst {
         star.concatenate(&left_to_left);
         star.concatenate(&right_to_right);
         star.concatenate(&Self::any_star(alphabet));
-        star.negate_with_symbol_table(alphabet);
+        let mut star = star.negate_with_symbol_table(alphabet);
         star.optimize();
         star
     }
@@ -617,25 +625,36 @@ mod tests {
     }
 
     #[test]
+    fn replace_transducer_test() {
+        let symbol_tabl = symt!["a", "c", "d", "<", ">"];
+        let mapping: SoundVec = fst![3, 2 => 4];
+        let mapping: SoundFst = mapping.into();
+
+        let input1: SoundVec = fst![3, 1, 3, 1, 3, 1, 3]; // "cacacac"
+        let mut rt = mapping.replace_transducer(4, 5, &symbol_tabl);
+    }
+
+    #[test]
     fn right_arrow_test1() {
         let symbol_tabl = symt!["a", "b", "c", "d"];
-        let mapping: SoundVec = fst![3, 2 => 4];
+        let mapping: SoundVec = fst![3, 1 => 4];
 
         let left: SoundVec = fst![3, 1];
         let right: SoundVec = fst![3];
 
         let input1: SoundVec = fst![3, 1, 3, 1, 3, 1, 3]; // "cacacac"
 
-        let replaced =
+        let mut replaced =
             SoundFst(mapping).replace_in_context(left.into(), right.into(), false, &symbol_tabl);
+        replaced.optimize();
         replaced.d(line!());
-
-        let expected: SoundVec = fst![3, 1, 3, 1, 3, 1 => 4, 4, 4];
 
         let mut actual = SoundFst(input1);
         actual.compose(&replaced);
-        actual.d(line!());
+        project(&mut actual.0, ProjectType::ProjectOutput);
+        let paths: Vec<_> = actual.0.paths_iter().collect();
+        let a = paths[0].olabels.as_slice();
 
-        assert_eq!(expected, actual.0);
+        assert_eq!(a, &[3, 1, 4, 4, 3]);
     }
 }
