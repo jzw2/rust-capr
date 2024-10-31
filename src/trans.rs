@@ -224,8 +224,7 @@ impl SoundFst {
 
         println!("{}", line!());
         // iff statement
-        let mut start_then_end =
-            Self::if_start_then_end(&end_in_transducer, &start_bracket, alphabet);
+        let start_then_end = Self::if_start_then_end(&end_in_transducer, &start_bracket, alphabet);
 
         let end_ten_start = Self::if_end_then_start(&end_in_transducer, &start_bracket, alphabet);
         //end_ten_start.optimize();
@@ -621,8 +620,8 @@ mod tests {
         let mapping: SoundVec = fst![3, 2 => 4];
         let mapping: SoundFst = mapping.into();
 
-        let input1: SoundVec = fst![3, 1, 3, 1, 3, 1, 3]; // "cacacac"
-        let rt = mapping.replace_transducer(4, 5, &symbol_tabl);
+        //let input1: SoundVec = fst![3, 1, 3, 1, 3, 1, 3]; // "cacacac"
+        mapping.replace_transducer(4, 5, &symbol_tabl);
     }
 
     #[test]
