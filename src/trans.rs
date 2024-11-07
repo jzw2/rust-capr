@@ -377,7 +377,7 @@ impl SoundFst {
     }
 
     pub fn transduce_text(&self, table: &SymbolTable, text: &str) -> Vec<String> {
-        let mut t = self.clone();
+        let t = self.clone();
         println!("{:?}", table);
         println!("{}", text);
 
