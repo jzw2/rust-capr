@@ -376,24 +376,30 @@ impl SoundFst {
         }
     }
 
-    fn transduce_text(&self, table: &SymbolTable, text: &str) -> Vec<String> {
+    pub fn transduce_text(&self, table: &SymbolTable, text: &str) -> Vec<String> {
         let mut t = self.clone();
+        println!("{:?}", table);
+        println!("{}", text);
 
         let labels: Vec<_> = text
-            .split("")
-            .map(|c| table.get_label(c).unwrap())
+            .chars()
+            .inspect(|c| println!("{}", c))
+            .map(|c| table.get_label(c.to_string()).unwrap())
             .collect();
         let text_fst: VectorFst<_> = acceptor(&labels, SoundWeight::one());
-        let text_fst: SoundFst = text_fst.into();
+        let mut text_fst: SoundFst = text_fst.into();
 
         let table = Arc::new(table.clone());
-        t.compose(&text_fst);
-        t.output_project();
-        t.0.set_output_symbols(Arc::clone(&table));
+        text_fst.compose(&t);
+        text_fst.output_project();
+        text_fst.0.set_output_symbols(Arc::clone(&table));
+        text_fst.0.set_input_symbols(Arc::clone(&table));
 
         // let acceptor: VectorFst<_> = acceptor(&labels, SoundWeight::one());
-        self.0
+        text_fst
+            .0
             .string_paths_iter()
+            // .inspect(|x| println!("{:?}", x))
             .unwrap()
             .map(|path| path.ostring().unwrap())
             .collect()
@@ -672,5 +678,23 @@ mod tests {
         let a = paths[0].olabels.as_slice();
 
         assert_eq!(a, &[3, 1, 4, 4, 3]);
+    }
+
+    #[test]
+    fn right_arrow_test_with_transduce_text() {
+        let symbol_tabl = symt!["a", "b", "c", "d"];
+        let mapping: SoundVec = fst![3, 1 => 4];
+
+        let left: SoundVec = fst![3, 1];
+        let right: SoundVec = fst![3];
+
+        // let input1: SoundVec = fst![3, 1, 3, 1, 3, 1, 3]; // "cacacac"
+
+        let replaced =
+            SoundFst(mapping).replace_in_context(left.into(), right.into(), false, &symbol_tabl);
+
+        let transduced = replaced.transduce_text(&symbol_tabl, "cacacac");
+
+        assert_eq!(transduced[0], "c a d d c");
     }
 }
