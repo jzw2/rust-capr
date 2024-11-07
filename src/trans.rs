@@ -47,6 +47,9 @@ impl SoundFst {
         project(&mut self.0, ProjectType::ProjectInput)
     }
 
+    pub fn output_project(&mut self) {
+        project(&mut self.0, ProjectType::ProjectOutput)
+    }
     fn any_star(st: &SymbolTable) -> Self {
         let mut fst: SoundVec = epsilon_machine().unwrap();
         for label in st.labels() {
@@ -371,6 +374,29 @@ impl SoundFst {
                 .emplace_tr(state, s, s, SoundWeight::one(), state)
                 .unwrap();
         }
+    }
+
+    fn transduce_text(&self, table: &SymbolTable, text: &str) -> Vec<String> {
+        let mut t = self.clone();
+
+        let labels: Vec<_> = text
+            .split("")
+            .map(|c| table.get_label(c).unwrap())
+            .collect();
+        let text_fst: VectorFst<_> = acceptor(&labels, SoundWeight::one());
+        let text_fst: SoundFst = text_fst.into();
+
+        let table = Arc::new(table.clone());
+        t.compose(&text_fst);
+        t.output_project();
+        t.0.set_output_symbols(Arc::clone(&table));
+
+        // let acceptor: VectorFst<_> = acceptor(&labels, SoundWeight::one());
+        self.0
+            .string_paths_iter()
+            .unwrap()
+            .map(|path| path.ostring().unwrap())
+            .collect()
     }
 }
 
