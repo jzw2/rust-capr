@@ -18,6 +18,25 @@ pub fn greet() {
 }
 
 #[wasm_bindgen]
+pub fn transduce_context_invert(
+    left: &str,
+    right: &str,
+    from: &str,
+    to: &str,
+    input: &str,
+) -> Vec<String> {
+    console_error_panic_hook::set_once();
+    let sound = SoundLaw::new(from, to, left, right);
+    let alphabet: Vec<_> = "abcedfghijklmnopqrstuvwxyz".split("").collect();
+    let mut table = SymbolTable::new();
+    table.add_symbols(alphabet);
+
+    let mut fst = sound.to_fst(&table);
+    fst.invert();
+    fst.transduce_text(&table, input)
+}
+
+#[wasm_bindgen]
 pub fn transduce_context(
     left: &str,
     right: &str,
@@ -37,8 +56,8 @@ pub fn transduce_context(
 
 #[cfg(test)]
 mod tests {
-    use crate::SymbolTable;
     use crate::trans::SoundLaw;
+    use crate::{transduce_context, SymbolTable};
     #[test]
     fn sound_law() {
         let left = "a";
@@ -47,13 +66,8 @@ mod tests {
         let to = "x";
         let input = "abc";
 
-        let sound = SoundLaw::new(from, to, left, right);
-        let alphabet: Vec<_> = "abcedfghijklmnopqrstuvwxyz".split("").collect();
-        let mut table = SymbolTable::new();
-        table.add_symbols(alphabet);
+        let output = transduce_context(left, right, from, to, input);
 
-        let fst = sound.to_fst(&table);
-        let output = fst.transduce_text(&table, input);
         assert_eq!(&output[0], "a x c");
     }
 }
