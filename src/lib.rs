@@ -27,8 +27,8 @@ pub fn transduce_context_invert(
 ) -> Vec<String> {
     console_error_panic_hook::set_once();
     let sound = SoundLaw::new(from, to, left, right);
-    // let alphabet: Vec<_> = "abcedfghijklmnopqrstuvwxyz".split("").collect();
-     let alphabet: Vec<_> = "abcx".split("").collect();
+    let alphabet: Vec<_> = "abcedfghijklmnopqrstuvwxyz".split("").collect();
+     // let alphabet: Vec<_> = "abcx".split("").collect();
     let mut table = SymbolTable::new();
     table.add_symbols(alphabet);
 
