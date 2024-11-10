@@ -22,6 +22,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq)]
 pub struct SoundFst(pub SoundVec);
 
+const DEBUG: bool = false;
+
 pub type SoundVec = VectorFst<SoundWeight>;
 
 impl From<VectorFst<SoundWeight>> for SoundFst {
@@ -101,14 +103,18 @@ impl SoundFst {
         self.0 = reverse(&self.0).unwrap();
     }
     pub fn df(&self, s: &str) {
-        // self.0
-        //     .draw(format!("images/{}.dot", s), &DrawingConfig::default())
-        //     .unwrap()
+        if DEBUG {
+            self.0
+                .draw(format!("images/{}.dot", s), &DrawingConfig::default())
+                .unwrap()
+        }
     }
     pub fn d(&self, line: u32) {
-        // self.0
-        //     .draw(format!("images/{}.dot", line), &DrawingConfig::default())
-        //     .unwrap()
+        if DEBUG {
+            self.0
+                .draw(format!("images/{}.dot", line), &DrawingConfig::default())
+                .unwrap()
+        }
     }
     fn no_upper(&self, alphabet: &SymbolTable) -> Self {
         let mut projection = self.0.clone();

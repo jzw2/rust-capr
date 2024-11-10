@@ -17,7 +17,8 @@
           buildInputs = [ yarn nodejs cargo rustc rustfmt pre-commit rustPackages.clippy rust-analyzer cargo-flamegraph xdot
           wasm-pack
           lld
-          
+          nodePackages.eslint
+
           ];
           RUST_SRC_PATH = rustPlatform.rustLibSrc;
 
