@@ -63,6 +63,10 @@ impl SoundFst {
                 let _ = fst.add_tr(0, Tr::new(label, label, SoundWeight::one(), 0));
             }
         }
+
+        fst.set_input_symbols(st.clone().into());
+        fst.set_output_symbols(st.clone().into());
+
         fst.into()
     }
 
@@ -608,5 +612,21 @@ mod tests {
         let transduced = replaced.transduce_text(&symbol_tabl, "cacacac");
 
         assert_eq!(transduced[0], "c a d d c");
+    }
+
+    #[test]
+    fn symbol_compose_test() {
+        let st = symt!["a", "b", "c"];
+        let st2 = symt!["x", "y", "z"];
+        let arc = Arc::new(st);
+        let mut x = SoundFst::from_single_label(1);
+        x.0.set_input_symbols(Arc::clone(&arc));
+        x.0.set_output_symbols(Arc::clone(&arc));
+
+        let star = SoundFst::any_star(&st2);
+        x.compose(&star);
+        let vec: Vec<_> = x.0.string_paths_iter().unwrap().collect();
+        assert_eq!(vec[0].ostring().unwrap(), "x");
+        assert_eq!(vec[0].istring().unwrap(), "a");
     }
 }
