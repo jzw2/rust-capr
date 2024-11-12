@@ -5,16 +5,19 @@ mod negate;
 mod trans;
 
 use rustfst::SymbolTable;
-use trans::SoundLaw;
+use trans::{SoundFst, SoundLaw};
 
-#[wasm_bindgen]
-extern "C" {
-    fn alert(s: &str);
-}
+pub fn create_law(left: &str, right: &str, from: &str, to: &str) -> SoundLaw {
+    let alphabet: Vec<_> = "abcedfghijklmnopqrstuvwxyz"
+        .chars()
+        .map(|x| x.to_string())
+        .collect();
+    // let alphabet: Vec<_> = "abcx".split("").collect();
+    let mut table = SymbolTable::new();
+    table.add_symbols(alphabet);
 
-#[wasm_bindgen]
-pub fn greet() {
-    alert("Hello, wasm-game-of-life!");
+    let sound = SoundLaw::new(from, to, left, right, &table);
+    sound
 }
 
 #[wasm_bindgen]
@@ -26,15 +29,12 @@ pub fn transduce_context_invert(
     input: &str,
 ) -> Vec<String> {
     console_error_panic_hook::set_once();
-    let sound = SoundLaw::new(from, to, left, right);
-    let alphabet: Vec<_> = "abcedfghijklmnopqrstuvwxyz".split("").collect();
-     // let alphabet: Vec<_> = "abcx".split("").collect();
-    let mut table = SymbolTable::new();
-    table.add_symbols(alphabet);
+    let law = create_law(left, right, from, to);
+    let mut fst = law.get_fst().clone();
 
-    let mut fst = sound.to_fst(&table);
     fst.invert();
     fst.df("inverted");
+    let table = law.get_table();
     fst.transduce_text(&table, input)
 }
 
@@ -47,12 +47,10 @@ pub fn transduce_context(
     input: &str,
 ) -> Vec<String> {
     console_error_panic_hook::set_once();
-    let sound = SoundLaw::new(from, to, left, right);
-    let alphabet: Vec<_> = "abcedfghijklmnopqrstuvwxyz".split("").collect();
-    let mut table = SymbolTable::new();
-    table.add_symbols(alphabet);
+    let law = create_law(left, right, from, to);
+    let fst = law.get_fst().clone();
 
-    let fst = sound.to_fst(&table);
+    let table = law.get_table();
     fst.transduce_text(&table, input)
 }
 

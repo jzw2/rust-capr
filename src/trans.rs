@@ -18,6 +18,7 @@ use rustfst::{
 };
 use rustfst::{fst, DrawingConfig};
 use serde::{Deserialize, Serialize};
+use wasm_bindgen::prelude::wasm_bindgen;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct SoundFst(pub SoundVec);
@@ -64,8 +65,9 @@ impl SoundFst {
             }
         }
 
-        fst.set_input_symbols(st.clone().into());
-        fst.set_output_symbols(st.clone().into());
+        let arc: Arc<_> = st.clone().into();
+        fst.set_input_symbols(Arc::clone(&arc));
+        fst.set_output_symbols(Arc::clone(&arc));
 
         fst.into()
     }
@@ -402,22 +404,53 @@ impl SoundFst {
 /// `to` is y
 /// `left_context` is a
 /// `right_context` is b
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct SoundLaw {
     from: String,
     to: String,
     left_context: String,
     right_context: String,
+    fst: SoundFst,
+    table: SymbolTable,
 }
 
 impl SoundLaw {
-    pub fn new(from: &str, to: &str, left_context: &str, right_context: &str) -> SoundLaw {
+    pub fn new(
+        from: &str,
+        to: &str,
+        left_context: &str,
+        right_context: &str,
+        table: &SymbolTable,
+    ) -> SoundLaw {
+        let labels =
+            [left_context, right_context, from, to].map(|s| get_labels_from_str(s, table).unwrap());
+        let left_context_fst: VectorFst<_> = acceptor(&labels[0], SoundWeight::one());
+        let right_context_fst: VectorFst<_> = acceptor(&labels[1], SoundWeight::one());
+
+        let transform: VectorFst<_> = transducer(&labels[2], &labels[3], SoundWeight::one());
+        let transform = SoundFst(transform);
+
+        transform.replace_in_context(
+            left_context_fst.into(),
+            right_context_fst.into(),
+            false,
+            table,
+        );
         SoundLaw {
             from: from.to_string(),
             to: to.to_string(),
             left_context: left_context.into(),
             right_context: right_context.into(),
+            fst: transform,
+            table: table.clone(),
         }
+    }
+
+    pub fn get_fst(&self) -> &SoundFst {
+        &self.fst
+    }
+    pub fn get_table(&self) -> &SymbolTable {
+        &self.table
     }
 }
 
@@ -618,15 +651,28 @@ mod tests {
     fn symbol_compose_test() {
         let st = symt!["a", "b", "c"];
         let st2 = symt!["x", "y", "z"];
+        let st3 = symt!["1", "2", "3"];
         let arc = Arc::new(st);
         let mut x = SoundFst::from_single_label(1);
-        x.0.set_input_symbols(Arc::clone(&arc));
-        x.0.set_output_symbols(Arc::clone(&arc));
+        x.0.set_input_symbols(arc.clone());
+        x.0.set_output_symbols(arc.clone());
+
+        let mut x_clone = x.clone();
+        x_clone.0.set_input_symbols(st3.clone().into());
+        x_clone.0.set_output_symbols(st3.clone().into());
 
         let star = SoundFst::any_star(&st2);
         x.compose(&star);
         let vec: Vec<_> = x.0.string_paths_iter().unwrap().collect();
         assert_eq!(vec[0].ostring().unwrap(), "x");
         assert_eq!(vec[0].istring().unwrap(), "a");
+
+        x.union(&x_clone);
+
+        let vec: Vec<_> = x.0.string_paths_iter().unwrap().collect();
+        assert_eq!(vec[0].ostring().unwrap(), "x");
+        assert_eq!(vec[0].istring().unwrap(), "a");
+        assert_eq!(vec[1].ostring().unwrap(), "x");
+        assert_eq!(vec[1].istring().unwrap(), "a");
     }
 }
