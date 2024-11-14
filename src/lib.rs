@@ -49,6 +49,7 @@ pub fn transduce_context(
     console_error_panic_hook::set_once();
     let law = create_law(left, right, from, to);
     let fst = law.get_fst().clone();
+    fst.df("non_invert");
 
     let table = law.get_table();
     fst.transduce_text(&table, input)
@@ -72,7 +73,7 @@ mod tests {
         assert_eq!(&output[1], "x x x x");
     }
     #[test]
-    fn sound_law() {
+    fn sound_law_non_invert() {
         let left = "a";
         let right = "c";
         let from = "b";
@@ -80,6 +81,7 @@ mod tests {
         let input = "abc";
 
         let output = transduce_context(left, right, from, to, input);
+        dbg!(&output);
 
         assert_eq!(&output[0], "a x c");
     }

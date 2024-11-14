@@ -23,7 +23,7 @@ use wasm_bindgen::prelude::wasm_bindgen;
 #[derive(Clone, Debug, PartialEq)]
 pub struct SoundFst(pub SoundVec);
 
-const DEBUG: bool = false;
+const DEBUG: bool = true;
 
 pub type SoundVec = VectorFst<SoundWeight>;
 
@@ -260,14 +260,20 @@ impl SoundFst {
     }
 
     fn constrain_boundry_markers(alphabet: &SymbolTable, left: Label, right: Label) -> SoundFst {
-        let left_to_left = Self::from_single_label(left);
-        let right_to_right = Self::from_single_label(right);
+        let arc = Arc::new(alphabet.clone());
+        let mut left_to_left = Self::from_single_label(left);
+        left_to_left.0.set_input_symbols(arc.clone());
+        left_to_left.0.set_output_symbols(arc.clone());
+
+        let mut right_to_right = Self::from_single_label(right);
+        right_to_right.0.set_input_symbols(arc.clone());
+        right_to_right.0.set_output_symbols(arc.clone());
         let mut star = Self::any_star(alphabet);
         star.concatenate(&left_to_left);
         star.concatenate(&right_to_right);
         star.concatenate(&Self::any_star(alphabet));
         let mut star = star.negate_with_symbol_table(alphabet);
-        star.optimize();
+        // star.optimize();
         star
     }
 
@@ -290,17 +296,25 @@ impl SoundFst {
         let right_marker = alphabet_with_marker.add_symbol("right_marker");
 
         println!("inserting boundry markers");
-        let ibt: SoundFst = Self::insert_boundry_markers(alphabet, left_marker, right_marker);
+        let mut ibt: SoundFst = Self::insert_boundry_markers(alphabet, left_marker, right_marker);
+        ibt.0.set_input_symbols(alphabet_with_marker.clone().into());
+        ibt.0
+            .set_output_symbols(alphabet_with_marker.clone().into());
         println!("removing boundry markers");
-        let rbt: SoundFst = Self::remove_boundry_markers(alphabet, left_marker, right_marker); // remove boundry markers
+        let mut rbt: SoundFst = Self::remove_boundry_markers(alphabet, left_marker, right_marker); // remove boundry markers
+        rbt.0.set_input_symbols(alphabet_with_marker.clone().into());
+        rbt.0
+            .set_output_symbols(alphabet_with_marker.clone().into());
 
         println!("constriaingin boundry markers");
         let cbt = Self::constrain_boundry_markers(&alphabet_with_marker, left_marker, right_marker);
+        cbt.df("cbt");
 
         println!("left context");
         let mut lct =
             left_context.replace_context(left_marker, right_marker, &alphabet_with_marker);
         lct.optimize();
+        lct.df("left_context");
 
         println!("right context");
         let mut right_rev: SoundFst = right_context;
@@ -310,6 +324,7 @@ impl SoundFst {
         let mut rct = right_rev.replace_context(right_marker, left_marker, &alphabet_with_marker);
         rct.reverse();
         rct.optimize();
+        rct.df("right_context");
 
         println!("create replace tranducer");
         let mut rt = self.replace_transducer(left_marker, right_marker, &alphabet_with_marker);
@@ -318,15 +333,20 @@ impl SoundFst {
         let mut result: SoundFst = ibt.clone();
         println!("composing cbt");
         result.compose(&cbt);
+        result.df("compose_cbt");
         println!("composing rct");
         result.compose(&rct);
+        result.df("compose_rct");
         println!("composing lct");
         result.compose(&lct);
         println!("composing lt");
+        result.df("compose_lct");
         result.compose(&rt);
+        result.df("compose_rt");
         println!("composing rbt");
         result.compose(&rbt);
         println!("done");
+        result.df("compose_rbt");
 
         if optional {
             todo!()
@@ -424,13 +444,15 @@ impl SoundLaw {
     ) -> SoundLaw {
         let labels =
             [left_context, right_context, from, to].map(|s| get_labels_from_str(s, table).unwrap());
+        dbg!(&labels);
+
         let left_context_fst: VectorFst<_> = acceptor(&labels[0], SoundWeight::one());
         let right_context_fst: VectorFst<_> = acceptor(&labels[1], SoundWeight::one());
 
         let transform: VectorFst<_> = transducer(&labels[2], &labels[3], SoundWeight::one());
         let transform = SoundFst(transform);
 
-        transform.replace_in_context(
+        let replace_fst = transform.replace_in_context(
             left_context_fst.into(),
             right_context_fst.into(),
             false,
@@ -441,7 +463,7 @@ impl SoundLaw {
             to: to.to_string(),
             left_context: left_context.into(),
             right_context: right_context.into(),
-            fst: transform,
+            fst: replace_fst,
             table: table.clone(),
         }
     }
@@ -643,6 +665,19 @@ mod tests {
             SoundFst(mapping).replace_in_context(left.into(), right.into(), false, &symbol_tabl);
 
         let transduced = replaced.transduce_text(&symbol_tabl, "cacacac");
+
+        assert_eq!(transduced[0], "c a d d c");
+    }
+
+    #[test]
+    fn right_arrow_test_with_soundlaw() {
+        let symbol_tabl = symt!["a", "b", "c", "d"];
+        let law = SoundLaw::new("ca", "d", "ca", "c", &symbol_tabl);
+
+        // let input1: SoundVec = fst![3, 1, 3, 1, 3, 1, 3]; // "cacacac"
+        let fst = law.get_fst();
+
+        let transduced = fst.transduce_text(&symbol_tabl, "cacacac");
 
         assert_eq!(transduced[0], "c a d d c");
     }
