@@ -3,6 +3,7 @@ accepts.out
 image.txt
 negate_test.txt
 images/
+nix_env/
 
 # Created by https://www.toptal.com/developers/gitignore/api/node
 # Edit at https://www.toptal.com/developers/gitignore?templates=node
