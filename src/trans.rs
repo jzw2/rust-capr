@@ -23,7 +23,7 @@ use wasm_bindgen::prelude::wasm_bindgen;
 #[derive(Clone, Debug, PartialEq)]
 pub struct SoundFst(pub SoundVec);
 
-const DEBUG: bool = true;
+const DEBUG: bool = false;
 
 pub type SoundVec = VectorFst<SoundWeight>;
 
@@ -262,12 +262,8 @@ impl SoundFst {
     fn constrain_boundry_markers(alphabet: &SymbolTable, left: Label, right: Label) -> SoundFst {
         let arc = Arc::new(alphabet.clone());
         let mut left_to_left = Self::from_single_label(left);
-        left_to_left.0.set_input_symbols(arc.clone());
-        left_to_left.0.set_output_symbols(arc.clone());
 
         let mut right_to_right = Self::from_single_label(right);
-        right_to_right.0.set_input_symbols(arc.clone());
-        right_to_right.0.set_output_symbols(arc.clone());
         let mut star = Self::any_star(alphabet);
         star.concatenate(&left_to_left);
         star.concatenate(&right_to_right);
@@ -297,14 +293,8 @@ impl SoundFst {
 
         println!("inserting boundry markers");
         let mut ibt: SoundFst = Self::insert_boundry_markers(alphabet, left_marker, right_marker);
-        ibt.0.set_input_symbols(alphabet_with_marker.clone().into());
-        ibt.0
-            .set_output_symbols(alphabet_with_marker.clone().into());
         println!("removing boundry markers");
         let mut rbt: SoundFst = Self::remove_boundry_markers(alphabet, left_marker, right_marker); // remove boundry markers
-        rbt.0.set_input_symbols(alphabet_with_marker.clone().into());
-        rbt.0
-            .set_output_symbols(alphabet_with_marker.clone().into());
 
         println!("constriaingin boundry markers");
         let cbt = Self::constrain_boundry_markers(&alphabet_with_marker, left_marker, right_marker);
