@@ -5,7 +5,7 @@ mod negate;
 mod trans;
 
 use rustfst::SymbolTable;
-use trans::{SoundFst, SoundLaw};
+use trans::SoundLaw;
 
 pub fn create_law(left: &str, right: &str, from: &str, to: &str) -> SoundLaw {
     let alphabet: Vec<_> = "abcedfghijklmnopqrstuvwxyz"
@@ -16,8 +16,8 @@ pub fn create_law(left: &str, right: &str, from: &str, to: &str) -> SoundLaw {
     let mut table = SymbolTable::new();
     table.add_symbols(alphabet);
 
-    let sound = SoundLaw::new(from, to, left, right, &table);
-    sound
+    
+    SoundLaw::new(from, to, left, right, &table)
 }
 
 #[wasm_bindgen]
@@ -35,7 +35,7 @@ pub fn transduce_context_invert(
     fst.invert();
     fst.df("inverted");
     let table = law.get_table();
-    fst.transduce_text(&table, input)
+    fst.transduce_text(table, input)
 }
 
 #[wasm_bindgen]
@@ -52,12 +52,12 @@ pub fn transduce_context(
     fst.df("non_invert");
 
     let table = law.get_table();
-    fst.transduce_text(&table, input)
+    fst.transduce_text(table, input)
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::trans::SoundLaw;
+    
     use crate::*;
     #[test]
     fn sound_law_invert() {

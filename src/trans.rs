@@ -17,8 +17,6 @@ use rustfst::{
     Label, Semiring, SymbolTable, Tr,
 };
 use rustfst::{fst, DrawingConfig};
-use serde::{Deserialize, Serialize};
-use wasm_bindgen::prelude::wasm_bindgen;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct SoundFst(pub SoundVec);
@@ -260,17 +258,16 @@ impl SoundFst {
     }
 
     fn constrain_boundry_markers(alphabet: &SymbolTable, left: Label, right: Label) -> SoundFst {
-        let arc = Arc::new(alphabet.clone());
-        let mut left_to_left = Self::from_single_label(left);
+        let left_to_left = Self::from_single_label(left);
 
-        let mut right_to_right = Self::from_single_label(right);
+        let right_to_right = Self::from_single_label(right);
         let mut star = Self::any_star(alphabet);
         star.concatenate(&left_to_left);
         star.concatenate(&right_to_right);
         star.concatenate(&Self::any_star(alphabet));
-        let mut star = star.negate_with_symbol_table(alphabet);
+
         // star.optimize();
-        star
+        star.negate_with_symbol_table(alphabet)
     }
 
     fn replace_in_context(
@@ -292,9 +289,9 @@ impl SoundFst {
         let right_marker = alphabet_with_marker.add_symbol("right_marker");
 
         println!("inserting boundry markers");
-        let mut ibt: SoundFst = Self::insert_boundry_markers(alphabet, left_marker, right_marker);
+        let ibt: SoundFst = Self::insert_boundry_markers(alphabet, left_marker, right_marker);
         println!("removing boundry markers");
-        let mut rbt: SoundFst = Self::remove_boundry_markers(alphabet, left_marker, right_marker); // remove boundry markers
+        let rbt: SoundFst = Self::remove_boundry_markers(alphabet, left_marker, right_marker); // remove boundry markers
 
         println!("constriaingin boundry markers");
         let cbt = Self::constrain_boundry_markers(&alphabet_with_marker, left_marker, right_marker);
@@ -605,7 +602,7 @@ mod tests {
         let left: SoundVec = fst![2, 1];
         let left: SoundFst = left.into();
         let symbol_tabl = symt!["a", "c", "d", "<", ">"];
-        let fst = left.replace_context(4, 5, &symbol_tabl);
+        left.replace_context(4, 5, &symbol_tabl);
     }
 
     #[test]
