@@ -3,9 +3,11 @@ use wasm_bindgen::prelude::*;
 
 mod negate;
 mod trans;
+mod sound_law;
+
 
 use rustfst::SymbolTable;
-use trans::SoundLaw;
+use sound_law::SoundLaw;
 
 pub fn create_law(left: &str, right: &str, from: &str, to: &str) -> SoundLaw {
     let alphabet: Vec<_> = "abcedfghijklmnopqrstuvwxyz"
@@ -16,7 +18,7 @@ pub fn create_law(left: &str, right: &str, from: &str, to: &str) -> SoundLaw {
     let mut table = SymbolTable::new();
     table.add_symbols(alphabet);
 
-    
+
     SoundLaw::new(from, to, left, right, &table)
 }
 
@@ -57,7 +59,7 @@ pub fn transduce_context(
 
 #[cfg(test)]
 mod tests {
-    
+
     use crate::*;
     #[test]
     fn sound_law_invert() {
