@@ -2,9 +2,8 @@ extern crate console_error_panic_hook;
 use wasm_bindgen::prelude::*;
 
 mod negate;
-mod trans;
 mod sound_law;
-
+mod trans;
 
 use rustfst::SymbolTable;
 use sound_law::SoundLaw;
@@ -17,7 +16,6 @@ pub fn create_law(left: &str, right: &str, from: &str, to: &str) -> SoundLaw {
     // let alphabet: Vec<_> = "abcx".split("").collect();
     let mut table = SymbolTable::new();
     table.add_symbols(alphabet);
-
 
     SoundLaw::new(from, to, left, right, &table)
 }
@@ -32,12 +30,8 @@ pub fn transduce_context_invert(
 ) -> Vec<String> {
     console_error_panic_hook::set_once();
     let law = create_law(left, right, from, to);
-    let mut fst = law.get_fst().clone();
 
-    fst.invert();
-    fst.df("inverted");
-    let table = law.get_table();
-    fst.transduce_text(table, input)
+    law.transduce_text_backwards(input)
 }
 
 #[wasm_bindgen]
@@ -50,11 +44,7 @@ pub fn transduce_context(
 ) -> Vec<String> {
     console_error_panic_hook::set_once();
     let law = create_law(left, right, from, to);
-    let fst = law.get_fst().clone();
-    fst.df("non_invert");
-
-    let table = law.get_table();
-    fst.transduce_text(table, input)
+    law.transduce_text(input)
 }
 
 #[cfg(test)]

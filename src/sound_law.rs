@@ -1,5 +1,8 @@
+use std::sync::Arc;
+
 use crate::trans::SoundFst;
 use crate::trans::SoundWeight;
+use rustfst::prelude::Fst;
 use rustfst::prelude::VectorFst;
 use rustfst::utils::acceptor;
 use rustfst::utils::transducer;
@@ -116,6 +119,41 @@ impl SoundLaw {
             alphabet,
         )
     }
+
+    pub fn transduce_text(&self, text: &str) -> Vec<String> {
+        let t = self.fst.clone();
+        let table = &self.table;
+        println!("{:?}", table);
+        println!("{}", text);
+
+        let labels: Vec<_> = text
+            .chars()
+            .inspect(|c| println!("{}", c))
+            .map(|c| table.get_label(c.to_string()).unwrap())
+            .collect();
+        let text_fst: VectorFst<_> = acceptor(&labels, SoundWeight::one());
+        let mut text_fst: SoundFst = text_fst.into();
+
+        let table = Arc::new(table.clone());
+        text_fst.compose(&t);
+        text_fst.output_project();
+        text_fst.0.set_output_symbols(Arc::clone(&table));
+        text_fst.0.set_input_symbols(Arc::clone(&table));
+
+        // let acceptor: VectorFst<_> = acceptor(&labels, SoundWeight::one());
+        text_fst
+            .0
+            .string_paths_iter()
+            // .inspect(|x| println!("{:?}", x))
+            .unwrap()
+            .map(|path| path.ostring().unwrap())
+            .collect()
+    }
+    pub fn transduce_text_backwards(&self, text: &str) -> Vec<String> {
+        let mut invert = self.clone();
+        invert.fst.invert();
+        invert.transduce_text(text)
+    }
 }
 
 #[cfg(test)]
@@ -140,7 +178,7 @@ mod tests {
         // let input1: SoundVec = fst![3, 1, 3, 1, 3, 1, 3]; // "cacacac"
         let fst = law.get_fst();
 
-        let transduced = fst.transduce_text(&symbol_tabl, "cacacac");
+        let transduced = law.transduce_text("cacacac");
 
         assert_eq!(transduced[0], "c a d d c");
     }

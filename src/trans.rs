@@ -374,35 +374,6 @@ impl SoundFst {
                 .unwrap();
         }
     }
-
-    pub fn transduce_text(&self, table: &SymbolTable, text: &str) -> Vec<String> {
-        let t = self.clone();
-        println!("{:?}", table);
-        println!("{}", text);
-
-        let labels: Vec<_> = text
-            .chars()
-            .inspect(|c| println!("{}", c))
-            .map(|c| table.get_label(c.to_string()).unwrap())
-            .collect();
-        let text_fst: VectorFst<_> = acceptor(&labels, SoundWeight::one());
-        let mut text_fst: SoundFst = text_fst.into();
-
-        let table = Arc::new(table.clone());
-        text_fst.compose(&t);
-        text_fst.output_project();
-        text_fst.0.set_output_symbols(Arc::clone(&table));
-        text_fst.0.set_input_symbols(Arc::clone(&table));
-
-        // let acceptor: VectorFst<_> = acceptor(&labels, SoundWeight::one());
-        text_fst
-            .0
-            .string_paths_iter()
-            // .inspect(|x| println!("{:?}", x))
-            .unwrap()
-            .map(|path| path.ostring().unwrap())
-            .collect()
-    }
 }
 
 // given t that actually does the replacement, creates a transuducer that makes sure
@@ -415,6 +386,7 @@ mod tests {
     use std::vec;
 
     use rustfst::{fst, prelude::rm_epsilon::rm_epsilon, symt, DrawingConfig};
+    use sound_law::SoundLaw;
 
     use super::*;
 
@@ -523,17 +495,9 @@ mod tests {
     #[test]
     fn right_arrow_test_with_transduce_text() {
         let symbol_tabl = symt!["a", "b", "c", "d"];
-        let mapping: SoundVec = fst![3, 1 => 4];
+        let law = SoundLaw::new("ca", "d", "ca", "c", &symbol_tabl);
 
-        let left: SoundVec = fst![3, 1];
-        let right: SoundVec = fst![3];
-
-        // let input1: SoundVec = fst![3, 1, 3, 1, 3, 1, 3]; // "cacacac"
-
-        let replaced =
-            SoundFst(mapping).replace_in_context(left.into(), right.into(), false, &symbol_tabl);
-
-        let transduced = replaced.transduce_text(&symbol_tabl, "cacacac");
+        let transduced = law.transduce_text("cacacac");
 
         assert_eq!(transduced[0], "c a d d c");
     }
