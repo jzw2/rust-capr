@@ -22,8 +22,6 @@ pub struct SoundLaw {
     table: SymbolTable,
 }
 
-
-
 #[derive(Debug)]
 struct SoundLawLabels {
     from: Vec<Label>,
@@ -140,39 +138,72 @@ impl SoundLaw {
         self.right_context.to_string()
     }
     pub fn transduce_text(&self, text: &str) -> Vec<String> {
-        let t = self.fst.clone();
-        let table = &self.table;
-        println!("{:?}", table);
-        println!("{}", text);
-
-        let labels: Vec<_> = text
-            .chars()
-            .inspect(|c| println!("{}", c))
-            .map(|c| table.get_label(c.to_string()).unwrap())
-            .collect();
-        let text_fst: VectorFst<_> = acceptor(&labels, SoundWeight::one());
-        let mut text_fst: SoundFst = text_fst.into();
-
-        let table = Arc::new(table.clone());
-        text_fst.compose(&t);
-        text_fst.output_project();
-        text_fst.0.set_output_symbols(Arc::clone(&table));
-        text_fst.0.set_input_symbols(Arc::clone(&table));
-
-        // let acceptor: VectorFst<_> = acceptor(&labels, SoundWeight::one());
-        text_fst
-            .0
-            .string_paths_iter()
-            // .inspect(|x| println!("{:?}", x))
-            .unwrap()
-            .map(|path| path.ostring().unwrap())
-            .collect()
+        transduce_text_with_symbol_table(&self.fst, &self.table, text)
     }
 
     pub fn transduce_text_backwards(&self, text: &str) -> Vec<String> {
         let mut invert = self.clone();
         invert.fst.invert();
         invert.transduce_text(text)
+    }
+}
+
+fn transduce_text_with_symbol_table(
+    fst: &SoundFst,
+    table: &SymbolTable,
+    text: &str,
+) -> Vec<String> {
+    let t = fst;
+    let labels: Vec<_> = text
+        .chars()
+        .inspect(|c| println!("{}", c))
+        .map(|c| table.get_label(c.to_string()).unwrap())
+        .collect();
+    let text_fst: VectorFst<_> = acceptor(&labels, SoundWeight::one());
+    let mut text_fst: SoundFst = text_fst.into();
+
+    let table = Arc::new(table.clone());
+    text_fst.compose(&t);
+    text_fst.output_project();
+    text_fst.0.set_output_symbols(Arc::clone(&table));
+    text_fst.0.set_input_symbols(Arc::clone(&table));
+
+    // let acceptor: VectorFst<_> = acceptor(&labels, SoundWeight::one());
+    text_fst
+        .0
+        .string_paths_iter()
+        // .inspect(|x| println!("{:?}", x))
+        .unwrap()
+        .map(|path| path.ostring().unwrap())
+        .collect()
+}
+// todo: make a thing for the symbol table to check
+//
+#[wasm_bindgen]
+pub struct SoundLawComposition {
+    laws: Vec<SoundLaw>,
+    final_fst: SoundFst,
+}
+
+#[wasm_bindgen]
+impl SoundLawComposition {
+    pub fn add_law(&mut self, law: &SoundLaw) {
+        self.laws.push(law.clone());
+        self.final_fst.compose(law.get_fst());
+        let arc = Arc::new(law.get_table().clone());
+        // TODO: do something smarter than this
+        self.final_fst.0.set_input_symbols(arc.clone());
+        self.final_fst.0.set_output_symbols(arc.clone());
+    }
+
+    pub fn transduce_text(&self, text: &str) -> Vec<String> {
+        match self.laws.first() {
+            None => vec![],
+            Some(_) => {
+                let table = self.final_fst.0.input_symbols().unwrap();
+                transduce_text_with_symbol_table(&self.final_fst, table, text)
+            }
+        }
     }
 }
 
