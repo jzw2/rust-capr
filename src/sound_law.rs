@@ -9,7 +9,9 @@ use rustfst::utils::transducer;
 use rustfst::Label;
 use rustfst::Semiring;
 use rustfst::SymbolTable;
+use wasm_bindgen::prelude::wasm_bindgen;
 
+#[wasm_bindgen]
 #[derive(Clone, Debug)]
 pub struct SoundLaw {
     from: String,
@@ -19,6 +21,8 @@ pub struct SoundLaw {
     fst: SoundFst,
     table: SymbolTable,
 }
+
+
 
 #[derive(Debug)]
 struct SoundLawLabels {
@@ -119,7 +123,22 @@ impl SoundLaw {
             alphabet,
         )
     }
+}
 
+#[wasm_bindgen]
+impl SoundLaw {
+    pub fn get_from(&self) -> String {
+        self.from.to_string()
+    }
+    pub fn get_to(&self) -> String {
+        self.to.to_string()
+    }
+    pub fn get_left_context(&self) -> String {
+        self.left_context.to_string()
+    }
+    pub fn get_right_context(&self) -> String {
+        self.right_context.to_string()
+    }
     pub fn transduce_text(&self, text: &str) -> Vec<String> {
         let t = self.fst.clone();
         let table = &self.table;
@@ -149,6 +168,7 @@ impl SoundLaw {
             .map(|path| path.ostring().unwrap())
             .collect()
     }
+
     pub fn transduce_text_backwards(&self, text: &str) -> Vec<String> {
         let mut invert = self.clone();
         invert.fst.invert();

@@ -8,6 +8,7 @@ mod trans;
 use rustfst::SymbolTable;
 use sound_law::SoundLaw;
 
+#[wasm_bindgen]
 pub fn create_law(left: &str, right: &str, from: &str, to: &str) -> SoundLaw {
     let alphabet: Vec<_> = "abcedfghijklmnopqrstuvwxyz"
         .chars()
