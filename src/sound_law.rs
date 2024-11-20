@@ -1,8 +1,10 @@
 use std::sync::Arc;
 
 use crate::trans::SoundFst;
+use crate::trans::SoundVec;
 use crate::trans::SoundWeight;
 use rustfst::prelude::Fst;
+use rustfst::prelude::MutableFst;
 use rustfst::prelude::VectorFst;
 use rustfst::utils::acceptor;
 use rustfst::utils::transducer;
@@ -185,11 +187,23 @@ pub struct SoundLawComposition {
     final_fst: SoundFst,
 }
 
+// todo fix memory so I stop cloning
 #[wasm_bindgen]
 impl SoundLawComposition {
+    pub fn new() -> SoundLawComposition {
+        let fst: SoundVec = SoundVec::new();
+        SoundLawComposition {
+            laws: vec![],
+            final_fst: SoundFst(fst),
+        }
+    }
     pub fn add_law(&mut self, law: &SoundLaw) {
         self.laws.push(law.clone());
-        self.final_fst.compose(law.get_fst());
+        if self.laws.len() == 1 {
+            self.final_fst = law.fst.clone();
+        } else {
+            self.final_fst.compose(law.get_fst());
+        }
         let arc = Arc::new(law.get_table().clone());
         // TODO: do something smarter than this
         self.final_fst.0.set_input_symbols(arc.clone());
