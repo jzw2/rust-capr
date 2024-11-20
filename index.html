@@ -3,21 +3,32 @@
     <head>
         <meta charset="utf-8" />
         <title>Rust Capr</title>
+        <style>
+            .rule-notation {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                margin-bottom: 15px;
+            }
+        </style>
     </head>
     <body>
-        <h1></h1>
-        <h4>From</h4>
-        <input type="text" id="from" />
-        <h4>To</h4>
-        <input type="text" id="to" />
-        <h4>Left</h4>
-        <input type="text" id="left" />
-        <h4>Right</h4>
-        <input type="text" id="right" />
+        <h1>Transduction Tool</h1>
 
+        <div class="rule">
+            <h4>Rule</h4>
+            <div class="rule-notation">
+                <input type="text" class="from" id="from" placeholder="a" />
+                <span>→</span>
+                <input type="text" class="to" id="to" placeholder="b" />
+                <span>/</span>
+                <input type="text" class="left" id="left" placeholder="x" />
+                <span>_</span>
+                <input type="text" class="right" id="right" placeholder="y" />
+            </div>
+        </div>
 
-        <button id="create-law" type="button" > Create Fst <button/>
-
+        <button id="create-law" type="button">Create Fst</button>
 
         <h4>Input</h4>
         <input type="text" id="input" />
@@ -27,6 +38,9 @@
         <p id="output"></p>
         <h4>Backwards Output</h4>
         <p id="backwards-output"></p>
+
+        <h2>Current Rules</h2>
+        <ul id="rulesList"></ul>
 
         <canvas width="100" height="100" id="mainCanvas"></canvas>
         <script type="module" src="index.ts"></script>
