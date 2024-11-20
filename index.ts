@@ -6,9 +6,9 @@ import init, {
   SoundLawComposition,
 } from "./pkg/rust_capr";
 
-var currentInput: SoundLaw | null = null;
+let currentInput: SoundLaw | undefined;
 
-function setLaw() {
+const setLaw = () => {
   (document.getElementById("output") as HTMLParagraphElement).innerText =
     "Compiling FST";
   (
@@ -22,12 +22,12 @@ function setLaw() {
   currentLaws.push(currentInput);
   fst?.add_law(currentInput);
   transduce();
-}
+};
 
 let currentLaws: SoundLaw[] = [];
 let fst: SoundLawComposition | null = null;
 
-function updateRulesList() {
+const updateRulesList = () => {
   const rulesList = document.getElementById(
     "rulesList",
   ) as HTMLParagraphElement;
@@ -38,9 +38,9 @@ function updateRulesList() {
     listItem.textContent = s;
     rulesList.appendChild(listItem);
   });
-}
+};
 
-function transduce() {
+const transduce = () => {
   (document.getElementById("output") as HTMLParagraphElement).innerText =
     "Loading...";
   (
@@ -66,7 +66,7 @@ function transduce() {
     //   document.getElementById("backwards-output") as HTMLParagraphElement
     // ).innerText = "\n" + backward_result.join("\n");
   }
-}
+};
 
 async function run() {
   await init();
