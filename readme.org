@@ -3,12 +3,23 @@
 
 Capr like system but with improvements
 
+* Installation
+You first need wasm-pack and cargo. Also you need yarn and parcel for the front end.
+Run
+
+=wasm-pack build --target web=
+
+Then do =yarn run parcel index.html= to start a server.
+
+
 * Progress
 Current goal is to get a functional system that is able to do the bare minimum of Capr.
 
  - Specficaiton of sound laws
+    - Specification of sound classes for use with sound laws (ie features such as palatal, voiced, liquid etc)
  - Apply laws of proto form to get modern reflex
  - Apply laws backwards to get potential proto form.
+
 
 * (Potential) Goals
 ** More user friendly sound law inputs
@@ -20,3 +31,10 @@ As long as there is some regularity, the FST should also be able to generate all
 * Current Limitations
 - Parallel substitutions is not supported
 - Only upper, upper substitution is supported
+
+
+* Design
+
+Most of the infastructure is built on top of the library =rustfst= which is largely openfst written in rust.
+The replacement operator was surprisingly non trivial, and most code has been adapted from hfsts c++ implementation.
+The rust creates a web assembly package which is then run in the browser.
