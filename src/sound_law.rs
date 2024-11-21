@@ -185,6 +185,7 @@ fn transduce_text_with_symbol_table(
 pub struct SoundLawComposition {
     laws: Vec<SoundLaw>,
     final_fst: SoundFst,
+    backwards_fst: SoundFst,
 }
 
 // todo fix memory so I stop cloning
@@ -195,14 +196,19 @@ impl SoundLawComposition {
         SoundLawComposition {
             laws: vec![],
             final_fst: SoundFst(fst),
+            backwards_fst: SoundFst(SoundVec::new()),
         }
     }
     pub fn add_law(&mut self, law: &SoundLaw) {
         self.laws.push(law.clone());
         if self.laws.len() == 1 {
             self.final_fst = law.fst.clone();
+            self.backwards_fst = law.fst.clone();
+            self.backwards_fst.invert();
         } else {
             self.final_fst.compose(law.get_fst());
+            self.backwards_fst = self.final_fst.clone();
+            self.backwards_fst.invert();
         }
         let arc = Arc::new(law.get_table().clone());
         // TODO: do something smarter than this
