@@ -53,7 +53,7 @@ const transduce = () => {
 
   if (fst != null) {
     let result = fst.transduce_text(input);
-    // let backward_result = fst.transduce_text_backwards(backward);
+    let backward_result = fst.transduce_text_invert(backward);
     console.log(`${result}, ${result.length}`);
     //console.log(`${backward_result}, ${backward.length}`);
     (document.getElementById("output") as HTMLParagraphElement).innerText =
@@ -62,9 +62,9 @@ const transduce = () => {
         .split(" ")
         .filter((s) => s != " ")
         .join("");
-    // (
-    //   document.getElementById("backwards-output") as HTMLParagraphElement
-    // ).innerText = "\n" + backward_result.join("\n");
+    (
+      document.getElementById("backwards-output") as HTMLParagraphElement
+    ).innerText = "\n" + backward_result.join("\n");
   }
 };
 

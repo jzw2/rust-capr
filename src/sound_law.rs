@@ -225,6 +225,15 @@ impl SoundLawComposition {
             }
         }
     }
+    pub fn transduce_text_invert(&self, text: &str) -> Vec<String> {
+        match self.laws.first() {
+            None => vec![],
+            Some(_) => {
+                let table = self.final_fst.0.input_symbols().unwrap();
+                transduce_text_with_symbol_table(&self.backwards_fst, table, text)
+            }
+        }
+    }
 }
 
 #[cfg(test)]
