@@ -14,10 +14,11 @@
       {
         defaultPackage = naersk-lib.buildPackage ./.;
         devShell = with pkgs; mkShell {
-          buildInputs = [ yarn nodejs cargo rustc rustfmt pre-commit rustPackages.clippy rust-analyzer cargo-flamegraph xdot
+          buildInputs = [ yarn nodejs cargo rustc rustfmt pre-commit rustPackages.clippy rust-analyzer cargo-flamegraph # xdot
           wasm-pack
           lld
           nodePackages.eslint
+	  iconv
 
           ];
           RUST_SRC_PATH = rustPlatform.rustLibSrc;
