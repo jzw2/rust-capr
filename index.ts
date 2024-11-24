@@ -6,9 +6,22 @@ import init, {
   SoundLawComposition,
 } from "./pkg/rust_capr";
 
-let currentInput: SoundLaw | undefined;
+import { Drawable } from "./krist_lib/editor";
+import Victor from "victor";
+import { RuleNode } from "./krist_lib/rule-node";
 
-const setLaw = () => {
+type Operation = {
+  left: string;
+  right: string;
+  to: string;
+  from: string;
+};
+
+const setLaw = (
+  currentLaws: SoundLaw[],
+  fst: SoundLawComposition,
+  operations: Operation[],
+) => {
   (document.getElementById("output") as HTMLParagraphElement).innerText =
     "Compiling FST";
   (
@@ -18,16 +31,16 @@ const setLaw = () => {
   const right = (document.getElementById("right") as HTMLInputElement).value;
   const to = (document.getElementById("to") as HTMLInputElement).value;
   const from = (document.getElementById("from") as HTMLInputElement).value;
+
   let currentInput = create_law(left, right, from, to);
+  operations.push({ left, right, from, to });
   currentLaws.push(currentInput);
-  fst?.add_law(currentInput);
-  transduce();
+  fst.add_law(currentInput);
+
+  transduce(fst);
 };
 
-let currentLaws: SoundLaw[] = [];
-let fst: SoundLawComposition | null = null;
-
-const updateRulesList = () => {
+const updateRulesList = (currentLaws: SoundLaw[]) => {
   const rulesList = document.getElementById(
     "rulesList",
   ) as HTMLParagraphElement;
@@ -40,7 +53,7 @@ const updateRulesList = () => {
   });
 };
 
-const transduce = () => {
+const transduce = (fst: SoundLawComposition) => {
   (document.getElementById("output") as HTMLParagraphElement).innerText =
     "Loading...";
   (
@@ -68,29 +81,64 @@ const transduce = () => {
   }
 };
 
+const serializeOps = (operations: Operation[]) => {
+  localStorage.setItem("operations", JSON.stringify(operations));
+};
+
+const deserializeOps = (): [SoundLaw[], SoundLawComposition, Operation[]] => {
+  let ops: Operation[] = [];
+  try {
+    const serialized = localStorage.getItem("operations");
+    if (serialized) {
+      ops = JSON.parse(serialized);
+    }
+  } catch (err) {
+    // nothing
+  } finally {
+    const currentLaws: SoundLaw[] = [];
+    const fst: SoundLawComposition = SoundLawComposition.new();
+    for (const { left, right, from, to } of ops) {
+      let currentInput = create_law(left, right, from, to);
+      currentLaws.push(currentInput);
+      fst.add_law(currentInput);
+    }
+    return [currentLaws, fst, ops];
+  }
+};
+
 async function run() {
   await init();
-  fst = SoundLawComposition.new();
 
   console.log("Event listeners!");
 
   // List of all input field ids that need an event listener
+
   const inputIds = ["input", "backward"];
+
+  const [currentLaws, fst, operations] = deserializeOps();
+  updateRulesList(currentLaws);
 
   inputIds.forEach((id) => {
     (document.getElementById(id) as HTMLInputElement).addEventListener(
       "input",
-      () => transduce(),
+      () => transduce(fst),
     );
   });
 
   (document.getElementById("create-law") as HTMLButtonElement).addEventListener(
     "click",
     () => {
-      setLaw();
-      updateRulesList();
+      setLaw(currentLaws, fst, operations);
+      updateRulesList(currentLaws);
+      serializeOps(operations);
     },
   );
+
+  const rule = new RuleNode(
+    document.getElementById("mainCanvas") as HTMLCanvasElement,
+    new Victor(10, 10),
+  );
+  rule.render();
 }
 
 run();
