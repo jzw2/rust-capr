@@ -1,8 +1,10 @@
 extern crate console_error_panic_hook;
+use tables::lower_case_latin;
 use wasm_bindgen::prelude::*;
 
 mod negate;
 mod sound_law;
+mod tables;
 mod trans;
 
 use rustfst::SymbolTable;
@@ -10,15 +12,9 @@ use sound_law::SoundLaw;
 
 #[wasm_bindgen]
 pub fn create_law(left: &str, right: &str, from: &str, to: &str) -> SoundLaw {
-    let alphabet: Vec<_> = "abcedfghijklmnopqrstuvwxyz"
-        .chars()
-        .map(|x| x.to_string())
-        .collect();
-    // let alphabet: Vec<_> = "abcx".split("").collect();
-    let mut table = SymbolTable::new();
-    table.add_symbols(alphabet);
+    let latin = lower_case_latin();
 
-    SoundLaw::new(from, to, left, right, &table)
+    SoundLaw::new(from, to, left, right, &latin)
 }
 
 #[wasm_bindgen]
