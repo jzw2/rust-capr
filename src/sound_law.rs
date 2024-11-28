@@ -35,6 +35,10 @@ struct SoundLawLabels {
 pub fn get_labels_from_str(s: &str, table: &SymbolTable) -> Option<Vec<Label>> {
     s.chars().map(|x| table.get_label(x.to_string())).collect()
 }
+
+
+
+
 /// example we want x -> y / a _ b, ie x turns to y when it is in front of a and before b
 /// aka axb -> ayb
 /// a = b = x, in string xxxx,
@@ -186,6 +190,13 @@ pub struct SoundLawComposition {
     laws: Vec<SoundLaw>,
     final_fst: SoundFst,
     backwards_fst: SoundFst,
+}
+
+
+impl Default for SoundLawComposition {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 // todo fix memory so I stop cloning
