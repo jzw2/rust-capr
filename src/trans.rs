@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use crate::sound_law;
 use rustfst::algorithms::compose::compose;
 use rustfst::algorithms::determinize::determinize;
 use rustfst::algorithms::{reverse, tr_sort, ProjectType};
@@ -14,7 +13,7 @@ use rustfst::{
     algorithms::{concat::concat, project},
     fst_impls::VectorFst,
     fst_traits::{Fst, MutableFst},
-    utils::{acceptor, epsilon_machine, transducer},
+    utils::{acceptor, epsilon_machine},
     Label, Semiring, SymbolTable, Tr,
 };
 use rustfst::{fst, DrawingConfig};
@@ -385,8 +384,10 @@ impl SoundFst {
 mod tests {
     use std::vec;
 
-    use rustfst::{fst, prelude::rm_epsilon::rm_epsilon, symt, DrawingConfig};
+    use rustfst::{fst, prelude::rm_epsilon::rm_epsilon, symt, DrawingConfig, utils::transducer};
     use sound_law::SoundLaw;
+
+    use crate::sound_law;
 
     use super::*;
 

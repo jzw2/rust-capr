@@ -7,7 +7,6 @@ mod sound_law;
 mod tables;
 mod trans;
 
-use rustfst::SymbolTable;
 use sound_law::SoundLaw;
 
 #[wasm_bindgen]

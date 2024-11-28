@@ -169,7 +169,7 @@ fn transduce_text_with_symbol_table(
     let mut text_fst: SoundFst = text_fst.into();
 
     let table = Arc::new(table.clone());
-    text_fst.compose(&t);
+    text_fst.compose(t);
     text_fst.output_project();
     text_fst.0.set_output_symbols(Arc::clone(&table));
     text_fst.0.set_input_symbols(Arc::clone(&table));
@@ -211,7 +211,7 @@ impl SoundLawComposition {
         }
     }
     pub fn recompute_fsts(&mut self) -> bool {
-        if self.laws.len() == 0 {
+        if self.laws.is_empty() {
             return false;
         }
 
