@@ -199,6 +199,25 @@ impl SoundLawComposition {
             backwards_fst: SoundFst(SoundVec::new()),
         }
     }
+    pub fn recompute_fsts(&mut self) -> bool {
+        if self.laws.len() == 0 {
+            return false;
+        }
+
+        let mut total_fst = self.laws.first().unwrap().fst.clone();
+        let mut total_backwards = self.laws.last().unwrap().fst.clone();
+
+        for new_fst in self.laws.iter().skip(1) {
+            total_fst.compose(&new_fst.fst);
+        }
+        for new_fst in self.laws.iter().rev().skip(1) {
+            total_backwards.compose(&new_fst.fst);
+        }
+        self.final_fst = total_fst;
+        self.backwards_fst = total_backwards;
+
+        true
+    }
     pub fn add_law(&mut self, law: &SoundLaw) {
         self.laws.push(law.clone());
         if self.laws.len() == 1 {
@@ -261,5 +280,24 @@ mod tests {
         let transduced = law.transduce_text("cacacac");
 
         assert_eq!(transduced[0], "c a d d c");
+    }
+
+    #[test]
+    fn compose_test() {
+        let symbol_tabl = symt!["a", "b", "c", "d"];
+        let law1 = SoundLaw::new("a", "b", "", "", &symbol_tabl);
+        let law2 = SoundLaw::new("b", "c", "", "", &symbol_tabl);
+
+        let mut compose = SoundLawComposition::new();
+        compose.add_law(&law1);
+        compose.add_law(&law2);
+
+        let transduced = compose.transduce_text("a");
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0], "c");
+
+        let transduced = compose.transduce_text("b");
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0], "c");
     }
 }
