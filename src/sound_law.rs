@@ -212,18 +212,20 @@ impl SoundLawComposition {
         }
 
         let mut total_fst = self.laws.first().unwrap().fst.clone();
-        let mut total_backwards = self.laws.last().unwrap().fst.clone();
 
         for new_fst in self.laws.iter().skip(1) {
             total_fst.compose(&new_fst.fst);
         }
-        for new_fst in self.laws.iter().rev().skip(1) {
-            total_backwards.compose(&new_fst.fst);
-        }
         self.final_fst = total_fst;
-        self.backwards_fst = total_backwards;
+        self.backwards_fst = self.final_fst.clone();
+        self.backwards_fst.invert();
 
         true
+    }
+
+    pub fn insert(&mut self, index: usize, law: &SoundLaw) {
+        self.laws.insert(index, law.clone());
+        self.recompute_fsts();
     }
 
     pub fn rm_law(&mut self, index: usize) {
@@ -311,6 +313,12 @@ mod tests {
         let transduced = compose.transduce_text("b");
         assert_eq!(transduced.len(), 1);
         assert_eq!(transduced[0], "c");
+
+        let transduced = compose.transduce_text_invert("c");
+        assert_eq!(transduced.len(), 3);
+        assert!(transduced.contains(&"c".to_owned()));
+        assert!(transduced.contains(&"b".to_owned()));
+        assert!(transduced.contains(&"a".to_owned()));
     }
     #[test]
     fn compose_test_rm() {
@@ -330,5 +338,30 @@ mod tests {
         let transduced = compose.transduce_text("b");
         assert_eq!(transduced.len(), 1);
         assert_eq!(transduced[0], "c");
+    }
+    #[test]
+    fn compose_test_insert() {
+        let symbol_tabl = symt!["a", "b", "c", "d"];
+        let law1 = SoundLaw::new("a", "b", "", "", &symbol_tabl);
+        let law2 = SoundLaw::new("c", "d", "", "", &symbol_tabl);
+        let law3 = SoundLaw::new("b", "c", "", "", &symbol_tabl);
+
+        let mut compose = SoundLawComposition::new();
+        compose.add_law(&law1);
+        compose.add_law(&law2);
+
+        compose.insert(1, &law3);
+
+        let transduced = compose.transduce_text("a");
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0], "d");
+
+        let transduced = compose.transduce_text("b");
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0], "d");
+
+        let transduced = compose.transduce_text_invert("d");
+        assert_eq!(transduced.len(), 4);
+        //assert_eq!(transduced[0], "c");
     }
 }
