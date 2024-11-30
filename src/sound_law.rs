@@ -36,9 +36,6 @@ pub fn get_labels_from_str(s: &str, table: &SymbolTable) -> Option<Vec<Label>> {
     s.chars().map(|x| table.get_label(x.to_string())).collect()
 }
 
-
-
-
 /// example we want x -> y / a _ b, ie x turns to y when it is in front of a and before b
 /// aka axb -> ayb
 /// a = b = x, in string xxxx,
@@ -192,7 +189,6 @@ pub struct SoundLawComposition {
     backwards_fst: SoundFst,
 }
 
-
 impl Default for SoundLawComposition {
     fn default() -> Self {
         Self::new()
@@ -228,6 +224,11 @@ impl SoundLawComposition {
         self.backwards_fst = total_backwards;
 
         true
+    }
+
+    pub fn rm_law(&mut self, index: usize) {
+        self.laws.remove(index);
+        self.recompute_fsts();
     }
     pub fn add_law(&mut self, law: &SoundLaw) {
         self.laws.push(law.clone());
@@ -306,6 +307,25 @@ mod tests {
         let transduced = compose.transduce_text("a");
         assert_eq!(transduced.len(), 1);
         assert_eq!(transduced[0], "c");
+
+        let transduced = compose.transduce_text("b");
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0], "c");
+    }
+    #[test]
+    fn compose_test_rm() {
+        let symbol_tabl = symt!["a", "b", "c", "d"];
+        let law1 = SoundLaw::new("a", "b", "", "", &symbol_tabl);
+        let law2 = SoundLaw::new("b", "c", "", "", &symbol_tabl);
+
+        let mut compose = SoundLawComposition::new();
+        compose.add_law(&law1);
+        compose.add_law(&law2);
+        compose.rm_law(0);
+
+        let transduced = compose.transduce_text("a");
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0], "a");
 
         let transduced = compose.transduce_text("b");
         assert_eq!(transduced.len(), 1);
