@@ -106,6 +106,116 @@ const deserializeOps = (): [SoundLaw[], SoundLawComposition, Operation[]] => {
   }
 };
 
+const mouseListeners = (state: State) => {
+  const list = document.getElementById("rulesList") as HTMLUListElement;
+  let draggingElement: HTMLElement | null = null;
+  let placeholder: HTMLElement | null = null;
+
+  // Store the bounding rectangle of the list
+  let listBounds: DOMRect;
+  let removeIndex: number | undefined;
+  let insertIndex: number | undefined;
+
+  list.addEventListener("mousedown", (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === "LI") {
+      removeIndex = Array.from(list.children).indexOf(target);
+      draggingElement = target;
+
+      // Update the bounds of the list
+      listBounds = list.getBoundingClientRect();
+
+      // Create a placeholder for visual feedback
+      placeholder = document.createElement("li");
+      placeholder.classList.add("placeholder");
+      placeholder.style.height = `${draggingElement.offsetHeight}px`;
+
+      // Insert the placeholder in place of the dragging element
+      list.insertBefore(placeholder, draggingElement);
+      list.removeChild(draggingElement);
+
+      // Set up the dragged element style
+      draggingElement.classList.add("dragging");
+      draggingElement.style.width = `${draggingElement.offsetWidth}px`; // Fix width to prevent layout shift
+      document.body.appendChild(draggingElement);
+
+      // Move to the current mouse position
+      moveAt(e.pageX, e.pageY);
+    }
+  });
+
+  document.addEventListener("mousemove", (e: MouseEvent) => {
+    if (draggingElement) {
+      moveAt(e.pageX, e.pageY);
+
+      // Check which list item is under the cursor
+      const elementsBelow = document.elementsFromPoint(e.clientX, e.clientY);
+      const listItemBelow = elementsBelow.find(
+        (el) => el.tagName === "LI" && el !== placeholder,
+      ) as HTMLElement;
+
+      if (listItemBelow && placeholder) {
+        const rect = listItemBelow.getBoundingClientRect();
+        if (e.clientY < rect.top + rect.height / 2) {
+          list.insertBefore(placeholder, listItemBelow);
+        } else {
+          list.insertBefore(placeholder, listItemBelow.nextSibling);
+        }
+      }
+    }
+  });
+
+  document.addEventListener("mouseup", () => {
+    if (draggingElement && placeholder) {
+      // Remove placeholder and place dragging element
+      draggingElement.classList.remove("dragging");
+      draggingElement.style.removeProperty("left");
+      draggingElement.style.removeProperty("top");
+      draggingElement.style.removeProperty("width");
+      list.insertBefore(draggingElement, placeholder);
+      insertIndex = Array.from(list.children).indexOf(draggingElement);
+      placeholder.remove();
+
+      // Reset variables
+      draggingElement = null;
+      placeholder = null;
+
+      if (insertIndex && removeIndex) {
+        let [old] = state.laws.splice(removeIndex, 1);
+        let fst = state.composition.rm_law(removeIndex);
+
+        state.laws.splice(insertIndex, 0, old);
+        state.composition.insert(insertIndex, fst);
+      }
+      transduce(state.composition);
+    }
+  });
+
+  function moveAt(pageX: number, pageY: number) {
+    if (draggingElement && listBounds) {
+      const x = Math.max(
+        listBounds.left,
+        Math.min(
+          pageX - draggingElement.offsetWidth / 2,
+          listBounds.right - draggingElement.offsetWidth,
+        ),
+      );
+      const y = Math.max(
+        listBounds.top,
+        Math.min(
+          pageY - draggingElement.offsetHeight / 2,
+          listBounds.bottom - draggingElement.offsetHeight,
+        ),
+      );
+
+      draggingElement.style.left = `${x}px`;
+      draggingElement.style.top = `${y}px`;
+    }
+  }
+};
+
+type State = { laws: SoundLaw[]; composition: SoundLawComposition };
+
 async function run() {
   await init();
 
@@ -116,6 +226,7 @@ async function run() {
   const inputIds = ["input", "backward"];
 
   const [currentLaws, fst, operations] = deserializeOps();
+  let state: State = { laws: currentLaws, composition: fst };
   updateRulesList(currentLaws);
 
   inputIds.forEach((id) => {
@@ -139,6 +250,8 @@ async function run() {
     new Victor(10, 10),
   );
   rule.render();
+
+  mouseListeners(state);
 }
 
 run();

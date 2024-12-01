@@ -228,9 +228,10 @@ impl SoundLawComposition {
         self.recompute_fsts();
     }
 
-    pub fn rm_law(&mut self, index: usize) {
-        self.laws.remove(index);
+    pub fn rm_law(&mut self, index: usize) -> SoundLaw {
+        let rm = self.laws.remove(index);
         self.recompute_fsts();
+        rm
     }
     pub fn add_law(&mut self, law: &SoundLaw) {
         self.laws.push(law.clone());

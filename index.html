@@ -10,6 +10,30 @@
                 gap: 5px;
                 margin-bottom: 15px;
             }
+
+            ul {
+                list-style-type: none;
+                padding: 0;
+                position: relative;
+            }
+            li {
+                padding: 10px;
+                margin: 5px;
+                background-color: #ddd;
+                border: 1px solid #ccc;
+                position: relative;
+                cursor: pointer;
+            }
+            .dragging {
+                position: absolute;
+                pointer-events: none;
+                opacity: 0.8;
+                z-index: 1000;
+            }
+            .placeholder {
+                border: 2px dashed #007bff;
+                height: 40px;
+            }
         </style>
     </head>
     <body>
