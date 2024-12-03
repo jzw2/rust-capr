@@ -40,15 +40,38 @@ const setLaw = (
   transduce(fst);
 };
 
-const updateRulesList = (currentLaws: SoundLaw[]) => {
+const updateRulesList = (state: State) => {
   const rulesList = document.getElementById(
     "rulesList",
   ) as HTMLParagraphElement;
+  let currentLaws = state.laws;
   rulesList.innerHTML = "";
-  currentLaws.forEach((x) => {
+  currentLaws.forEach((x, index) => {
     let s = `Rule: ${x.get_from()} → ${x.get_to()} / ${x.get_left_context()} _ ${x.get_right_context()}`;
     const listItem = document.createElement("li");
     listItem.textContent = s;
+    listItem.draggable = true;
+
+    const deleteButton = document.createElement("button");
+    deleteButton.textContent = "Delete";
+    deleteButton.classList.add("delete-button");
+    deleteButton.addEventListener("click", () => {
+      currentLaws.splice(index, 1);
+      state.composition.rm_law(index);
+      transduce(state.composition);
+      updateRulesList(state);
+
+      serializeOps(
+        state.laws.map((law) => ({
+          left: law.get_left_context(),
+          right: law.get_right_context(),
+          from: law.get_from(),
+          to: law.get_to(),
+        })),
+      );
+    });
+
+    listItem.appendChild(deleteButton);
     rulesList.appendChild(listItem);
   });
 };
@@ -64,21 +87,18 @@ const transduce = (fst: SoundLawComposition) => {
   const backward = (document.getElementById("backward") as HTMLInputElement)
     .value;
 
-  if (fst != null) {
-    let result = fst.transduce_text(input);
-    let backward_result = fst.transduce_text_invert(backward);
-    console.log(`${result}, ${result.length}`);
-    //console.log(`${backward_result}, ${backward.length}`);
-    (document.getElementById("output") as HTMLParagraphElement).innerText =
-      result
-        .join("")
-        .split(" ")
-        .filter((s) => s != " ")
-        .join("");
-    (
-      document.getElementById("backwards-output") as HTMLParagraphElement
-    ).innerText = "\n" + backward_result.join("\n");
-  }
+  let result = fst.transduce_text(input);
+  let backward_result = fst.transduce_text_invert(backward);
+  console.log(`${result}, ${result.length}`);
+  //console.log(`${backward_result}, ${backward.length}`);
+  (document.getElementById("output") as HTMLParagraphElement).innerText = result
+    .join("")
+    .split(" ")
+    .filter((s) => s != " ")
+    .join("");
+  (
+    document.getElementById("backwards-output") as HTMLParagraphElement
+  ).innerText = "\n" + backward_result.join("\n");
 };
 
 const serializeOps = (operations: Operation[]) => {
@@ -106,116 +126,71 @@ const deserializeOps = (): [SoundLaw[], SoundLawComposition, Operation[]] => {
   }
 };
 
+type State = { laws: SoundLaw[]; composition: SoundLawComposition };
+
 const mouseListeners = (state: State) => {
   const list = document.getElementById("rulesList") as HTMLUListElement;
-  let draggingElement: HTMLElement | null = null;
-  let placeholder: HTMLElement | null = null;
 
-  // Store the bounding rectangle of the list
-  let listBounds: DOMRect;
-  let removeIndex: number | undefined;
-  let insertIndex: number | undefined;
-
-  list.addEventListener("mousedown", (e: MouseEvent) => {
+  list.addEventListener("dragstart", (e: DragEvent) => {
     const target = e.target as HTMLElement;
     if (target.tagName === "LI") {
-      removeIndex = Array.from(list.children).indexOf(target);
-      draggingElement = target;
-
-      // Update the bounds of the list
-      listBounds = list.getBoundingClientRect();
-
-      // Create a placeholder for visual feedback
-      placeholder = document.createElement("li");
-      placeholder.classList.add("placeholder");
-      placeholder.style.height = `${draggingElement.offsetHeight}px`;
-
-      // Insert the placeholder in place of the dragging element
-      list.insertBefore(placeholder, draggingElement);
-      list.removeChild(draggingElement);
-
-      // Set up the dragged element style
-      draggingElement.classList.add("dragging");
-      draggingElement.style.width = `${draggingElement.offsetWidth}px`; // Fix width to prevent layout shift
-      document.body.appendChild(draggingElement);
-
-      // Move to the current mouse position
-      moveAt(e.pageX, e.pageY);
+      e.dataTransfer?.setData(
+        "text/plain",
+        Array.from(list.children).indexOf(target).toString(),
+      );
+      target.classList.add("dragging");
     }
   });
 
-  document.addEventListener("mousemove", (e: MouseEvent) => {
-    if (draggingElement) {
-      moveAt(e.pageX, e.pageY);
-
-      // Check which list item is under the cursor
-      const elementsBelow = document.elementsFromPoint(e.clientX, e.clientY);
-      const listItemBelow = elementsBelow.find(
-        (el) => el.tagName === "LI" && el !== placeholder,
-      ) as HTMLElement;
-
-      if (listItemBelow && placeholder) {
-        const rect = listItemBelow.getBoundingClientRect();
-        if (e.clientY < rect.top + rect.height / 2) {
-          list.insertBefore(placeholder, listItemBelow);
+  list.addEventListener("dragover", (e: DragEvent) => {
+    e.preventDefault();
+    const target = e.target as HTMLElement;
+    if (target && target.tagName === "LI") {
+      e.dataTransfer!.dropEffect = "move";
+      const draggingItem = list.querySelector(".dragging");
+      if (draggingItem && target !== draggingItem) {
+        const rect = target.getBoundingClientRect();
+        const offset = e.clientY - rect.top;
+        if (offset > rect.height / 2) {
+          list.insertBefore(draggingItem, target.nextSibling);
         } else {
-          list.insertBefore(placeholder, listItemBelow.nextSibling);
+          list.insertBefore(draggingItem, target);
         }
       }
     }
   });
+  list.addEventListener("drop", (e: DragEvent) => {
+    e.preventDefault();
+    const target = e.target as HTMLElement;
+    if (target && target.tagName === "LI") {
+      const oldIndex = parseInt(e.dataTransfer!.getData("text/plain"), 10);
+      const newIndex = Array.from(list.children).indexOf(target);
 
-  document.addEventListener("mouseup", () => {
-    if (draggingElement && placeholder) {
-      // Remove placeholder and place dragging element
-      draggingElement.classList.remove("dragging");
-      draggingElement.style.removeProperty("left");
-      draggingElement.style.removeProperty("top");
-      draggingElement.style.removeProperty("width");
-      list.insertBefore(draggingElement, placeholder);
-      insertIndex = Array.from(list.children).indexOf(draggingElement);
-      placeholder.remove();
-
-      // Reset variables
-      draggingElement = null;
-      placeholder = null;
-
-      if (insertIndex && removeIndex) {
-        let [old] = state.laws.splice(removeIndex, 1);
-        let fst = state.composition.rm_law(removeIndex);
-
-        state.laws.splice(insertIndex, 0, old);
-        state.composition.insert(insertIndex, fst);
+      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+        const [movedLaw] = state.laws.splice(oldIndex, 1);
+        state.laws.splice(newIndex, 0, movedLaw);
+        state.composition = SoundLawComposition.new();
+        state.laws.forEach((law) => state.composition.add_law(law));
+        updateRulesList(state);
+        serializeOps(
+          state.laws.map((law) => ({
+            left: law.get_left_context(),
+            right: law.get_right_context(),
+            from: law.get_from(),
+            to: law.get_to(),
+          })),
+        );
+        transduce(state.composition);
       }
-      transduce(state.composition);
     }
   });
-
-  function moveAt(pageX: number, pageY: number) {
-    if (draggingElement && listBounds) {
-      const x = Math.max(
-        listBounds.left,
-        Math.min(
-          pageX - draggingElement.offsetWidth / 2,
-          listBounds.right - draggingElement.offsetWidth,
-        ),
-      );
-      const y = Math.max(
-        listBounds.top,
-        Math.min(
-          pageY - draggingElement.offsetHeight / 2,
-          listBounds.bottom - draggingElement.offsetHeight,
-        ),
-      );
-
-      draggingElement.style.left = `${x}px`;
-      draggingElement.style.top = `${y}px`;
+  list.addEventListener("dragend", () => {
+    const draggingItem = list.querySelector(".dragging");
+    if (draggingItem) {
+      draggingItem.classList.remove("dragging");
     }
-  }
+  });
 };
-
-type State = { laws: SoundLaw[]; composition: SoundLawComposition };
-
 async function run() {
   await init();
 
@@ -227,7 +202,7 @@ async function run() {
 
   const [currentLaws, fst, operations] = deserializeOps();
   let state: State = { laws: currentLaws, composition: fst };
-  updateRulesList(currentLaws);
+  updateRulesList(state);
 
   inputIds.forEach((id) => {
     (document.getElementById(id) as HTMLInputElement).addEventListener(
@@ -239,8 +214,9 @@ async function run() {
   (document.getElementById("create-law") as HTMLButtonElement).addEventListener(
     "click",
     () => {
+      console.log("pressed the button");
       setLaw(currentLaws, fst, operations);
-      updateRulesList(currentLaws);
+      updateRulesList(state);
       serializeOps(operations);
     },
   );
