@@ -220,6 +220,7 @@ impl SoundLawComposition {
             total_fst.compose(&new_fst.fst);
         }
         self.final_fst = total_fst;
+        self.final_fst.optimize();
         self.backwards_fst = self.final_fst.clone();
         self.backwards_fst.invert();
 
@@ -244,6 +245,7 @@ impl SoundLawComposition {
             self.backwards_fst.invert();
         } else {
             self.final_fst.compose(law.get_fst());
+            self.final_fst.optimize();
             self.backwards_fst = self.final_fst.clone();
             self.backwards_fst.invert();
         }
@@ -380,7 +382,8 @@ mod tests {
         compose.add_law(&law2);
         compose.insert(1, &law3);
 
-
+        compose.backwards_fst.optimize();
+        compose.backwards_fst.df("overflow");
         let transduced = compose.transduce_text_invert("dddddd");
         assert_eq!(transduced.len(), LIMIT);
 
