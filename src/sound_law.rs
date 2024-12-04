@@ -24,6 +24,8 @@ pub struct SoundLaw {
     table: SymbolTable,
 }
 
+const LIMIT: usize = 20;
+
 #[derive(Debug)]
 struct SoundLawLabels {
     from: Vec<Label>,
@@ -178,6 +180,7 @@ fn transduce_text_with_symbol_table(
         // .inspect(|x| println!("{:?}", x))
         .unwrap()
         .map(|path| path.ostring().unwrap())
+        .take(LIMIT)
         .collect()
 }
 // todo: make a thing for the symbol table to check
@@ -364,5 +367,22 @@ mod tests {
         let transduced = compose.transduce_text_invert("d");
         assert_eq!(transduced.len(), 4);
         //assert_eq!(transduced[0], "c");
+    }
+    #[test]
+    fn compose_test_overflow() {
+        let symbol_tabl = symt!["a", "b", "c", "d"];
+        let law1 = SoundLaw::new("a", "b", "", "", &symbol_tabl);
+        let law2 = SoundLaw::new("c", "d", "", "", &symbol_tabl);
+        let law3 = SoundLaw::new("b", "c", "", "", &symbol_tabl);
+
+        let mut compose = SoundLawComposition::new();
+        compose.add_law(&law1);
+        compose.add_law(&law2);
+        compose.insert(1, &law3);
+
+
+        let transduced = compose.transduce_text_invert("dddddd");
+        assert_eq!(transduced.len(), LIMIT);
+
     }
 }
