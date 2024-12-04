@@ -21,7 +21,11 @@ use rustfst::{fst, DrawingConfig};
 #[derive(Clone, Debug, PartialEq)]
 pub struct SoundFst(pub SoundVec);
 
+#[cfg(test)]
 const DEBUG: bool = true;
+
+#[cfg(not(test))]
+const DEBUG: bool = false;
 
 pub type SoundVec = VectorFst<SoundWeight>;
 
