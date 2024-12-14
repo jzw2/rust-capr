@@ -6,9 +6,9 @@ import init, {
   SoundLawComposition,
 } from "./pkg/rust_capr";
 
-import { Drawable } from "./krist_lib/editor";
+// import { Drawable } from "./krist_lib/editor";
 import Victor from "victor";
-import { RuleNode } from "./krist_lib/rule-node";
+// import { RuleNode } from "./krist_lib/rule-node";
 
 type Operation = {
   left: string;
@@ -221,11 +221,11 @@ async function run() {
     },
   );
 
-  const rule = new RuleNode(
-    document.getElementById("mainCanvas") as HTMLCanvasElement,
-    new Victor(10, 10),
-  );
-  rule.render();
+  // const rule = new RuleNode(
+  //   document.getElementById("mainCanvas") as HTMLCanvasElement,
+  //   new Victor(10, 10),
+  // );
+  // rule.render();
 
   mouseListeners(state);
 }
