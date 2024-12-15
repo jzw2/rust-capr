@@ -40,3 +40,9 @@ As long as there is some regularity, the FST should also be able to generate all
 Most of the infastructure is built on top of the library =rustfst= which is largely openfst written in rust.
 The replacement operator was surprisingly non trivial, and most code has been adapted from hfsts c++ implementation.
 The rust creates a web assembly package which is then run in the browser.
+
+* Similar projects
+
+- https://zompist.com/sca2.html
+
+- https://github.com/knightss27/capr
