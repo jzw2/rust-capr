@@ -3,7 +3,7 @@
 
 Capr like system but with improvements
 
-Try [[https://jzw2.github.io/rust-capr/][here].
+Try [[https://jzw2.github.io/rust-capr/][here]].
 
 * Installation
 You first need wasm-pack and cargo. Also you need yarn and parcel for the front end.
