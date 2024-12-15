@@ -202,6 +202,7 @@ impl Default for SoundLawComposition {
 #[wasm_bindgen]
 impl SoundLawComposition {
     pub fn new() -> SoundLawComposition {
+        console_error_panic_hook::set_once();
         let fst: SoundVec = SoundVec::new();
         SoundLawComposition {
             laws: vec![],
@@ -386,6 +387,5 @@ mod tests {
         compose.backwards_fst.df("overflow");
         let transduced = compose.transduce_text_invert("dddddd");
         assert_eq!(transduced.len(), LIMIT);
-
     }
 }

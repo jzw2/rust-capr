@@ -73,4 +73,16 @@ mod tests {
 
         assert_eq!(&output[0], "a x c");
     }
+
+    #[test]
+    fn symbol_boundry() {
+        let left = "a";
+        let right = "c";
+        let from = "b";
+        let to = "x";
+        let input = "#abc#";
+
+        let output = transduce_context(left, right, from, to, input);
+        assert_eq!(&output[0], "# a x c #");
+    }
 }
