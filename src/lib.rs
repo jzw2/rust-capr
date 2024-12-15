@@ -1,5 +1,5 @@
 extern crate console_error_panic_hook;
-use tables::lower_case_latin;
+use tables::{lower_case_latin, xsampa_ascii};
 use wasm_bindgen::prelude::*;
 
 mod negate;
@@ -11,9 +11,11 @@ use sound_law::SoundLaw;
 
 #[wasm_bindgen]
 pub fn create_law(left: &str, right: &str, from: &str, to: &str) -> SoundLaw {
-    let latin = lower_case_latin();
+    // let latin = lower_case_latin();
+    let xsampa = xsampa_ascii();
 
-    SoundLaw::new(from, to, left, right, &latin)
+    // SoundLaw::new(from, to, left, right, &latin)
+    SoundLaw::new(from, to, left, right, &xsampa)
 }
 
 #[wasm_bindgen]

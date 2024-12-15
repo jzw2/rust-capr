@@ -12,3 +12,17 @@ pub fn lower_case_latin() -> SymbolTable {
     table.add_symbols(alphabet);
     table
 }
+
+pub fn xsampa_ascii() -> SymbolTable {
+    let xsampa_chars: Vec<String> = ('a'..='z')
+        .chain('A'..='Z')
+        .chain('0'..='9')
+        .chain("&',-/\\=@_!?\"<>".chars())
+        .chain("#".chars()) // boundry
+        .map(|x| x.to_string())
+        .collect();
+
+    let mut table = SymbolTable::new();
+    table.add_symbols(xsampa_chars);
+    table
+}
