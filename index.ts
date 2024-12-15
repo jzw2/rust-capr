@@ -4,6 +4,7 @@ import init, {
   transduce_context,
   transduce_context_invert,
   SoundLawComposition,
+  soundlaw_xsampa_to_ipa,
 } from "./pkg/rust_capr";
 
 // import { Drawable } from "./krist_lib/editor";
@@ -92,13 +93,15 @@ const transduce = (fst: SoundLawComposition) => {
   console.log(`${result}, ${result.length}`);
   //console.log(`${backward_result}, ${backward.length}`);
   (document.getElementById("output") as HTMLParagraphElement).innerText = result
-    .join("")
-    .split(" ")
-    .filter((s) => s != " ")
-    .join("");
+    .map((x) => x + "\t IPA: " + soundlaw_xsampa_to_ipa(x))
+    .join("\n");
   (
     document.getElementById("backwards-output") as HTMLParagraphElement
-  ).innerText = "\n" + backward_result.join("\n");
+  ).innerText =
+    "\n" +
+    backward_result
+      .map((x) => x + "\t IPA: " + soundlaw_xsampa_to_ipa(x))
+      .join("\n");
 };
 
 const serializeOps = (operations: Operation[]) => {

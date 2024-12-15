@@ -3,6 +3,7 @@ use std::sync::Arc;
 use crate::trans::SoundFst;
 use crate::trans::SoundVec;
 use crate::trans::SoundWeight;
+use ipa_translate::xsampa_to_ipa;
 use rustfst::prelude::Fst;
 use rustfst::prelude::MutableFst;
 use rustfst::prelude::VectorFst;
@@ -274,6 +275,11 @@ impl SoundLawComposition {
             }
         }
     }
+}
+
+#[wasm_bindgen]
+pub fn soundlaw_xsampa_to_ipa(s: &str) -> String {
+    xsampa_to_ipa(s)
 }
 
 #[cfg(test)]
