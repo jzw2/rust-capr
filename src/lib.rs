@@ -1,5 +1,5 @@
 extern crate console_error_panic_hook;
-use tables::{lower_case_latin, xsampa_ascii};
+use tables::xsampa_ascii;
 use wasm_bindgen::prelude::*;
 
 mod negate;

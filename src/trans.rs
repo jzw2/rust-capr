@@ -386,7 +386,7 @@ impl SoundFst {
 
 #[cfg(test)]
 mod tests {
-    use std::vec;
+    
 
     use rustfst::{fst, prelude::rm_epsilon::rm_epsilon, symt, DrawingConfig, utils::transducer};
     use sound_law::SoundLaw;
