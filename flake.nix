@@ -1,33 +1,60 @@
 {
   inputs = {
+    nixpkgs.url = "github:cachix/devenv-nixpkgs/rolling";
+    systems.url = "github:nix-systems/default";
+    devenv.url = "github:cachix/devenv";
     naersk.url = "github:nix-community/naersk/master";
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     utils.url = "github:numtide/flake-utils";
+    devenv.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, utils, naersk }:
-    utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = import nixpkgs { inherit system; };
-        naersk-lib = pkgs.callPackage naersk { };
-      in
-      {
-        defaultPackage = naersk-lib.buildPackage ./.;
-        devShell = with pkgs; mkShell {
-          buildInputs = [ yarn nodejs cargo rustc rustfmt pre-commit rustPackages.clippy rust-analyzer cargo-flamegraph # xdot
-          wasm-pack
-          lld
-          nodePackages.eslint
-	  iconv
+  nixConfig = {
+    extra-trusted-public-keys = "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw=";
+    extra-substituters = "https://devenv.cachix.org";
+  };
 
-          ];
-          RUST_SRC_PATH = rustPlatform.rustLibSrc;
+  outputs = { self, nixpkgs, devenv, systems, ... } @ inputs:
+    let
+      forEachSystem = nixpkgs.lib.genAttrs (import systems);
+    in
+    {
+      packages = forEachSystem (system: {
+        devenv-up = self.devShells.${system}.default.config.procfileScript;
+        devenv-test = self.devShells.${system}.default.config.test;
+      });
 
-        shellHook = ''
-exec fish
+      devShells = forEachSystem
+        (system:
+          let
+            pkgs = nixpkgs.legacyPackages.${system};
+          in
+          {
+            default = devenv.lib.mkShell {
+              inherit inputs pkgs;
+              modules = [
+                {
+                  # https://devenv.sh/reference/options/
+                  packages = [
+                    pkgs.wasm-pack
+                    pkgs.lld
+                    pkgs.mold
 
-'';
-        };
-      }
-    );
+                  ];
+                  devcontainer.enable = true;
+                 languages.rust.enable = true;
+                 languages.rust.mold.enable = false;
+                 languages.typescript.enable = true;
+                 languages.nix.enable = true;
+                 languages.javascript.yarn.enable = true;
+                 languages.javascript.enable = true;
+                  enterShell = ''
+                    echo hi
+                  '';
+
+                  processes.hello.exec = "echo hi";
+                }
+              ];
+            };
+          });
+    };
 }
