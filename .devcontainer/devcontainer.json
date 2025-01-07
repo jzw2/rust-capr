@@ -6,6 +6,13 @@
       ]
     }
   },
-  "image": "ghcr.io/cachix/devenv:latest",
+
+"features": {
+    "ghcr.io/devcontainers/features/sshd:1": {
+        "version": "latest"
+    }
+},
+
+"image": "ghcr.io/cachix/devenv:latest",
   "overrideCommand": false
 }
