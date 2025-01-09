@@ -129,7 +129,11 @@ const deserializeOps = (): [SoundLaw[], SoundLawComposition, Operation[]] => {
   }
 };
 
-type State = { laws: SoundLaw[]; composition: SoundLawComposition };
+type State = {
+  laws: SoundLaw[];
+  composition: SoundLawComposition;
+  strings: String[];
+};
 
 const mouseListeners = (state: State) => {
   const list = document.getElementById("rulesList") as HTMLUListElement;
@@ -204,8 +208,29 @@ async function run() {
   const inputIds = ["input", "backward"];
 
   const [currentLaws, fst, operations] = deserializeOps();
-  let state: State = { laws: currentLaws, composition: fst };
+  let state: State = { laws: currentLaws, composition: fst, strings: [] };
   updateRulesList(state);
+
+  let uploadButton = document.getElementById("upload") as HTMLInputElement;
+  let fileContent = document.getElementById("file-inputs") as HTMLUListElement;
+
+  uploadButton.addEventListener("change", async () => {
+    console.log("changed");
+    if (uploadButton.files) {
+      let file = uploadButton.files[0];
+      const text = await file.text();
+      const lines = text.split("\n");
+      state.strings = lines;
+
+      lines.forEach((line) => {
+        const item = document.createElement("li");
+        item.textContent = line;
+        fileContent.appendChild(item);
+      });
+    } else {
+      state.strings = [];
+    }
+  });
 
   inputIds.forEach((id) => {
     (document.getElementById(id) as HTMLInputElement).addEventListener(
