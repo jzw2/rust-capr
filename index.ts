@@ -26,15 +26,15 @@ type Message =
 
 //todo: refactor so it isn't so big
 type State = {
-  soundLawInputs: SoundLawInput;
+  soundLawInputs: SoundLawInput[];
   laws: SoundLaw[];
-  input: String;
-  output: String[];
-  reverseInput: String;
-  revereseOutput: String[];
+  input: string;
+  output: string[];
+  reverseInput: string;
+  revereseOutput: string[];
   composition: SoundLawComposition;
-  fileStrings: String[];
-  transducedFileStrings: String[][];
+  fileStrings: string[];
+  transducedFilestrings: string[][];
 };
 
 type SoundLawInput = {
@@ -45,7 +45,18 @@ type SoundLawInput = {
 };
 
 const update = (message: Message, state: State) => {
+  console.log("Found message" + message.type);
   if (message.type === "AddSoundLaw") {
+    state.soundLawInputs.push(message.law);
+    const law = create_law(
+      message.law.left,
+      message.law.right,
+      message.law.from,
+      message.law.to,
+    );
+    state.composition.add_law(law);
+    state.output = state.composition.transduce_text(state.input);
+    state.revereseOutput = state.composition.transduce_text(state.reverseInput);
   } else {
     //whatever
   }
@@ -53,7 +64,26 @@ const update = (message: Message, state: State) => {
 };
 
 const renderInit = (sendMessage: (message: Message) => void) => {
-  const
+  const left = document.getElementById("left") as HTMLInputElement;
+  const right = document.getElementById("right") as HTMLInputElement;
+  const to = document.getElementById("to") as HTMLInputElement;
+  const from = document.getElementById("from") as HTMLInputElement;
+
+  const createButton = document.getElementById(
+    "create-law",
+  ) as HTMLButtonElement;
+
+  createButton.addEventListener("click", () => {
+    sendMessage({
+      type: "AddSoundLaw",
+      law: {
+        left: left.value,
+        right: right.value,
+        from: from.value,
+        to: to.value,
+      },
+    });
+  });
 };
 
 const render = (state: State, sendMessage: (message: Message) => void) => {
@@ -90,12 +120,7 @@ async function run() {
   await init();
 
   let state: State = {
-    soundLawInputs: {
-      left: "",
-      right: "",
-      to: "",
-      from: "",
-    },
+    soundLawInputs: [],
     laws: [],
     input: "",
     output: [],
