@@ -12,7 +12,7 @@ import init, {
 // import { RuleNode } from "./krist_lib/rule-node";
 
 type AddSoundLaw = { type: "AddSoundLaw"; law: SoundLawInput };
-type UploadFile = { type: "UploadFile"; contents: String };
+type UploadFile = { type: "UploadFile"; contents: string };
 type StartDrag = { type: "StartDrag"; index: number };
 type HoveringOver = { type: "HoveringOver"; index: number };
 type ClickDelete = { type: "ClickDelete"; index: number };
@@ -22,7 +22,9 @@ type Message =
   | UploadFile
   | StartDrag
   | HoveringOver
-  | ClickDelete;
+  | ClickDelete
+  | { type: "ChangeInput"; input: string }
+  | { type: "ChangeBackwardsInput"; input: string };
 
 //todo: refactor so it isn't so big
 type State = {
@@ -34,7 +36,7 @@ type State = {
   revereseOutput: string[];
   composition: SoundLawComposition;
   fileStrings: string[];
-  transducedFilestrings: string[][];
+  transducedFileStrings: string[][];
 };
 
 type SoundLawInput = {
@@ -47,6 +49,9 @@ type SoundLawInput = {
 const update = (message: Message, state: State) => {
   console.log("Found message" + message.type);
   if (message.type === "AddSoundLaw") {
+    console.log(
+      `${message.law.left} ${message.law.right} ${message.law.from} ${message.law.to}`,
+    );
     state.soundLawInputs.push(message.law);
     const law = create_law(
       message.law.left,
@@ -54,9 +59,14 @@ const update = (message: Message, state: State) => {
       message.law.from,
       message.law.to,
     );
+    state.laws.push(law);
     state.composition.add_law(law);
     state.output = state.composition.transduce_text(state.input);
     state.revereseOutput = state.composition.transduce_text(state.reverseInput);
+  } else if (message.type === "ChangeInput") {
+    state.input = message.input;
+  } else if (message.type === "ChangeBackwardsInput") {
+    state.reverseInput = message.input;
   } else {
     //whatever
   }
@@ -84,6 +94,15 @@ const renderInit = (sendMessage: (message: Message) => void) => {
       },
     });
   });
+
+  const input = document.getElementById("input") as HTMLInputElement;
+  const backwards = document.getElementById("backward") as HTMLInputElement;
+  input?.addEventListener("input", () =>
+    sendMessage({ type: "ChangeInput", input: input.value }),
+  );
+  backwards?.addEventListener("input", () =>
+    sendMessage({ type: "ChangeBackwardsInput", input: backwards.value }),
+  );
 };
 
 const render = (state: State, sendMessage: (message: Message) => void) => {
