@@ -59,8 +59,10 @@ const update = (message: Message, state: State) => {
       message.law.from,
       message.law.to,
     );
-    state.laws.push(law);
-    state.composition.add_law(law);
+    console.log(law);
+    console.log("starting");
+    state.composition.add_law(law); // mentions that null pointer passed to rust
+    console.log("oops we didn't make it here");
     state.output = state.composition.transduce_text(state.input);
     state.revereseOutput = state.composition.transduce_text(state.reverseInput);
   } else if (message.type === "ChangeInput") {
@@ -145,7 +147,7 @@ async function run() {
     output: [],
     reverseInput: "",
     revereseOutput: [],
-    composition: new SoundLawComposition(),
+    composition: SoundLawComposition.new(),
     fileStrings: [],
     transducedFileStrings: [],
   };
