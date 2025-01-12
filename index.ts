@@ -7,6 +7,10 @@ import init, {
   soundlaw_xsampa_to_ipa,
 } from "./pkg/rust_capr";
 
+let sendMessage = (_: Message) => {
+  console.log("Send Message not initialize properly");
+};
+
 // import { Drawable } from "./krist_lib/editor";
 // import Victor from "victor";
 // import { RuleNode } from "./krist_lib/rule-node";
@@ -69,11 +73,7 @@ const updateLaw = (message: AddSoundLaw, state: State): Message => {
   };
 };
 
-const update = (
-  message: Message,
-  state: State,
-  sendMessage: (m: Message) => void,
-) => {
+const update = (message: Message, state: State) => {
   console.log("Found message" + message.type);
   if (message.type === "AddSoundLaw") {
     console.log(
@@ -91,7 +91,7 @@ const update = (
     // });
     console.log("After Promise Run");
     console.log("Calliing duplicate render Promise Run");
-    render(state, sendMessage);
+    //render(state);
   } else if (message.type === "ChangeInput") {
     state.input = message.input;
     state.output = state.composition.transduce_text(state.input);
@@ -112,7 +112,7 @@ const update = (
   return state; //change this
 };
 
-const renderInit = (sendMessage: (message: Message) => void) => {
+const renderInit = () => {
   const left = document.getElementById("left") as HTMLInputElement;
   const right = document.getElementById("right") as HTMLInputElement;
   const to = document.getElementById("to") as HTMLInputElement;
@@ -144,7 +144,7 @@ const renderInit = (sendMessage: (message: Message) => void) => {
   );
 };
 
-const render = (state: State, sendMessage: (message: Message) => void) => {
+const render = (state: State) => {
   const loading = document.getElementById("loading");
   if (loading) {
     //console.log("isLoading: " + state.isLoading);
@@ -203,12 +203,12 @@ async function run() {
     transducedFileStrings: [],
   };
 
-  const sendMessage = (message: Message) => {
-    state = update(message, state, sendMessage);
-    render(state, sendMessage);
+  sendMessage = (message: Message) => {
+    state = update(message, state);
+    render(state);
   };
 
-  renderInit(sendMessage);
+  renderInit();
 }
 
 run();
