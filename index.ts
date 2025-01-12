@@ -82,20 +82,30 @@ const update = (
     message;
     state.soundLawInputs.push(message.law);
     state.isLoading = true;
+    console.log("Before Promise stuff");
     // render(state, sendMessage);
-    Promise.resolve().then(() => sendMessage(updateLaw(message, state)));
+    setTimeout(() => sendMessage(updateLaw(message, state)));
+    // new Promise((resolve, reject) => {
+    //   sendMessage(updateLaw(message, state));
+    //   resolve(null);
+    // });
     console.log("After Promise Run");
-
-    // state.output = state.composition.transduce_text(state.input);
-    // state.revereseOutput = state.composition.transduce_text(state.reverseInput);
+    console.log("Calliing duplicate render Promise Run");
+    render(state, sendMessage);
   } else if (message.type === "ChangeInput") {
     state.input = message.input;
+    state.output = state.composition.transduce_text(state.input);
   } else if (message.type === "ChangeBackwardsInput") {
     state.reverseInput = message.input;
+    state.revereseOutput = state.composition.transduce_text_invert(
+      state.reverseInput,
+    );
   } else if (message.type === "FinishLoading") {
     state.isLoading = false;
     state.laws = message.laws;
     state.composition = message.composition;
+    state.output = state.composition.transduce_text(state.input);
+    state.revereseOutput = state.composition.transduce_text(state.reverseInput);
   } else {
     //whatever
   }
@@ -137,7 +147,7 @@ const renderInit = (sendMessage: (message: Message) => void) => {
 const render = (state: State, sendMessage: (message: Message) => void) => {
   const loading = document.getElementById("loading");
   if (loading) {
-    console.log("isLoading: " + state.isLoading);
+    //console.log("isLoading: " + state.isLoading);
     if (state.isLoading) {
       loading.style.display = "block";
     } else {
@@ -145,6 +155,7 @@ const render = (state: State, sendMessage: (message: Message) => void) => {
     }
     // loading.style.display = "block";
   }
+  console.log(state.output);
   const output = document.getElementById("output") as HTMLParagraphElement;
   output.innerHTML = state.output.join("\n");
   const backwardsOutput = document.getElementById(
