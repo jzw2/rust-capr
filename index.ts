@@ -24,10 +24,16 @@ type Message =
   | HoveringOver
   | ClickDelete
   | { type: "ChangeInput"; input: string }
-  | { type: "ChangeBackwardsInput"; input: string };
+  | { type: "ChangeBackwardsInput"; input: string }
+  | {
+      type: "FinishLoading";
+      laws: SoundLaw[];
+      composition: SoundLawComposition;
+    };
 
 //todo: refactor so it isn't so big
 type State = {
+  isLoading: boolean;
   soundLawInputs: SoundLawInput[];
   laws: SoundLaw[];
   input: string;
@@ -46,29 +52,50 @@ type SoundLawInput = {
   from: string;
 };
 
-const update = (message: Message, state: State) => {
+const updateLaw = (message: AddSoundLaw, state: State): Message => {
+  const law = create_law(
+    message.law.left,
+    message.law.right,
+    message.law.from,
+    message.law.to,
+  );
+  state.laws.push(law);
+  state.composition.add_law(law); // mentions that null pointer passed to rust
+  console.log("Finished computation");
+  return {
+    type: "FinishLoading",
+    laws: state.laws,
+    composition: state.composition,
+  };
+};
+
+const update = (
+  message: Message,
+  state: State,
+  sendMessage: (m: Message) => void,
+) => {
   console.log("Found message" + message.type);
   if (message.type === "AddSoundLaw") {
     console.log(
       `${message.law.left} ${message.law.right} ${message.law.from} ${message.law.to}`,
     );
+    message;
     state.soundLawInputs.push(message.law);
-    const law = create_law(
-      message.law.left,
-      message.law.right,
-      message.law.from,
-      message.law.to,
-    );
-    console.log(law);
-    console.log("starting");
-    state.composition.add_law(law); // mentions that null pointer passed to rust
-    console.log("oops we didn't make it here");
-    state.output = state.composition.transduce_text(state.input);
-    state.revereseOutput = state.composition.transduce_text(state.reverseInput);
+    state.isLoading = true;
+    // render(state, sendMessage);
+    Promise.resolve().then(() => sendMessage(updateLaw(message, state)));
+    console.log("After Promise Run");
+
+    // state.output = state.composition.transduce_text(state.input);
+    // state.revereseOutput = state.composition.transduce_text(state.reverseInput);
   } else if (message.type === "ChangeInput") {
     state.input = message.input;
   } else if (message.type === "ChangeBackwardsInput") {
     state.reverseInput = message.input;
+  } else if (message.type === "FinishLoading") {
+    state.isLoading = false;
+    state.laws = message.laws;
+    state.composition = message.composition;
   } else {
     //whatever
   }
@@ -108,6 +135,16 @@ const renderInit = (sendMessage: (message: Message) => void) => {
 };
 
 const render = (state: State, sendMessage: (message: Message) => void) => {
+  const loading = document.getElementById("loading");
+  if (loading) {
+    console.log("isLoading: " + state.isLoading);
+    if (state.isLoading) {
+      loading.style.display = "block";
+    } else {
+      loading.style.display = "none";
+    }
+    // loading.style.display = "block";
+  }
   const output = document.getElementById("output") as HTMLParagraphElement;
   output.innerHTML = state.output.join("\n");
   const backwardsOutput = document.getElementById(
@@ -135,12 +172,15 @@ const render = (state: State, sendMessage: (message: Message) => void) => {
     listItem.appendChild(deleteButton);
     rulesList.appendChild(listItem);
   });
+
+  console.log("Finished rendering");
 };
 
 async function run() {
   await init();
 
   let state: State = {
+    isLoading: false,
     soundLawInputs: [],
     laws: [],
     input: "",
@@ -153,7 +193,7 @@ async function run() {
   };
 
   const sendMessage = (message: Message) => {
-    state = update(message, state);
+    state = update(message, state, sendMessage);
     render(state, sendMessage);
   };
 
