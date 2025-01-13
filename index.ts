@@ -106,6 +106,8 @@ const update = (message: Message, state: State) => {
     state.composition = message.composition;
     state.output = state.composition.transduce_text(state.input);
     state.revereseOutput = state.composition.transduce_text(state.reverseInput);
+  } else if (message.type === "UploadFile") {
+    state.fileStrings = message.contents.split("\n").filter((x) => x !== "");
   } else {
     //whatever
   }
@@ -113,6 +115,18 @@ const update = (message: Message, state: State) => {
 };
 
 const renderInit = () => {
+  const uploadFile = document.getElementById("upload") as HTMLInputElement;
+
+  uploadFile.addEventListener("change", async () => {
+    if (uploadFile.files) {
+      let file = uploadFile.files[0];
+      const text = await file.text();
+      sendMessage({ type: "UploadFile", contents: text });
+    } else {
+      sendMessage({ type: "UploadFile", contents: "" });
+    }
+  });
+
   const left = document.getElementById("left") as HTMLInputElement;
   const right = document.getElementById("right") as HTMLInputElement;
   const to = document.getElementById("to") as HTMLInputElement;
@@ -182,6 +196,18 @@ const render = (state: State) => {
 
     listItem.appendChild(deleteButton);
     rulesList.appendChild(listItem);
+  });
+
+  let fileContent = document.getElementById(
+    "file-headers",
+  ) as HTMLTableRowElement;
+
+  fileContent.innerHTML = "";
+
+  state.fileStrings.forEach((line) => {
+    const item = document.createElement("td");
+    item.textContent = line;
+    fileContent.appendChild(item);
   });
 
   console.log("Finished rendering");
