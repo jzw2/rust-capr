@@ -33,6 +33,7 @@ type Message =
   | ClickDelete
   | { type: "ChangeInput"; input: string }
   | { type: "ChangeBackwardsInput"; input: string }
+  | { type: "Rearrange"; old: number; new: number }
   | {
       type: "FinishLoading";
       laws: SoundLaw[];
@@ -132,6 +133,18 @@ const update = (message: Message, state: State) => {
     state.transducedFileStrings = state.fileStrings.map((s) =>
       state.composition.transduce_text(s),
     );
+  } else if (message.type === "Rearrange") {
+    const oldIndex = message.old;
+    const newIndex = message.new;
+    const [movedLaw] = state.laws.splice(oldIndex, 1);
+    state.laws.splice(newIndex, 0, movedLaw);
+    state.composition = SoundLawComposition.new();
+    state.laws.forEach((law) => state.composition.add_law(law));
+    state.output = state.composition.transduce_text(state.input);
+    state.revereseOutput = state.composition.transduce_text(state.reverseInput);
+    state.transducedFileStrings = state.fileStrings.map((s) =>
+      state.composition.transduce_text(s),
+    );
   } else {
     //whatever
   }
@@ -183,6 +196,49 @@ const renderInit = () => {
   backwards?.addEventListener("input", () =>
     sendMessage({ type: "ChangeBackwardsInput", input: backwards.value }),
   );
+
+  const list = document.getElementById("rulesList") as HTMLUListElement;
+
+  list.addEventListener("dragstart", (e: DragEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === "LI") {
+      e.dataTransfer?.setData(
+        "text/plain",
+        Array.from(list.children).indexOf(target).toString(),
+      );
+      target.classList.add("dragging");
+    }
+  });
+
+  list.addEventListener("dragover", (e: DragEvent) => {
+    e.preventDefault();
+    const target = e.target as HTMLElement;
+    if (target && target.tagName === "LI") {
+      e.dataTransfer!.dropEffect = "move";
+      const draggingItem = list.querySelector(".dragging");
+      if (draggingItem && target !== draggingItem) {
+        const rect = target.getBoundingClientRect();
+        const offset = e.clientY - rect.top;
+        if (offset > rect.height / 2) {
+          list.insertBefore(draggingItem, target.nextSibling);
+        } else {
+          list.insertBefore(draggingItem, target);
+        }
+      }
+    }
+  });
+  list.addEventListener("drop", (e: DragEvent) => {
+    e.preventDefault();
+    const target = e.target as HTMLElement;
+    if (target && target.tagName === "LI") {
+      const oldIndex = parseInt(e.dataTransfer!.getData("text/plain"), 10);
+      const newIndex = Array.from(list.children).indexOf(target);
+
+      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+        sendMessage({ type: "Rearrange", old: oldIndex, new: newIndex });
+      }
+    }
+  });
 };
 
 const render = (state: State) => {
