@@ -7,6 +7,9 @@ import init, {
   soundlaw_xsampa_to_ipa,
 } from "./pkg/rust_capr";
 
+// Send message needs to have access to the state
+// which isn't created until after the rust stuff gets loaded
+// so initially we give it a dummy function
 let sendMessage = (_: Message) => {
   console.log("Send Message not initialize properly");
 };
@@ -21,6 +24,7 @@ type StartDrag = { type: "StartDrag"; index: number };
 type HoveringOver = { type: "HoveringOver"; index: number };
 type ClickDelete = { type: "ClickDelete"; index: number };
 
+// Sends a message that the state needs to be updated in some way
 type Message =
   | AddSoundLaw
   | UploadFile
@@ -56,6 +60,7 @@ type SoundLawInput = {
   from: string;
 };
 
+// Creating sound laws take a decent amout of time
 const updateLaw = (message: AddSoundLaw, state: State): Message => {
   const law = create_law(
     message.law.left,
@@ -73,6 +78,8 @@ const updateLaw = (message: AddSoundLaw, state: State): Message => {
   };
 };
 
+// If a message is sent, it takes the old state and
+// returns a new state based on what the message was
 const update = (message: Message, state: State) => {
   console.log("Found message" + message.type);
   if (message.type === "AddSoundLaw") {
@@ -106,14 +113,34 @@ const update = (message: Message, state: State) => {
     state.composition = message.composition;
     state.output = state.composition.transduce_text(state.input);
     state.revereseOutput = state.composition.transduce_text(state.reverseInput);
+    state.transducedFileStrings = state.fileStrings.map((s) =>
+      state.composition.transduce_text(s),
+    );
+    console.log(state.transducedFileStrings);
   } else if (message.type === "UploadFile") {
     state.fileStrings = message.contents.split("\n").filter((x) => x !== "");
+    state.transducedFileStrings = state.fileStrings.map((s) =>
+      state.composition.transduce_text(s),
+    );
+    console.log(state.transducedFileStrings);
+    // probably won't work if it's a triangle matrix
+  } else if (message.type === "ClickDelete") {
+    state.composition.rm_law(message.index);
+    state.laws.splice(message.index, 1);
+    state.output = state.composition.transduce_text(state.input);
+    state.revereseOutput = state.composition.transduce_text(state.reverseInput);
+    state.transducedFileStrings = state.fileStrings.map((s) =>
+      state.composition.transduce_text(s),
+    );
   } else {
     //whatever
   }
   return state; //change this
 };
 
+// Since some things are only set once
+// putting it in render seems to be kind of wasteful
+// this function is only called once
 const renderInit = () => {
   const uploadFile = document.getElementById("upload") as HTMLInputElement;
 
@@ -198,17 +225,33 @@ const render = (state: State) => {
     rulesList.appendChild(listItem);
   });
 
-  let fileContent = document.getElementById(
+  let table = document.getElementById("file-inputs") as HTMLTableRowElement;
+  table.innerHTML = ' <thead> <tr id="file-headers"></tr> </thead> ';
+  let tableHeader = document.getElementById(
     "file-headers",
   ) as HTMLTableRowElement;
 
-  fileContent.innerHTML = "";
-
   state.fileStrings.forEach((line) => {
-    const item = document.createElement("td");
+    const item = document.createElement("th");
     item.textContent = line;
-    fileContent.appendChild(item);
+    tableHeader.appendChild(item);
   });
+
+  if (state.transducedFileStrings.length > 0) {
+    const transpose = state.transducedFileStrings[0].map((_, index) =>
+      state.transducedFileStrings.map((row) => row[index]),
+    );
+
+    transpose.forEach((row) => {
+      const htmlRow = document.createElement("tr");
+      row.forEach((col) => {
+        const item = document.createElement("td");
+        item.textContent = col;
+        htmlRow.appendChild(item);
+      });
+      table.append(htmlRow);
+    });
+  }
 
   console.log("Finished rendering");
 };
