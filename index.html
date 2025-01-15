@@ -33,9 +33,25 @@
                 border: 2px dashed #007bff;
                 height: 40px;
             }
+            #loading {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                font-size: 8rem;
+                font-weight: bold;
+                text-align: center;
+                line-height: 100vh;
+                z-index: 1000;
+            }
         </style>
     </head>
     <body>
+        <p id="loading">Loading!!!</p>
         <input type="file" id="upload" />
         <h1>Transduction Tool</h1>
 
