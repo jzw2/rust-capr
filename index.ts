@@ -34,11 +34,15 @@ type Message =
   | { type: "ChangeInput"; input: string }
   | { type: "ChangeBackwardsInput"; input: string }
   | { type: "Rearrange"; old: number; new: number }
+  | { type: "Transduce" }
   | {
       type: "FinishLoading";
       laws: SoundLaw[];
       composition: SoundLawComposition;
-    };
+    }
+  | { type: "DragStart"; index: number }
+  | { type: "DragOver"; index: number }
+  | { type: "DragEnd" };
 
 //todo: refactor so it isn't so big
 type State = {
@@ -52,7 +56,12 @@ type State = {
   composition: SoundLawComposition;
   fileStrings: string[];
   transducedFileStrings: string[][];
+  drag: DragType;
 };
+
+type DragType =
+  | { type: "NoDrag" }
+  | { type: "DraggingOver"; old: number; new: number };
 
 type SoundLawInput = {
   left: string;
@@ -79,6 +88,15 @@ const updateLaw = (message: AddSoundLaw, state: State): Message => {
   };
 };
 
+const transduce = (state: State): State => {
+  state.output = state.composition.transduce_text(state.input);
+  state.revereseOutput = state.composition.transduce_text(state.reverseInput);
+  state.transducedFileStrings = state.fileStrings.map((s) =>
+    state.composition.transduce_text(s),
+  );
+  return state;
+};
+
 // If a message is sent, it takes the old state and
 // returns a new state based on what the message was
 const update = (message: Message, state: State) => {
@@ -90,15 +108,12 @@ const update = (message: Message, state: State) => {
     message;
     state.soundLawInputs.push(message.law);
     state.isLoading = true;
-    console.log("Before Promise stuff");
     // render(state, sendMessage);
     setTimeout(() => sendMessage(updateLaw(message, state)));
     // new Promise((resolve, reject) => {
     //   sendMessage(updateLaw(message, state));
     //   resolve(null);
     // });
-    console.log("After Promise Run");
-    console.log("Calliing duplicate render Promise Run");
     //render(state);
   } else if (message.type === "ChangeInput") {
     state.input = message.input;
@@ -112,27 +127,19 @@ const update = (message: Message, state: State) => {
     state.isLoading = false;
     state.laws = message.laws;
     state.composition = message.composition;
-    state.output = state.composition.transduce_text(state.input);
-    state.revereseOutput = state.composition.transduce_text(state.reverseInput);
-    state.transducedFileStrings = state.fileStrings.map((s) =>
-      state.composition.transduce_text(s),
-    );
     console.log(state.transducedFileStrings);
+    state = transduce(state);
   } else if (message.type === "UploadFile") {
     state.fileStrings = message.contents.split("\n").filter((x) => x !== "");
     state.transducedFileStrings = state.fileStrings.map((s) =>
       state.composition.transduce_text(s),
     );
     console.log(state.transducedFileStrings);
-    // probably won't work if it's a triangle matrix
+    state = transduce(state);
   } else if (message.type === "ClickDelete") {
     state.composition.rm_law(message.index);
     state.laws.splice(message.index, 1);
-    state.output = state.composition.transduce_text(state.input);
-    state.revereseOutput = state.composition.transduce_text(state.reverseInput);
-    state.transducedFileStrings = state.fileStrings.map((s) =>
-      state.composition.transduce_text(s),
-    );
+    state = transduce(state);
   } else if (message.type === "Rearrange") {
     const oldIndex = message.old;
     const newIndex = message.new;
@@ -140,13 +147,12 @@ const update = (message: Message, state: State) => {
     state.laws.splice(newIndex, 0, movedLaw);
     state.composition = SoundLawComposition.new();
     state.laws.forEach((law) => state.composition.add_law(law));
-    state.output = state.composition.transduce_text(state.input);
-    state.revereseOutput = state.composition.transduce_text(state.reverseInput);
-    state.transducedFileStrings = state.fileStrings.map((s) =>
-      state.composition.transduce_text(s),
-    );
+    state = transduce(state);
+  } else if (message.type === "Transduce") {
+    state = transduce(state);
   } else {
     //whatever
+    console.log("Very bad, message was not found");
   }
   return state; //change this
 };
@@ -201,43 +207,17 @@ const renderInit = () => {
 
   list.addEventListener("dragstart", (e: DragEvent) => {
     const target = e.target as HTMLElement;
-    if (target.tagName === "LI") {
-      e.dataTransfer?.setData(
-        "text/plain",
-        Array.from(list.children).indexOf(target).toString(),
-      );
-      target.classList.add("dragging");
-    }
+    const index = Array.from(list.children).indexOf(target);
+    sendMessage({ type: "DragStart", index: index });
   });
 
   list.addEventListener("dragover", (e: DragEvent) => {
-    e.preventDefault();
     const target = e.target as HTMLElement;
-    if (target && target.tagName === "LI") {
-      e.dataTransfer!.dropEffect = "move";
-      const draggingItem = list.querySelector(".dragging");
-      if (draggingItem && target !== draggingItem) {
-        const rect = target.getBoundingClientRect();
-        const offset = e.clientY - rect.top;
-        if (offset > rect.height / 2) {
-          list.insertBefore(draggingItem, target.nextSibling);
-        } else {
-          list.insertBefore(draggingItem, target);
-        }
-      }
-    }
+    const index = Array.from(list.children).indexOf(target);
+    sendMessage({ type: "DragOver", index: index });
   });
-  list.addEventListener("drop", (e: DragEvent) => {
-    e.preventDefault();
-    const target = e.target as HTMLElement;
-    if (target && target.tagName === "LI") {
-      const oldIndex = parseInt(e.dataTransfer!.getData("text/plain"), 10);
-      const newIndex = Array.from(list.children).indexOf(target);
-
-      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-        sendMessage({ type: "Rearrange", old: oldIndex, new: newIndex });
-      }
-    }
+  list.addEventListener("dragend", (e: DragEvent) => {
+    sendMessage({ type: "DragEnd" });
   });
 };
 
@@ -252,7 +232,6 @@ const render = (state: State) => {
     }
     // loading.style.display = "block";
   }
-  console.log(state.output);
   const output = document.getElementById("output") as HTMLParagraphElement;
   output.innerHTML = state.output.join("\n");
   const backwardsOutput = document.getElementById(
@@ -326,6 +305,7 @@ async function run() {
     composition: SoundLawComposition.new(),
     fileStrings: [],
     transducedFileStrings: [],
+    drag: { type: "NoDrag" },
   };
 
   sendMessage = (message: Message) => {
