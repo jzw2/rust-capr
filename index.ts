@@ -150,6 +150,16 @@ const update = (message: Message, state: State) => {
     state = transduce(state);
   } else if (message.type === "Transduce") {
     state = transduce(state);
+  } else if (message.type === "DragStart") {
+    state.drag = {
+      type: "DraggingOver",
+      old: message.index,
+      new: message.index,
+    };
+  } else if (message.type === "DragOver") {
+    if (state.drag.type == "DraggingOver") {
+      state.drag.new = message.index;
+    }
   } else {
     //whatever
     console.log("Very bad, message was not found");
