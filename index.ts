@@ -155,10 +155,24 @@ const update = (message: Message, state: State) => {
       type: "DraggingOver",
       old: message.index,
       new: message.index,
-    };
+    }; // start with dragging over self
   } else if (message.type === "DragOver") {
     if (state.drag.type == "DraggingOver") {
       state.drag.new = message.index;
+    } else {
+      console.log("Drag over called without first starting a drag");
+    }
+  } else if (message.type === "DragEnd") {
+    if (state.drag.type == "DraggingOver") {
+      const oldIndex = state.drag.old;
+      const newIndex = state.drag.new;
+      const [movedLaw] = state.laws.splice(oldIndex, 1);
+      state.laws.splice(newIndex, 0, movedLaw);
+      state.composition = SoundLawComposition.new();
+      state.laws.forEach((law) => state.composition.add_law(law));
+      state = transduce(state);
+    } else {
+      console.log("Drag over called without first starting a drag");
     }
   } else {
     //whatever
