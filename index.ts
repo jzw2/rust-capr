@@ -1,11 +1,16 @@
 import init, {
-  create_law,
+  create_law_async,
   SoundLaw,
-  transduce_context,
-  transduce_context_invert,
   SoundLawComposition,
-  soundlaw_xsampa_to_ipa,
 } from "./pkg/rust_capr";
+
+import {
+  AddSoundLaw,
+  Message,
+  State,
+  CMessage,
+  SoundLawInput,
+} from "./types.ts";
 
 // Send message needs to have access to the state
 // which isn't created until after the rust stuff gets loaded
@@ -18,68 +23,19 @@ let sendMessage = (_: Message) => {
 // import Victor from "victor";
 // import { RuleNode } from "./krist_lib/rule-node";
 
-type AddSoundLaw = { type: "AddSoundLaw"; law: SoundLawInput };
-type UploadFile = { type: "UploadFile"; contents: string };
-type StartDrag = { type: "StartDrag"; index: number };
-type HoveringOver = { type: "HoveringOver"; index: number };
-type ClickDelete = { type: "ClickDelete"; index: number };
-
-// Sends a message that the state needs to be updated in some way
-type Message =
-  | AddSoundLaw
-  | UploadFile
-  | StartDrag
-  | HoveringOver
-  | ClickDelete
-  | { type: "ChangeInput"; input: string }
-  | { type: "ChangeBackwardsInput"; input: string }
-  | { type: "Rearrange"; old: number; new: number }
-  | { type: "Transduce" }
-  | {
-      type: "FinishLoading";
-      laws: SoundLaw[];
-      composition: SoundLawComposition;
-    }
-  | { type: "DragStart"; index: number }
-  | { type: "DragOver"; index: number }
-  | { type: "DragEnd" };
-
-//todo: refactor so it isn't so big
-type State = {
-  isLoading: boolean;
-  soundLawInputs: SoundLawInput[];
-  laws: SoundLaw[];
-  input: string;
-  output: string[];
-  reverseInput: string;
-  revereseOutput: string[];
-  composition: SoundLawComposition;
-  fileStrings: string[];
-  transducedFileStrings: string[][];
-  drag: DragType;
-};
-
-type DragType =
-  | { type: "NoDrag" }
-  | { type: "DraggingOver"; old: number; new: number };
-
-type SoundLawInput = {
-  left: string;
-  right: string;
-  to: string;
-  from: string;
-};
-
 // Creating sound laws take a decent amout of time
-const updateLaw = (message: AddSoundLaw, state: State): Message => {
-  const law = create_law(
+const updateLaw = async (
+  message: AddSoundLaw,
+  state: State,
+): Promise<Message> => {
+  const law = await create_law_async(
     message.law.left,
     message.law.right,
     message.law.from,
     message.law.to,
   );
   state.laws.push(law);
-  state.composition.add_law(law); // mentions that null pointer passed to rust
+  await state.composition.add_law(law); // mentions that null pointer passed to rust
   console.log("Finished computation");
   return {
     type: "FinishLoading",
@@ -99,22 +55,18 @@ const transduce = (state: State): State => {
 
 // If a message is sent, it takes the old state and
 // returns a new state based on what the message was
-const update = (message: Message, state: State) => {
-  console.log("Found message" + message.type);
+const update = (message: Message, state: State): State => {
+  console.log("Found message: ", message);
   if (message.type === "AddSoundLaw") {
-    console.log(
-      `${message.law.left} ${message.law.right} ${message.law.from} ${message.law.to}`,
-    );
-    message;
     state.soundLawInputs.push(message.law);
     state.isLoading = true;
-    // render(state, sendMessage);
-    setTimeout(() => sendMessage(updateLaw(message, state)));
-    // new Promise((resolve, reject) => {
-    //   sendMessage(updateLaw(message, state));
-    //   resolve(null);
-    // });
-    //render(state);
+    console.log("before the promise");
+    // Promise.resolve()
+    //   .then(() => updateLaw(message, state))
+    //   .then((res) => sendMessage(res));
+    console.log("after the promise");
+    //setTimeout(() => updateLaw(message, state).then((msg) => sendMessage(msg)));
+    updateLaw(message, state).then((msg) => sendMessage(msg));
   } else if (message.type === "ChangeInput") {
     state.input = message.input;
     state.output = state.composition.transduce_text(state.input);
@@ -171,6 +123,7 @@ const update = (message: Message, state: State) => {
       state.composition = SoundLawComposition.new();
       state.laws.forEach((law) => state.composition.add_law(law));
       state = transduce(state);
+      state.drag.type = "NoDrag";
     } else {
       console.log("Drag over called without first starting a drag");
     }
@@ -178,7 +131,7 @@ const update = (message: Message, state: State) => {
     //whatever
     console.log("Very bad, message was not found");
   }
-  return state; //change this
+  return { ...state }; //change this
 };
 
 // Since some things are only set once
@@ -215,6 +168,7 @@ const renderInit = () => {
         from: from.value,
         to: to.value,
       },
+      loading: true,
     });
   });
 
@@ -226,29 +180,13 @@ const renderInit = () => {
   backwards?.addEventListener("input", () =>
     sendMessage({ type: "ChangeBackwardsInput", input: backwards.value }),
   );
-
-  const list = document.getElementById("rulesList") as HTMLUListElement;
-
-  list.addEventListener("dragstart", (e: DragEvent) => {
-    const target = e.target as HTMLElement;
-    const index = Array.from(list.children).indexOf(target);
-    sendMessage({ type: "DragStart", index: index });
-  });
-
-  list.addEventListener("dragover", (e: DragEvent) => {
-    const target = e.target as HTMLElement;
-    const index = Array.from(list.children).indexOf(target);
-    sendMessage({ type: "DragOver", index: index });
-  });
-  list.addEventListener("dragend", (e: DragEvent) => {
-    sendMessage({ type: "DragEnd" });
-  });
 };
 
 const render = (state: State) => {
+  console.log("Starting rendering with state ", state);
   const loading = document.getElementById("loading");
+  console.log("isLoading: " + state.isLoading);
   if (loading) {
-    //console.log("isLoading: " + state.isLoading);
     if (state.isLoading) {
       loading.style.display = "block";
     } else {
@@ -279,11 +217,39 @@ const render = (state: State) => {
     deleteButton.addEventListener("click", () => {
       sendMessage({ type: "ClickDelete", index: index });
     });
+    const list = document.getElementById("rulesList") as HTMLUListElement;
+
+    listItem.addEventListener("dragstart", (e: DragEvent) => {
+      e.preventDefault();
+      const target = e.target as HTMLElement;
+      const index = Array.from(list.children).indexOf(target);
+      sendMessage({ type: "DragStart", index: index });
+    });
+
+    listItem.addEventListener("dragover", (e: DragEvent) => {
+      e.preventDefault();
+      const target = e.target as HTMLElement;
+      const index = Array.from(list.children).indexOf(target);
+      sendMessage({ type: "DragOver", index: index });
+    });
+    listItem.addEventListener("dragend", (e: DragEvent) => {
+      console.log("dragend");
+      sendMessage({ type: "DragEnd" });
+    });
+    listItem.addEventListener("drop", () => {
+      console.log("drop");
+    });
 
     listItem.appendChild(deleteButton);
     rulesList.appendChild(listItem);
   });
 
+  if (state.drag.type == "DraggingOver") {
+    rulesList.insertBefore(
+      rulesList.children[state.drag.old],
+      rulesList.children[state.drag.new],
+    );
+  }
   let table = document.getElementById("file-inputs") as HTMLTableRowElement;
   table.innerHTML = ' <thead> <tr id="file-headers"></tr> </thead> ';
   let tableHeader = document.getElementById(
@@ -334,6 +300,8 @@ async function run() {
 
   sendMessage = (message: Message) => {
     state = update(message, state);
+    state = message.updateState(state);
+    console.log("After update");
     render(state);
   };
 
