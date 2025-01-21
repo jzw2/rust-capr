@@ -36,6 +36,10 @@ res("n").
 res("l").
 res("r").
 
+
+nas("m").
+nas("n").
+
 vow("o").
 vow("a").
 vow("i").
@@ -52,11 +56,12 @@ stop(X) :- vel(X).
 stop(X) :- labvel(X).
 stop(X) :- pal(X).
 
+stop_or_s(X) :- stop(X) ; X = "s".
 
-cons(X) :- stop(X).
+cons(X) :- stop_or_s(X).
 cons(X) :- lar(X).
 cons(X) :- res(X).
-cons("s").
+
 
 liq("l").
 liq("r").
@@ -203,6 +208,45 @@ law("p", "k_w", "",ends_in("k_w")),
 
 % 8
 law("e:", "i:", "",""),
+
+% 9
+law("o:", "u:", "",""), % ignore final sylables
+
+
+% 10 not here for some reason
+
+% 11
+law(":", "", vow, (res, cons)), 
+
+
+% C
+
+% 1
+
+law(cons, "x", "",(cons_or_s)),
+
+% 2
+law("p", "b", "",liq),
+
+% 3
+law("p", "w", "",liq),
+
+% 4
+ law("p", "f", "",""),
+
+
+% 5
+law("o:", "a:", "",""),
+% 6
+law("ey", "e:", "",""),
+
+
+% 7
+law("ew", "ow", "",""),
+
+
+% 8
+law("uw", "ow", "",cons),
 
 
 % end
