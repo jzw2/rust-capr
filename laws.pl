@@ -5,6 +5,11 @@
 :- use_module(library(dif)).
 :- use_module(library(si)).
 :- use_module(library(debug)).
+:- use_module(library(clpz)).
+:- use_module(library(format)).
+:- dynamic(call_stuff/2).
+:- dynamic(stuff/2).
+:- dynamic(test/2).
 
 
 lab("p").
@@ -107,23 +112,57 @@ context_match(law(_, _, Left, Right), Center) -->
     match(_, Right),
   seq(_).
 
-valid_length(FromStr, ToStr, Old, New) :-
-  length(S1, L),
-  length(S2, L),
-  append(FromStr, New, S1),
-  append(ToStr, Old, S2).
-
+valid_length(From, To, Old, New) :-
+  phrase(match(FromStr, From), FromStr),
+  phrase(match(ToStr, To), ToStr),
+  length(FromStr, Fl),
+  length(ToStr, Tl),
+  Fl + NL #= Tl + OL, !,
+  length(Old, OL),
+  length(New, NL).
   
 replace_sym(Law, Old, New) :-
   Law = law(From, To, Left, Right),
-  valid_length(FromStr, ToStr, Old, New),
-  phrase((seq(L), match(LC, Left), match(FromStr, From), match(RC, Right), seq(R)), Old ),
-   phrase((seq(L), match(LC, Left), match(ToStr, To), match(RC, Right), seq(R)), New ).
+  append(L, DifO1, Old),
+  append(L, DifN1, New),
+  append(DifO2, R, DifO1),
+  $ append(DifN2, R, DifN1),
+  phrase( (match(LC, Left), match(_, From), match(RC, Right)), DifO2 ),
+   phrase( (match(LC, Left), match(_, To), match(RC, Right)), DifN2 ).
   
 replace_re(law(From, _, Left, Right), Old, true) :-
    phrase((..., match(_, Left), match(_, From), match(_, Right), ...), Old).
 replace_re(Law, Old, false) :- \+ replace_re(Law, Old, true).
+
+
+replace_exact(Law, Old, New) :-
+  Law = law(From, To, Left, Right),
+  phrase( (match(LC, Left), match(_, From), match(RC, Right)), Old),
+   phrase( (match(LC, Left), match(_, To), match(RC, Right)), New ).
   
+
+replace_once_sym(Law, Old, New) :-
+  replace_exact(Law, Old1, New1),
+  append(Old1, S, Old),
+  append(New1, S, New).
+replace_once_sym(Law, [S | Old], [S | New]) :-
+  replace_once_sym(Law, Old, New).
+  
+  
+push([]) --> [].
+push([X | Rest]), [X] -->
+  push(Rest).
+
+replace_dcg_exact(law(From, To, Left, Right)) -->
+  match(LC, Left),
+  match(_, From),
+  match(RC, Right),
+  push(RC),
+  { phrase(match(ToStr, To), ToStr)},
+  push(ToStr),
+  push(LC).
+  
+
 
 replace_once(Law, Old, New) :-
    phrase(replace(Law, New), Old).
@@ -150,7 +189,6 @@ law("eh_3", "oo", "", ""),
 
 % 3
 law(lar, "a", cons, cons),
-
 
 % 4
 law(lar, "", stop, stop),
@@ -223,7 +261,7 @@ law(":", "", vow, (res, cons)),
 
 % 1
 
-law(cons, "x", "",(cons_or_s)),
+law(cons, "x", "",(stop_or_s)),
 
 % 2
 law("p", "b", "",liq),
@@ -291,14 +329,18 @@ examples(
   "#d_hugh_2te:r#", % 4 duxti:r
   "#krdtu#", % 5  krissu
    "#plh_1no#", % 6  gra:no
-  "#g_jrHno#", % 6  fla:no
-  "#wirHro_H#", % 7 wiro
-  "#dek_jm#", % 9  
+  "#g_jrh_hno#", % 6  fla:no
+  "#wih_hro_H#", % 7 wiro
+  "#dek_jm#", % 9  dekam
 
   % B
-  "#g_wow#", % 1
-  "#b_hero", % 2
-  "#g_wher", % 2
+  "#g_wow#", % 1 bow
+  "#b_hero", % 2  bero
+  "#g_wher", % 2 g_wero
+  "#k_jrd", % 3  kridyo
+  "#k_wrmi", % 3  k_wrimi
+  "#h_1lmo", % 3 limo
+  "#terh_1tro", % 4 taratro
 
   "cat"
 ]).
