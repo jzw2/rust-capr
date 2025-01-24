@@ -94,6 +94,8 @@ match(String, (P1, P2)) -->
    match(S2, P2),
    { append(S1, S2, String)}.
 
+match_pred(S, P) :- phrase(match(S, P), S).
+
 replace(law(From, To, Left, Right), New) -->  
   seq(NonContextL),
   match(LeftStr, Left),
@@ -140,9 +142,35 @@ replace_exact(Law, Old, New) :-
   phrase( (match(LC, Left), match(_, From), match(RC, Right)), Old),
    phrase( (match(LC, Left), match(_, To), match(RC, Right)), New ).
   
+double_nil([]-[]).
+double_cons([X | R1]-[X | R2], X, R1-R2).
+
+double_seq([], L1, L1).
+double_seq([X | Rest], L1, L) :-
+  double_cons(L1, X, L2),
+  double_seq(Rest, L2, L).
+
+double_match(Pattern, L1, L) :-
+  double_seq(S, L1, L),
+  match_pred(S, Pattern).
+
+double_replace(law(From, To, Left, Right), L1, L) :-
+  double_seq(_, L1, L2),
+  double_match(Left, L2, L3),
+  L3 = Old - New,
+  phrase(match(_, From), Old, Old1),
+  phrase(match(_, To), New, New1),
+  L4 = Old1 - New1,
+  double_match(Right, L4, L5),
+  double_seq(_, L5, L).
+  
+
+  
+  
+  
 
 replace_once_sym(Law, Old, New) :-
-  replace_exact(Law, Old1, New1).
+  $ replace_exact(Law, Old1, New1),
   append(Old1, S, Old),
   append(New1, S, New).
 replace_once_sym(Law, [S | Old], [S | New]) :-
@@ -293,7 +321,7 @@ transduce(Word, NewWord, Changes) :-
 
 transduce_re_(Word, Word, [], [Word]).
 transduce_re_(Word, NewWord, [Law | Rest], Changes) :-
-  replace_re(Law, Word, true),
+  replace_re(Law, Word),
   replace_sym(Law, Word, Replaced),
   $ Changes = [(Word, Law) | NewChanges],
   transduce_re_(Replaced, NewWord, Rest, NewChanges).
@@ -306,6 +334,21 @@ transduce_re(Word, NewWord, Changes) :-
   length(NewWord, _),
   laws(Laws),
   transduce_re_(Word, NewWord, Laws, Changes).
+
+transduce_exact_sym(Word, NewWord, Changes) :-
+  length(Word, _),
+  length(NewWord, _),
+  laws(Laws),
+  transduce_exact_sym_(Word, NewWord, Laws, Changes).
+
+transduce_exact_sym_(Word, Word, [], [Word]).
+transduce_exact_sym_(Word, NewWord, [Law | Rest], Changes) :-
+  $ replace_once_sym(Law, Word, Replaced),
+  $ Changes = [(Word, Law) | NewChanges],
+  transduce_exact_sym_(Replaced, NewWord, Rest, NewChanges).
+transduce_exact_sym_(Word, NewWord, [_ | Rest], Changes) :-
+  $ transduce_exact_sym_(Word, NewWord, Rest, Changes).
+
 examples(
   [
   % A
