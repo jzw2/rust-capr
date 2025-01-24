@@ -142,28 +142,12 @@ replace_exact(Law, Old, New) :-
   
 
 replace_once_sym(Law, Old, New) :-
-  replace_exact(Law, Old1, New1),
+  replace_exact(Law, Old1, New1).
   append(Old1, S, Old),
   append(New1, S, New).
 replace_once_sym(Law, [S | Old], [S | New]) :-
   replace_once_sym(Law, Old, New).
   
-  
-push([]) --> [].
-push([X | Rest]), [X] -->
-  push(Rest).
-
-replace_dcg_exact(law(From, To, Left, Right)) -->
-  match(LC, Left),
-  match(_, From),
-  match(RC, Right),
-  push(RC),
-  { phrase(match(ToStr, To), ToStr)},
-  push(ToStr),
-  push(LC).
-  
-
-
 replace_once(Law, Old, New) :-
    phrase(replace(Law, New), Old).
 
