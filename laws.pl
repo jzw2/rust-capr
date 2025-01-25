@@ -52,8 +52,8 @@ vow("e").
 vow("u").
 
 tonic(X) :-
-  append(V, "_H", X), % represent 
-  vow(V).
+  vow(V),
+  phrase((seq(V), "_H"), X).
 
 stop(X) :- lab(X).
 stop(X) :- dent(X).
@@ -75,9 +75,9 @@ all_cons --> [].
 all_cons --> seq(X), { cons(X)}, all_cons.
 
 tonic_syl(X) :-
-  append(Cons, Vow, X),
-  phrase(all_cons, Cons),
-  tonic(Vow).
+  tonic(Vow),
+  length(X, _),
+  phrase((all_cons, seq(Vow)), X, _).
 
 ends_in(End, String) :-
   append(_, End, String).
@@ -90,9 +90,9 @@ match(String, Pattern) --> {
 match(Pattern, Pattern) --> seq(Pattern), { list_si(Pattern) }.
 
 match(String, (P1, P2)) -->
+   { $ append(S1, S2, String)},
    match(S1, P1),
-   match(S2, P2),
-   { append(S1, S2, String)}.
+   match(S2, P2).
 
 match_pred(S, P) :- phrase(match(S, P), S).
 
@@ -151,18 +151,18 @@ double_seq([X | Rest], L1, L) :-
   double_seq(Rest, L2, L).
 
 double_match(Pattern, L1, L) :-
-  double_seq(S, L1, L),
-  match_pred(S, Pattern).
+  $ double_seq(S, L1, L),
+  $ match_pred(S, Pattern).
 
 double_replace(law(From, To, Left, Right), L1, L) :-
-  double_seq(_, L1, L2),
-  double_match(Left, L2, L3),
-  L3 = Old - New,
-  phrase(match(_, From), Old, Old1),
-  phrase(match(_, To), New, New1),
-  L4 = Old1 - New1,
-  double_match(Right, L4, L5),
-  double_seq(_, L5, L).
+  $ double_seq(_, L1, L2),
+  $ double_match(Left, L2, L3),
+  $ L3 = Old - New,
+  $ phrase(match(_, From), Old, Old1),
+  $ phrase(match(_, To), New, New1),
+  $ L4 = Old1 - New1,
+  $ double_match(Right, L4, L5),
+  $ double_seq(_, L5, L).
   
 
   
@@ -349,6 +349,17 @@ transduce_exact_sym_(Word, NewWord, [Law | Rest], Changes) :-
 transduce_exact_sym_(Word, NewWord, [_ | Rest], Changes) :-
   $ transduce_exact_sym_(Word, NewWord, Rest, Changes).
 
+transduce_double(Word, NewWord, Changes) :-
+  laws(Laws),
+  transduce_double(Word, NewWord, Laws, Changes).
+
+transduce_double(Word, Word, [], [Word]).
+transduce_double(Word, NewWord, [Law | Rest], Changes) :-
+  $ double_replace(Law, Word-Replaced, []-[]),
+  Changes = [(Word, Law) | NewChanges],
+  transduce_double(Replaced, NewWord, Rest, NewChanges).
+transduce_double(Word, NewWord, [_ | Rest], Changes) :-
+  transduce_double(Word, NewWord, Rest, Changes).
 examples(
   [
   % A
@@ -374,4 +385,7 @@ examples(
 
 transduce_all(Words, Changes) :-
   examples(Ex),
-maplist(transduce, Ex, Words, Changes).
+  maplist(transduce, Ex, Words, Changes).
+transduce_all_double(Words, Changes) :-
+  examples(Ex),
+  maplist(transduce_double, Ex, Words, Changes).
