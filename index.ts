@@ -65,8 +65,8 @@ const update = (message: Message, state: State): State => {
     //   .then(() => updateLaw(message, state))
     //   .then((res) => sendMessage(res));
     console.log("after the promise");
-    //setTimeout(() => updateLaw(message, state).then((msg) => sendMessage(msg)));
-    updateLaw(message, state).then((msg) => sendMessage(msg));
+    setTimeout(() => updateLaw(message, state).then((msg) => sendMessage(msg)));
+    //updateLaw(message, state).then((msg) => sendMessage(msg));
   } else if (message.type === "ChangeInput") {
     state.input = message.input;
     state.output = state.composition.transduce_text(state.input);
@@ -300,7 +300,7 @@ async function run() {
 
   sendMessage = (message: Message) => {
     state = update(message, state);
-    state = message.updateState(state);
+    //state = message.updateState(state); //todo: refactor this in
     console.log("After update");
     render(state);
   };
