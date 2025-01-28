@@ -76,25 +76,38 @@ all_cons --> seq(X), { cons(X)}, all_cons.
 
 tonic_syl(X) :-
   tonic(Vow),
-  length(X, _),
+  L #> 0,
+  length(X, L),
   phrase((all_cons, seq(Vow)), X, _).
 
-ends_in(End, String) :-
+tonic_syl(X, L1, L) :-
+  false. % todo
+
+  
+ ends_in(End, String) :-
   append(_, End, String).
   
 
-match(String, Pattern) --> {
- dif(Pattern, []), atom(Pattern), call(Pattern, String)
-}, seq(String).
+match(String, Pattern) -->  {match_pred(String, Pattern)}, seq(String).
 
-match(Pattern, Pattern) --> seq(Pattern), { list_si(Pattern) }.
 
-match(String, (P1, P2)) -->
-   { $ append(S1, S2, String)},
-   match(S1, P1),
-   match(S2, P2).
 
-match_pred(S, P) :- phrase(match(S, P), S).
+match_pred(String, Pattern) :-
+ dif(Pattern, []), atom(Pattern), current_predicate(Pattern/1), call(Pattern, String).
+match_pred(P, P) :- list_si(P).
+match_pred(S, (P1, P2)) :-
+  phrase(match(_, P1), S, S1),
+  phrase(match(_, P2), S1).
+% match_pred(String, Pattern) :-
+%   current_predicate(Pattern/3),
+%   F =.. [Pattern, String, L1, L2],
+%   phrase(F, L1, L2).
+
+
+match_pred(String, Pattern, L1, L) :-
+  current_predicate(Pattern/3),
+  call(Pattern, true), true. % todo
+  
 
 replace(law(From, To, Left, Right), New) -->  
   seq(NonContextL),
@@ -128,7 +141,7 @@ replace_sym(Law, Old, New) :-
   append(L, DifO1, Old),
   append(L, DifN1, New),
   append(DifO2, R, DifO1),
-  $ append(DifN2, R, DifN1),
+  append(DifN2, R, DifN1),
   phrase( (match(LC, Left), match(_, From), match(RC, Right)), DifO2 ),
    phrase( (match(LC, Left), match(_, To), match(RC, Right)), DifN2 ).
   
@@ -151,11 +164,11 @@ double_seq([X | Rest], L1, L) :-
   double_seq(Rest, L2, L).
 
 double_match(Pattern, L1, L) :-
-  $ double_seq(S, L1, L),
-  $ match_pred(S, Pattern).
+  double_seq(S, L1, L2),
+  match_pred(S, Pattern, L2, L).
 
 double_replace(law(From, To, Left, Right), L1, L) :-
-  $ double_seq(_, L1, L2),
+  $ double_seq(_, L1, L2), 
   $ double_match(Left, L2, L3),
   $ L3 = Old - New,
   $ phrase(match(_, From), Old, Old1),
@@ -163,9 +176,6 @@ double_replace(law(From, To, Left, Right), L1, L) :-
   $ L4 = Old1 - New1,
   $ double_match(Right, L4, L5),
   $ double_seq(_, L5, L).
-  
-
-  
   
   
 
@@ -214,7 +224,7 @@ law((dent, dent), "ss", "", ""),
 law("", "a", (cons, res), (lar, cons)), % contractits the previous laryngaial between consonants
 
 % 7
-law(lar, "", vow, (cons, tonic_syl)),
+% law(lar, "", vow, (cons, tonic_syl)), % broken now
 
 % 8
 law(lar, a, ("#", res), cons),
