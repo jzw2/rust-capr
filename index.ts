@@ -2,6 +2,7 @@ import init, {
   create_law_async,
   SoundLaw,
   SoundLawComposition,
+  soundlaw_xsampa_to_ipa,
 } from "./pkg/rust_capr";
 
 import {
@@ -191,11 +192,15 @@ const render = (state: State) => {
     // loading.style.display = "block";
   }
   const output = document.getElementById("output") as HTMLParagraphElement;
-  output.innerHTML = state.output.join("\n");
+  output.innerHTML = state.output
+    .map((x) => soundlaw_xsampa_to_ipa(x.replaceAll(" ", "")))
+    .join("\n");
   const backwardsOutput = document.getElementById(
     "backwards-output",
   ) as HTMLParagraphElement;
-  backwardsOutput.innerHTML = state.revereseOutput.join("\n");
+  backwardsOutput.innerHTML = state.revereseOutput
+    .map((x) => soundlaw_xsampa_to_ipa(x.replaceAll(" ", "")))
+    .join("\n");
   const rulesList = document.getElementById(
     "rulesList",
   ) as HTMLParagraphElement;
