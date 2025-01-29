@@ -1,53 +1,212 @@
 import init, {
-  create_law,
+  create_law_async,
   SoundLaw,
-  transduce_context,
-  transduce_context_invert,
   SoundLawComposition,
   soundlaw_xsampa_to_ipa,
 } from "./pkg/rust_capr";
 
+import {
+  AddSoundLaw,
+  Message,
+  State,
+  CMessage,
+  SoundLawInput,
+  DragType,
+} from "./types.ts";
+
+// Send message needs to have access to the state
+// which isn't created until after the rust stuff gets loaded
+// so initially we give it a dummy function
+let sendMessage = (_: Message) => {
+  console.log("Send Message not initialize properly");
+};
+
 // import { Drawable } from "./krist_lib/editor";
-import Victor from "victor";
+// import Victor from "victor";
 // import { RuleNode } from "./krist_lib/rule-node";
 
-type Operation = {
-  left: string;
-  right: string;
-  to: string;
-  from: string;
+// Creating sound laws take a decent amout of time
+const updateLaw = async (
+  message: AddSoundLaw,
+  state: State,
+): Promise<Message> => {
+  const law = await create_law_async(
+    message.law.left,
+    message.law.right,
+    message.law.from,
+    message.law.to,
+  );
+  state.laws.push(law);
+  await state.composition.add_law(law); // mentions that null pointer passed to rust
+  console.log("Finished computation");
+  return {
+    type: "FinishLoading",
+    laws: state.laws,
+    composition: state.composition,
+  };
 };
 
-const setLaw = (
-  currentLaws: SoundLaw[],
-  fst: SoundLawComposition,
-  operations: Operation[],
-) => {
-  (document.getElementById("output") as HTMLParagraphElement).innerText =
-    "Compiling FST";
-  (
-    document.getElementById("backwards-output") as HTMLParagraphElement
-  ).innerText = "Compiling FST";
-  const left = (document.getElementById("left") as HTMLInputElement).value;
-  const right = (document.getElementById("right") as HTMLInputElement).value;
-  const to = (document.getElementById("to") as HTMLInputElement).value;
-  const from = (document.getElementById("from") as HTMLInputElement).value;
-
-  let currentInput = create_law(left, right, from, to);
-  operations.push({ left, right, from, to });
-  currentLaws.push(currentInput);
-  fst.add_law(currentInput);
-
-  transduce(fst);
+const transduce = (state: State): State => {
+  state.output = state.composition.transduce_text(state.input);
+  state.revereseOutput = state.composition.transduce_text(state.reverseInput);
+  state.transducedFileStrings = state.fileStrings.map((s) =>
+    state.composition.transduce_text(s),
+  );
+  return state;
 };
 
-const updateRulesList = (state: State) => {
+// If a message is sent, it takes the old state and
+// returns a new state based on what the message was
+const update = (message: Message, state: State): State => {
+  console.log("Found message: ", message);
+  if (message.type === "AddSoundLaw") {
+    state.soundLawInputs.push(message.law);
+    state.isLoading = true;
+    // Promise.resolve()
+    //   .then(() => updateLaw(message, state))
+    //   .then((res) => sendMessage(res));
+    setTimeout(() => updateLaw(message, state).then((msg) => sendMessage(msg)));
+    //updateLaw(message, state).then((msg) => sendMessage(msg));
+  } else if (message.type === "ChangeInput") {
+    state.input = message.input;
+    state.output = state.composition.transduce_text(state.input);
+  } else if (message.type === "ChangeBackwardsInput") {
+    state.reverseInput = message.input;
+    state.revereseOutput = state.composition.transduce_text_invert(
+      state.reverseInput,
+    );
+  } else if (message.type === "FinishLoading") {
+    state.isLoading = false;
+    state.laws = message.laws;
+    state.composition = message.composition;
+    state = transduce(state);
+  } else if (message.type === "UploadFile") {
+    state.fileStrings = message.contents.split("\n").filter((x) => x !== "");
+    state.transducedFileStrings = state.fileStrings.map((s) =>
+      state.composition.transduce_text(s),
+    );
+    state = transduce(state);
+  } else if (message.type === "ClickDelete") {
+    state.composition.rm_law(message.index);
+    state.laws.splice(message.index, 1);
+    state = transduce(state);
+  } else if (message.type === "Rearrange") {
+    const oldIndex = message.old;
+    const newIndex = message.new;
+    const [movedLaw] = state.laws.splice(oldIndex, 1);
+    state.laws.splice(newIndex, 0, movedLaw);
+    state.composition = SoundLawComposition.new();
+    state.laws.forEach((law) => state.composition.add_law(law));
+    state = transduce(state);
+  } else if (message.type === "Transduce") {
+    state = transduce(state);
+  } else if (message.type === "DragStart") {
+    state.drag = {
+      type: "DraggingOver",
+      old: message.index,
+      new: message.index,
+    }; // start with dragging over self
+  } else if (message.type === "DragOver") {
+    if (state.drag.type == "DraggingOver") {
+      state.drag.new = message.index;
+    } else {
+      console.log("Drag over called without first starting a drag");
+    }
+  } else if (message.type === "DragEnd") {
+    if (state.drag.type == "DraggingOver") {
+      const oldIndex = state.drag.old;
+      const newIndex = state.drag.new;
+      const [movedLaw] = state.laws.splice(oldIndex, 1);
+      state.laws.splice(newIndex, 0, movedLaw);
+      state.composition = SoundLawComposition.new();
+      state.laws.forEach((law) => state.composition.add_law(law));
+      state = transduce(state);
+      state.drag.type = "NoDrag";
+    } else {
+      console.log("Drag over called without first starting a drag");
+    }
+  } else {
+    //whatever
+    console.log("Very bad, message was not found");
+  }
+  return { ...state }; //change this
+};
+
+// Since some things are only set once
+// putting it in render seems to be kind of wasteful
+// this function is only called once
+const renderInit = () => {
+  const uploadFile = document.getElementById("upload") as HTMLInputElement;
+
+  uploadFile.addEventListener("change", async () => {
+    if (uploadFile.files) {
+      let file = uploadFile.files[0];
+      const text = await file.text();
+      sendMessage({ type: "UploadFile", contents: text });
+    } else {
+      sendMessage({ type: "UploadFile", contents: "" });
+    }
+  });
+
+  const left = document.getElementById("left") as HTMLInputElement;
+  const right = document.getElementById("right") as HTMLInputElement;
+  const to = document.getElementById("to") as HTMLInputElement;
+  const from = document.getElementById("from") as HTMLInputElement;
+
+  const createButton = document.getElementById(
+    "create-law",
+  ) as HTMLButtonElement;
+
+  createButton.addEventListener("click", () => {
+    sendMessage({
+      type: "AddSoundLaw",
+      law: {
+        left: left.value,
+        right: right.value,
+        from: from.value,
+        to: to.value,
+      },
+      loading: true,
+    });
+  });
+
+  const input = document.getElementById("input") as HTMLInputElement;
+  const backwards = document.getElementById("backward") as HTMLInputElement;
+  input?.addEventListener("input", () =>
+    sendMessage({ type: "ChangeInput", input: input.value }),
+  );
+  backwards?.addEventListener("input", () =>
+    sendMessage({ type: "ChangeBackwardsInput", input: backwards.value }),
+  );
+};
+
+const render = (state: State) => {
+  console.log("Starting rendering with state ", state);
+  const loading = document.getElementById("loading");
+  if (loading) {
+    if (state.isLoading) {
+      loading.style.display = "block";
+    } else {
+      loading.style.display = "none";
+    }
+    // loading.style.display = "block";
+  }
+  const output = document.getElementById("output") as HTMLParagraphElement;
+  output.innerHTML = state.output
+    .map((x) => soundlaw_xsampa_to_ipa(x.replaceAll(" ", "")))
+    .join("\n");
+  const backwardsOutput = document.getElementById(
+    "backwards-output",
+  ) as HTMLParagraphElement;
+  backwardsOutput.innerHTML = state.revereseOutput
+    .map((x) => soundlaw_xsampa_to_ipa(x.replaceAll(" ", "")))
+    .join("\n");
   const rulesList = document.getElementById(
     "rulesList",
   ) as HTMLParagraphElement;
-  let currentLaws = state.laws;
+
   rulesList.innerHTML = "";
-  currentLaws.forEach((x, index) => {
+  state.laws.forEach((x, index) => {
     let s = `Rule: ${x.get_from()} → ${x.get_to()} / ${x.get_left_context()} _ ${x.get_right_context()}`;
     const listItem = document.createElement("li");
     listItem.textContent = s;
@@ -57,205 +216,93 @@ const updateRulesList = (state: State) => {
     deleteButton.textContent = "Delete";
     deleteButton.classList.add("delete-button");
     deleteButton.addEventListener("click", () => {
-      currentLaws.splice(index, 1);
-      state.composition.rm_law(index);
-      transduce(state.composition);
-      updateRulesList(state);
+      sendMessage({ type: "ClickDelete", index: index });
+    });
+    const list = document.getElementById("rulesList") as HTMLUListElement;
 
-      serializeOps(
-        state.laws.map((law) => ({
-          left: law.get_left_context(),
-          right: law.get_right_context(),
-          from: law.get_from(),
-          to: law.get_to(),
-        })),
-      );
+    const input = document.createElement("input");
+    const button = document.createElement("button");
+    button.innerHTML = "Click to Move Index";
+
+    button.addEventListener("click", () => {
+      const newIndex = parseInt(input.value, 10) - 1; // because lists are 1 based
+
+      if (!isNaN(newIndex)) {
+        sendMessage({ type: "Rearrange", old: index, new: newIndex });
+      } else {
+        console.log("Invalid index input");
+      }
     });
 
     listItem.appendChild(deleteButton);
+    listItem.appendChild(input);
+    listItem.appendChild(button);
     rulesList.appendChild(listItem);
   });
-};
 
-const transduce = (fst: SoundLawComposition) => {
-  (document.getElementById("output") as HTMLParagraphElement).innerText =
-    "Loading...";
-  (
-    document.getElementById("backwards-output") as HTMLParagraphElement
-  ).innerText = "Loading...";
-
-  const input = (document.getElementById("input") as HTMLInputElement).value;
-  const backward = (document.getElementById("backward") as HTMLInputElement)
-    .value;
-
-  let result = fst.transduce_text(input);
-  let backward_result = fst.transduce_text_invert(backward);
-  console.log(`${result}, ${result.length}`);
-  //console.log(`${backward_result}, ${backward.length}`);
-  (document.getElementById("output") as HTMLParagraphElement).innerText = result
-    .map((x) => x + "\t IPA: " + soundlaw_xsampa_to_ipa(x))
-    .join("\n");
-  (
-    document.getElementById("backwards-output") as HTMLParagraphElement
-  ).innerText =
-    "\n" +
-    backward_result
-      .map((x) => x + "\t IPA: " + soundlaw_xsampa_to_ipa(x))
-      .join("\n");
-};
-
-const serializeOps = (operations: Operation[]) => {
-  localStorage.setItem("operations", JSON.stringify(operations));
-};
-
-const deserializeOps = (): [SoundLaw[], SoundLawComposition, Operation[]] => {
-  let ops: Operation[] = [];
-  try {
-    const serialized = localStorage.getItem("operations");
-    if (serialized) {
-      ops = JSON.parse(serialized);
-    }
-  } catch (err) {
-    // nothing
-  } finally {
-    const currentLaws: SoundLaw[] = [];
-    const fst: SoundLawComposition = SoundLawComposition.new();
-    for (const { left, right, from, to } of ops) {
-      let currentInput = create_law(left, right, from, to);
-      currentLaws.push(currentInput);
-      fst.add_law(currentInput);
-    }
-    return [currentLaws, fst, ops];
+  if (state.drag.type == "DraggingOver") {
+    rulesList.insertBefore(
+      rulesList.children[state.drag.old],
+      rulesList.children[state.drag.new],
+    );
   }
+  let table = document.getElementById("file-inputs") as HTMLTableRowElement;
+  table.innerHTML = ' <thead> <tr id="file-headers"></tr> </thead> ';
+  let tableHeader = document.getElementById(
+    "file-headers",
+  ) as HTMLTableRowElement;
+
+  state.fileStrings.forEach((line) => {
+    const item = document.createElement("th");
+    item.textContent = soundlaw_xsampa_to_ipa(line);
+    tableHeader.appendChild(item);
+  });
+
+  if (state.transducedFileStrings.length > 0) {
+    const transpose = state.transducedFileStrings[0].map((_, index) =>
+      state.transducedFileStrings.map((row) =>
+        soundlaw_xsampa_to_ipa(row[index].replaceAll(" ", "")),
+      ),
+    );
+
+    transpose.forEach((row) => {
+      const htmlRow = document.createElement("tr");
+      row.forEach((col) => {
+        const item = document.createElement("td");
+        item.textContent = col;
+        htmlRow.appendChild(item);
+      });
+      table.append(htmlRow);
+    });
+  }
+
+  console.log("Finished rendering");
 };
 
-type State = {
-  laws: SoundLaw[];
-  composition: SoundLawComposition;
-  strings: String[];
-};
-
-const mouseListeners = (state: State) => {
-  const list = document.getElementById("rulesList") as HTMLUListElement;
-
-  list.addEventListener("dragstart", (e: DragEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.tagName === "LI") {
-      e.dataTransfer?.setData(
-        "text/plain",
-        Array.from(list.children).indexOf(target).toString(),
-      );
-      target.classList.add("dragging");
-    }
-  });
-
-  list.addEventListener("dragover", (e: DragEvent) => {
-    e.preventDefault();
-    const target = e.target as HTMLElement;
-    if (target && target.tagName === "LI") {
-      e.dataTransfer!.dropEffect = "move";
-      const draggingItem = list.querySelector(".dragging");
-      if (draggingItem && target !== draggingItem) {
-        const rect = target.getBoundingClientRect();
-        const offset = e.clientY - rect.top;
-        if (offset > rect.height / 2) {
-          list.insertBefore(draggingItem, target.nextSibling);
-        } else {
-          list.insertBefore(draggingItem, target);
-        }
-      }
-    }
-  });
-  list.addEventListener("drop", (e: DragEvent) => {
-    e.preventDefault();
-    const target = e.target as HTMLElement;
-    if (target && target.tagName === "LI") {
-      const oldIndex = parseInt(e.dataTransfer!.getData("text/plain"), 10);
-      const newIndex = Array.from(list.children).indexOf(target);
-
-      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-        const [movedLaw] = state.laws.splice(oldIndex, 1);
-        state.laws.splice(newIndex, 0, movedLaw);
-        state.composition = SoundLawComposition.new();
-        state.laws.forEach((law) => state.composition.add_law(law));
-        updateRulesList(state);
-        serializeOps(
-          state.laws.map((law) => ({
-            left: law.get_left_context(),
-            right: law.get_right_context(),
-            from: law.get_from(),
-            to: law.get_to(),
-          })),
-        );
-        transduce(state.composition);
-      }
-    }
-  });
-  list.addEventListener("dragend", () => {
-    const draggingItem = list.querySelector(".dragging");
-    if (draggingItem) {
-      draggingItem.classList.remove("dragging");
-    }
-  });
-};
 async function run() {
   await init();
 
-  console.log("Event listeners!");
+  let state: State = {
+    isLoading: false,
+    soundLawInputs: [],
+    laws: [],
+    input: "",
+    output: [],
+    reverseInput: "",
+    revereseOutput: [],
+    composition: SoundLawComposition.new(),
+    fileStrings: [],
+    transducedFileStrings: [],
+    drag: { type: "NoDrag" },
+  };
 
-  // List of all input field ids that need an event listener
+  sendMessage = (message: Message) => {
+    state = update(message, state);
+    //state = message.updateState(state); //todo: refactor this in
+    render(state);
+  };
 
-  const inputIds = ["input", "backward"];
-
-  const [currentLaws, fst, operations] = deserializeOps();
-  let state: State = { laws: currentLaws, composition: fst, strings: [] };
-  updateRulesList(state);
-
-  let uploadButton = document.getElementById("upload") as HTMLInputElement;
-  let fileContent = document.getElementById("file-inputs") as HTMLUListElement;
-
-  uploadButton.addEventListener("change", async () => {
-    console.log("changed");
-    if (uploadButton.files) {
-      let file = uploadButton.files[0];
-      const text = await file.text();
-      const lines = text.split("\n");
-      state.strings = lines;
-
-      lines.forEach((line) => {
-        const item = document.createElement("li");
-        item.textContent = line;
-        fileContent.appendChild(item);
-      });
-    } else {
-      state.strings = [];
-    }
-  });
-
-  inputIds.forEach((id) => {
-    (document.getElementById(id) as HTMLInputElement).addEventListener(
-      "input",
-      () => transduce(fst),
-    );
-  });
-
-  (document.getElementById("create-law") as HTMLButtonElement).addEventListener(
-    "click",
-    () => {
-      console.log("pressed the button");
-      setLaw(currentLaws, fst, operations);
-      updateRulesList(state);
-      serializeOps(operations);
-    },
-  );
-
-  // const rule = new RuleNode(
-  //   document.getElementById("mainCanvas") as HTMLCanvasElement,
-  //   new Victor(10, 10),
-  // );
-  // rule.render();
-
-  mouseListeners(state);
+  renderInit();
 }
 
 run();

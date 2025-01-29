@@ -1,3 +1,4 @@
+use std::future::Future;
 use std::sync::Arc;
 
 use crate::trans::SoundFst;
@@ -143,6 +144,7 @@ impl SoundLaw {
     pub fn get_right_context(&self) -> String {
         self.right_context.to_string()
     }
+
     pub fn transduce_text(&self, text: &str) -> Vec<String> {
         transduce_text_with_symbol_table(&self.fst, &self.table, text)
     }
@@ -175,14 +177,16 @@ fn transduce_text_with_symbol_table(
     text_fst.0.set_input_symbols(Arc::clone(&table));
 
     // let acceptor: VectorFst<_> = acceptor(&labels, SoundWeight::one());
-    text_fst
+    let output: Vec<String> = text_fst
         .0
         .string_paths_iter()
         // .inspect(|x| println!("{:?}", x))
         .unwrap()
         .map(|path| path.ostring().unwrap())
         .take(LIMIT)
-        .collect()
+        .collect();
+
+    output
 }
 // todo: make a thing for the symbol table to check
 //
@@ -239,7 +243,7 @@ impl SoundLawComposition {
         self.recompute_fsts();
         rm
     }
-    pub fn add_law(&mut self, law: &SoundLaw) {
+    pub async fn add_law(&mut self, law: &SoundLaw) {
         self.laws.push(law.clone());
         if self.laws.len() == 1 {
             self.final_fst = law.fst.clone();
