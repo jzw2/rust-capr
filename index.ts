@@ -125,6 +125,25 @@ const update = (message: Message, state: State): State => {
     } else {
       console.log("Drag over called without first starting a drag");
     }
+  } else if (message.type === "Save") {
+    localStorage.setItem("laws", JSON.stringify(state.soundLawInputs));
+  } else if (message.type === "Load") {
+    const storage = localStorage.getItem("laws");
+    if (storage) {
+      state.composition = SoundLawComposition.new();
+      state.laws = [];
+      state.soundLawInputs = [];
+      const laws = JSON.parse(storage) as SoundLawInput[];
+      state.isLoading = true;
+      setTimeout(() =>
+        laws.forEach((law) => {
+          state.soundLawInputs.push(law);
+          updateLaw({ type: "AddSoundLaw", law: law }, state).then((msg) =>
+            sendMessage(msg),
+          );
+        }),
+      );
+    }
   } else {
     //whatever
     console.log("Very bad, message was not found");
@@ -166,7 +185,6 @@ const renderInit = () => {
         from: from.value,
         to: to.value,
       },
-      loading: true,
     });
   });
 
@@ -178,6 +196,15 @@ const renderInit = () => {
   backwards?.addEventListener("input", () =>
     sendMessage({ type: "ChangeBackwardsInput", input: backwards.value }),
   );
+
+  const saveButton = document.getElementById("save") as HTMLButtonElement;
+  const loadButton = document.getElementById("load") as HTMLButtonElement;
+  saveButton.addEventListener("click", () => {
+    sendMessage({ type: "Save" });
+  });
+  loadButton.addEventListener("click", () => {
+    sendMessage({ type: "Load" });
+  });
 };
 
 const render = (state: State) => {
