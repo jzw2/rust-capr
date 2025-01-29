@@ -254,13 +254,15 @@ const render = (state: State) => {
 
   state.fileStrings.forEach((line) => {
     const item = document.createElement("th");
-    item.textContent = line;
+    item.textContent = soundlaw_xsampa_to_ipa(line);
     tableHeader.appendChild(item);
   });
 
   if (state.transducedFileStrings.length > 0) {
     const transpose = state.transducedFileStrings[0].map((_, index) =>
-      state.transducedFileStrings.map((row) => row[index]),
+      state.transducedFileStrings.map((row) =>
+        soundlaw_xsampa_to_ipa(row[index].replaceAll(" ", "")),
+      ),
     );
 
     transpose.forEach((row) => {
