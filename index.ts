@@ -10,6 +10,7 @@ import {
   State,
   CMessage,
   SoundLawInput,
+  DragType,
 } from "./types.ts";
 
 // Send message needs to have access to the state
@@ -60,11 +61,9 @@ const update = (message: Message, state: State): State => {
   if (message.type === "AddSoundLaw") {
     state.soundLawInputs.push(message.law);
     state.isLoading = true;
-    console.log("before the promise");
     // Promise.resolve()
     //   .then(() => updateLaw(message, state))
     //   .then((res) => sendMessage(res));
-    console.log("after the promise");
     setTimeout(() => updateLaw(message, state).then((msg) => sendMessage(msg)));
     //updateLaw(message, state).then((msg) => sendMessage(msg));
   } else if (message.type === "ChangeInput") {
@@ -79,14 +78,12 @@ const update = (message: Message, state: State): State => {
     state.isLoading = false;
     state.laws = message.laws;
     state.composition = message.composition;
-    console.log(state.transducedFileStrings);
     state = transduce(state);
   } else if (message.type === "UploadFile") {
     state.fileStrings = message.contents.split("\n").filter((x) => x !== "");
     state.transducedFileStrings = state.fileStrings.map((s) =>
       state.composition.transduce_text(s),
     );
-    console.log(state.transducedFileStrings);
     state = transduce(state);
   } else if (message.type === "ClickDelete") {
     state.composition.rm_law(message.index);
@@ -185,7 +182,6 @@ const renderInit = () => {
 const render = (state: State) => {
   console.log("Starting rendering with state ", state);
   const loading = document.getElementById("loading");
-  console.log("isLoading: " + state.isLoading);
   if (loading) {
     if (state.isLoading) {
       loading.style.display = "block";
@@ -219,28 +215,23 @@ const render = (state: State) => {
     });
     const list = document.getElementById("rulesList") as HTMLUListElement;
 
-    listItem.addEventListener("dragstart", (e: DragEvent) => {
-      e.preventDefault();
-      const target = e.target as HTMLElement;
-      const index = Array.from(list.children).indexOf(target);
-      sendMessage({ type: "DragStart", index: index });
-    });
+    const input = document.createElement("input");
+    const button = document.createElement("button");
+    button.innerHTML = "Click to Move Index";
 
-    listItem.addEventListener("dragover", (e: DragEvent) => {
-      e.preventDefault();
-      const target = e.target as HTMLElement;
-      const index = Array.from(list.children).indexOf(target);
-      sendMessage({ type: "DragOver", index: index });
-    });
-    listItem.addEventListener("dragend", (e: DragEvent) => {
-      console.log("dragend");
-      sendMessage({ type: "DragEnd" });
-    });
-    listItem.addEventListener("drop", () => {
-      console.log("drop");
+    button.addEventListener("click", () => {
+      const newIndex = parseInt(input.value, 10) - 1; // because lists are 1 based
+
+      if (!isNaN(newIndex)) {
+        sendMessage({ type: "Rearrange", old: index, new: newIndex });
+      } else {
+        console.log("Invalid index input");
+      }
     });
 
     listItem.appendChild(deleteButton);
+    listItem.appendChild(input);
+    listItem.appendChild(button);
     rulesList.appendChild(listItem);
   });
 
@@ -301,7 +292,6 @@ async function run() {
   sendMessage = (message: Message) => {
     state = update(message, state);
     //state = message.updateState(state); //todo: refactor this in
-    console.log("After update");
     render(state);
   };
 
