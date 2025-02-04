@@ -52,7 +52,23 @@
     </head>
     <body>
         <p id="loading">Loading!!!</p>
+        <h1>File Upload</h1>
         <input type="file" id="upload" />
+        <button id="save" type="button">Save Rules</button>
+        <button id="load" type="button">Load Rules</button>
+
+        <h1>Sound Class</h1>
+        <h2>Create New Sound Class</h2>
+        <select name="regex" id="regex">
+            <option value="Union">Union</option>
+            <option value="Disjunction">Disjunction</option>
+            <option value="Star">Kleene Star</option>
+        </select>
+        <div id="class-input"></div>
+        <div class="sound-class-area"></div>
+        <button class="create-sound-class">Create</button>
+
+        <ul id="sound-classes"></ul>
         <h1>Transduction Tool</h1>
 
         <div class="rule">
@@ -63,6 +79,7 @@
                 <input type="text" class="to" id="to" placeholder="b" />
                 <span>/</span>
                 <input type="text" class="left" id="left" placeholder="x" />
+
                 <span>_</span>
                 <input type="text" class="right" id="right" placeholder="y" />
             </div>
@@ -92,7 +109,7 @@
         <h2>Current Rules</h2>
         <ol id="rulesList"></ol>
 
-        <canvas width="1000" height="1000" id="mainCanvas"></canvas>
+        <!-- <canvas width="1000" height="1000" id="mainCanvas"></canvas> -->
         <script type="module" src="./index.ts"></script>
     </body>
 </html>

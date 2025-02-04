@@ -3,6 +3,7 @@ import init, {
   SoundLaw,
   SoundLawComposition,
   soundlaw_xsampa_to_ipa,
+  create_law,
 } from "./pkg/rust_capr";
 
 import {
@@ -12,6 +13,7 @@ import {
   CMessage,
   SoundLawInput,
   DragType,
+  RegexType,
 } from "./types.ts";
 
 // Send message needs to have access to the state
@@ -144,6 +146,8 @@ const update = (message: Message, state: State): State => {
         }),
       );
     }
+  } else if (message.type === "ChangeRegexType") {
+    state.regexType = message.regex;
   } else {
     //whatever
     console.log("Very bad, message was not found");
@@ -204,6 +208,24 @@ const renderInit = () => {
   });
   loadButton.addEventListener("click", () => {
     sendMessage({ type: "Load" });
+  });
+
+  const regexSelect = document.getElementById("regex") as HTMLSelectElement;
+  regexSelect.addEventListener("input", (e) => {
+    sendMessage({
+      type: "ChangeRegexType",
+      regex: { type: regexSelect.value } as RegexType,
+    });
+  });
+
+  const createSoundLine = document.querySelector(
+    ".create-sound-class",
+  ) as HTMLButtonElement;
+  createSoundLine.addEventListener("click", () => {
+    const input = document.querySelector(".phonemes-input") as HTMLInputElement;
+    if (input) {
+      sendMessage({ type: "AddSoundClass", sounds: input.value.split(" ") });
+    }
   });
 };
 
@@ -303,6 +325,26 @@ const render = (state: State) => {
     });
   }
 
+  // sound class
+  if (state.regexType.type == "Disjunction") {
+    const area = document.querySelector(".sound-class-area");
+    const nameDiv = document.createElement("div");
+    const nameHeader = document.createElement("p");
+    nameHeader.innerHTML = "Name";
+    nameDiv.append(nameHeader);
+    const name = document.createElement("input");
+    nameDiv.append(name);
+    area?.append(nameDiv);
+
+    const instructions = document.createElement("p");
+    instructions.innerHTML = "Put the phonemes with one space between each one";
+    const phonemes = document.createElement("input");
+    phonemes.classList.add("phonemes-input");
+    area?.append(instructions);
+
+    area?.append(phonemes);
+  }
+
   console.log("Finished rendering");
 };
 
@@ -310,6 +352,7 @@ async function run() {
   await init();
 
   let state: State = {
+    regexType: { type: "Union" },
     isLoading: false,
     soundLawInputs: [],
     laws: [],
