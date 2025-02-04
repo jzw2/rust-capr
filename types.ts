@@ -3,7 +3,6 @@ import { SoundLaw, SoundLawComposition } from "./pkg/rust_capr";
 export type AddSoundLaw = {
   type: "AddSoundLaw";
   law: SoundLawInput;
-  loading: boolean;
 };
 export type UploadFile = { type: "UploadFile"; contents: string };
 export type StartDrag = { type: "StartDrag"; index: number };
@@ -28,7 +27,16 @@ export type Message =
     }
   | { type: "DragStart"; index: number }
   | { type: "DragOver"; index: number }
+  | { type: "Save" }
+  | { type: "Load" }
+  | { type: "ChangeRegexType"; regex: RegexType }
+  | { type: "AddSoundClass"; name: string; sounds: string[] }
   | { type: "DragEnd" };
+
+export type RegexType =
+  | { type: "Union" }
+  | { type: "Disjunction" }
+  | { type: "Star" };
 
 export abstract class CMessage {
   abstract updateState(state: State): State;
@@ -36,6 +44,7 @@ export abstract class CMessage {
 
 //todo: refactor so it isn't so big
 export type State = {
+  regexType: RegexType;
   isLoading: boolean;
   soundLawInputs: SoundLawInput[];
   laws: SoundLaw[];
