@@ -78,13 +78,32 @@
                 <span>→</span>
                 <input type="text" class="to" id="to" placeholder="b" />
                 <span>/</span>
-                <input type="text" class="left" id="left" placeholder="x" />
+
+                <!-- Left Context: Input + Select -->
+                <input
+                    type="text"
+                    class="left"
+                    id="left-input"
+                    placeholder="x"
+                />
+                <select id="left-select">
+                    <option value="">Custom</option>
+                </select>
 
                 <span>_</span>
-                <input type="text" class="right" id="right" placeholder="y" />
+
+                <!-- Right Context: Input + Select -->
+                <input
+                    type="text"
+                    class="right"
+                    id="right-input"
+                    placeholder="y"
+                />
+                <select id="right-select">
+                    <option value="">Custom</option>
+                </select>
             </div>
         </div>
-
         <button id="create-law" type="button">Create Fst</button>
 
         <h4>File Inputs</h4>
