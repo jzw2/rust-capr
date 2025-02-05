@@ -148,6 +148,12 @@ const update = (message: Message, state: State): State => {
     }
   } else if (message.type === "ChangeRegexType") {
     state.regexType = message.regex;
+  } else if (message.type === "AddSoundClass") {
+    state.soundClasses.push({
+      type: "Disjunction",
+      name: message.name,
+      sounds: message.sounds,
+    });
   } else {
     //whatever
     console.log("Very bad, message was not found");
@@ -223,8 +229,13 @@ const renderInit = () => {
   ) as HTMLButtonElement;
   createSoundLine.addEventListener("click", () => {
     const input = document.querySelector(".phonemes-input") as HTMLInputElement;
-    if (input) {
-      sendMessage({ type: "AddSoundClass", sounds: input.value.split(" ") });
+    const name = document.querySelector(".phonemes-name") as HTMLInputElement;
+    if (input && name) {
+      sendMessage({
+        type: "AddSoundClass",
+        name: name.value,
+        sounds: input.value.split(" "),
+      });
     }
   });
 };
@@ -326,13 +337,15 @@ const render = (state: State) => {
   }
 
   // sound class
-  if (state.regexType.type == "Disjunction") {
+  const phonemes = document.querySelector(".phonemes-name");
+  if (state.regexType.type == "Disjunction" && phonemes == null) {
     const area = document.querySelector(".sound-class-area");
     const nameDiv = document.createElement("div");
     const nameHeader = document.createElement("p");
     nameHeader.innerHTML = "Name";
     nameDiv.append(nameHeader);
     const name = document.createElement("input");
+    name.classList.add("phonemes-name");
     nameDiv.append(name);
     area?.append(nameDiv);
 
@@ -345,6 +358,17 @@ const render = (state: State) => {
     area?.append(phonemes);
   }
 
+  // show sound rules
+  const soundList = document.querySelector("#sound-classes");
+  if (soundList) {
+    soundList.innerHTML = "";
+    state.soundClasses.forEach((sound) => {
+      const li = document.createElement("li");
+      li.innerHTML = `${sound.name}: ${sound.sounds.join(",")}`;
+      soundList.append(li);
+    });
+  }
+
   console.log("Finished rendering");
 };
 
@@ -352,6 +376,7 @@ async function run() {
   await init();
 
   let state: State = {
+    soundClasses: [],
     regexType: { type: "Union" },
     isLoading: false,
     soundLawInputs: [],
