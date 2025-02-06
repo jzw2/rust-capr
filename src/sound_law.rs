@@ -50,10 +50,13 @@ pub fn get_labels_from_str(s: &str, table: &SymbolTable) -> Option<Vec<Label>> {
 /// `right_context` is b
 
 impl SoundLaw {
-    fn disjunction_vec_fst(strings: &[&str], table: &SymbolTable) -> VectorFst<SoundWeight> {
+    pub fn disjunction_vec_fst<T: AsRef<str>>(
+        strings: &[T],
+        table: &SymbolTable,
+    ) -> VectorFst<SoundWeight> {
         let labeled_strings = strings
             .iter()
-            .map(|s| get_labels_from_str(s, table).unwrap());
+            .map(|s| get_labels_from_str(s.as_ref(), table).unwrap());
         let mut new_fst: VectorFst<SoundWeight> = VectorFst::new();
 
         for labeled_string in labeled_strings {
