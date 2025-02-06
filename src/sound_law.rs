@@ -5,6 +5,7 @@ use crate::trans::SoundFst;
 use crate::trans::SoundVec;
 use crate::trans::SoundWeight;
 use ipa_translate::xsampa_to_ipa;
+use rustfst::prelude::union::union;
 use rustfst::prelude::Fst;
 use rustfst::prelude::MutableFst;
 use rustfst::prelude::VectorFst;
@@ -49,6 +50,52 @@ pub fn get_labels_from_str(s: &str, table: &SymbolTable) -> Option<Vec<Label>> {
 /// `right_context` is b
 
 impl SoundLaw {
+    fn disjunction_vec_fst(strings: &[&str], table: &SymbolTable) -> VectorFst<SoundWeight> {
+        let labeled_strings = strings
+            .iter()
+            .map(|s| get_labels_from_str(s, table).unwrap());
+        let mut new_fst: VectorFst<SoundWeight> = VectorFst::new();
+
+        for labeled_string in labeled_strings {
+            let acceptor: VectorFst<_> = acceptor(&labeled_string, SoundWeight::one());
+            union(&mut new_fst, &acceptor).expect("union failed");
+        }
+        new_fst
+    }
+
+    pub fn new_with_vec_context(
+        from: &str,
+        to: &str,
+        left_context: VectorFst<SoundWeight>,
+        right_context: VectorFst<SoundWeight>,
+        table: &SymbolTable,
+    ) -> SoundLaw {
+        let labels = [from, to].map(|s| get_labels_from_str(s, table).unwrap());
+
+        // the left and right contexts fst
+        let left_context_fst: VectorFst<_> = left_context;
+        let right_context_fst: VectorFst<_> = right_context;
+
+        // the actual input to output
+        let transform: VectorFst<_> = transducer(&labels[0], &labels[1], SoundWeight::one());
+        let transform = SoundFst(transform);
+
+        let replace_fst = transform.replace_in_context(
+            left_context_fst.into(),
+            right_context_fst.into(),
+            false,
+            table,
+        );
+        SoundLaw {
+            from: from.to_string(),
+            to: to.to_string(),
+            left_context: "disjunction".into(),
+            right_context: "disjunction".into(),
+            fst: replace_fst,
+            table: table.clone(),
+        }
+    }
+
     pub fn new(
         from: &str,
         to: &str,
@@ -60,9 +107,11 @@ impl SoundLaw {
             [left_context, right_context, from, to].map(|s| get_labels_from_str(s, table).unwrap());
         dbg!(&labels);
 
+        // the left and right contexts fst
         let left_context_fst: VectorFst<_> = acceptor(&labels[0], SoundWeight::one());
         let right_context_fst: VectorFst<_> = acceptor(&labels[1], SoundWeight::one());
 
+        // the actual input to output
         let transform: VectorFst<_> = transducer(&labels[2], &labels[3], SoundWeight::one());
         let transform = SoundFst(transform);
 
