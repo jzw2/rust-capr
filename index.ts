@@ -369,6 +369,25 @@ const render = (state: State) => {
     });
   }
 
+  const leftSelect = document.querySelector("#left-select") as HTMLInputElement;
+  const rightSelect = document.querySelector(
+    "#right-select",
+  ) as HTMLInputElement;
+  leftSelect.innerHTML = "<option value=''> Custom </option> ";
+  rightSelect.innerHTML = "<option value=''> Custom </option> ";
+
+  state.soundClasses.forEach((law) => {
+    const leftNode = document.createElement("option");
+    leftNode.innerHTML = law.name;
+    leftNode.value = law.name;
+    const rightNode = document.createElement("option");
+    rightNode.innerHTML = law.name;
+    rightNode.value = law.name;
+
+    leftSelect.append(leftNode);
+    rightSelect.append(rightNode);
+  });
+
   console.log("Finished rendering");
 };
 
