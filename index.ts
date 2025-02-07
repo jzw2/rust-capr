@@ -4,6 +4,8 @@ import init, {
   SoundLawComposition,
   soundlaw_xsampa_to_ipa,
   create_law,
+  create_with_disjunctions,
+  Disjunction,
 } from "./pkg/rust_capr";
 
 import {
@@ -14,6 +16,7 @@ import {
   SoundLawInput,
   DragType,
   RegexType,
+  SoundClassName,
 } from "./types.ts";
 
 // Send message needs to have access to the state
@@ -32,9 +35,33 @@ const updateLaw = async (
   message: AddSoundLaw,
   state: State,
 ): Promise<Message> => {
-  const law = await create_law_async(
-    message.law.left,
-    message.law.right,
+  let left: string[] = [];
+  let right: string[] = [];
+  let oldLeft = message.law.left;
+  if (typeof oldLeft == "string") {
+    left = [oldLeft];
+  } else {
+    let x = state.soundClasses.find(
+      (sound_class) => sound_class.name == oldLeft.name,
+    );
+    if (x) {
+      left = x.sounds;
+    }
+  }
+  let oldright = message.law.right;
+  if (typeof oldright == "string") {
+    right = [oldright];
+  } else {
+    let x = state.soundClasses.find(
+      (sound_class) => sound_class.name == oldright.name,
+    );
+    if (x) {
+      right = x.sounds;
+    }
+  }
+  const law = create_with_disjunctions(
+    Disjunction.new(left),
+    Disjunction.new(right),
     message.law.from,
     message.law.to,
   );
@@ -177,8 +204,8 @@ const renderInit = () => {
     }
   });
 
-  const left = document.getElementById("left") as HTMLInputElement;
-  const right = document.getElementById("right") as HTMLInputElement;
+  const left = document.getElementById("left-input") as HTMLInputElement;
+  const right = document.getElementById("right-input") as HTMLInputElement;
   const to = document.getElementById("to") as HTMLInputElement;
   const from = document.getElementById("from") as HTMLInputElement;
 
@@ -187,11 +214,25 @@ const renderInit = () => {
   ) as HTMLButtonElement;
 
   createButton.addEventListener("click", () => {
+    const leftSelect = document.querySelector(
+      "#left-select",
+    ) as HTMLInputElement;
+    const rightSelect = document.querySelector(
+      "#right-select",
+    ) as HTMLInputElement;
+    let l: string | SoundClassName = left.value;
+    let r: string | SoundClassName = right.value;
+    if (leftSelect.value === "") {
+      l = { name: leftSelect.value };
+    }
+    if (rightSelect.value === "") {
+      r = { name: rightSelect.value };
+    }
     sendMessage({
       type: "AddSoundLaw",
       law: {
-        left: left.value,
-        right: right.value,
+        left: l,
+        right: r,
         from: from.value,
         to: to.value,
       },

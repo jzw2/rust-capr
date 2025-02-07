@@ -42,8 +42,11 @@ export abstract class CMessage {
   abstract updateState(state: State): State;
 }
 
+type SoundClass = { type: "Disjunction"; name: string; sounds: string[] };
+
 //todo: refactor so it isn't so big
 export type State = {
+  soundClasses: SoundClass[];
   regexType: RegexType;
   isLoading: boolean;
   soundLawInputs: SoundLawInput[];
@@ -63,8 +66,12 @@ export type DragType =
   | { type: "DraggingOver"; old: number; new: number };
 
 export type SoundLawInput = {
-  left: string;
-  right: string;
+  left: string | SoundClassName;
+  right: string | SoundClassName;
   to: string;
   from: string;
+};
+
+export type SoundClassName = {
+  name: string;
 };
