@@ -222,10 +222,10 @@ const renderInit = () => {
     ) as HTMLInputElement;
     let l: string | SoundClassName = left.value;
     let r: string | SoundClassName = right.value;
-    if (leftSelect.value === "") {
+    if (leftSelect.value !== "") {
       l = { name: leftSelect.value };
     }
-    if (rightSelect.value === "") {
+    if (rightSelect.value !== "") {
       r = { name: rightSelect.value };
     }
     sendMessage({
@@ -307,8 +307,20 @@ const render = (state: State) => {
   ) as HTMLParagraphElement;
 
   rulesList.innerHTML = "";
-  state.laws.forEach((x, index) => {
-    let s = `Rule: ${x.get_from()} → ${x.get_to()} / ${x.get_left_context()} _ ${x.get_right_context()}`;
+  state.soundLawInputs.forEach((x, index) => {
+    let left = "";
+    if (typeof x.left == "string") {
+      left = x.left;
+    } else {
+      left = x.left.name;
+    }
+    let right = "";
+    if (typeof x.right == "string") {
+      right = x.right;
+    } else {
+      right = x.right.name;
+    }
+    let s = `Rule: ${x.from} → ${x.to} / ${left} _ ${right}`;
     const listItem = document.createElement("li");
     listItem.textContent = s;
     listItem.draggable = true;
