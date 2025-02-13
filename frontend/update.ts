@@ -130,8 +130,14 @@ export const update = (message: Message, state: State): State => {
       console.log("Drag over called without first starting a drag");
     }
   } else if (message.type === "Save") {
+    localStorage.setItem("classes", JSON.stringify(state.soundClasses));
     localStorage.setItem("laws", JSON.stringify(state.soundLawInputs));
+    console.log("Storing classes");
   } else if (message.type === "Load") {
+    const classesStorage = localStorage.getItem("classes");
+    if (classesStorage) {
+      state.soundClasses = JSON.parse(classesStorage);
+    }
     const storage = localStorage.getItem("laws");
     if (storage) {
       state.composition = SoundLawComposition.new();
