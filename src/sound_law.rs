@@ -295,7 +295,7 @@ impl SoundLawComposition {
         self.recompute_fsts();
         rm
     }
-    pub async fn add_law(&mut self, law: &SoundLaw) {
+    pub fn add_law(&mut self, law: &SoundLaw) {
         self.laws.push(law.clone());
         if self.laws.len() == 1 {
             self.final_fst = law.fst.clone();
