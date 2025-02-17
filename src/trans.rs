@@ -75,7 +75,7 @@ impl SoundFst {
     }
 
     pub fn optimize(&mut self) {
-        rm_epsilon(&mut self.0).unwrap();
+        //rm_epsilon(&mut self.0).unwrap();
         let table = encode(
             &mut self.0,
             rustfst::prelude::encode::EncodeType::EncodeLabels,
@@ -176,16 +176,15 @@ impl SoundFst {
         let left_transducer: SoundFst = Self::from_single_label(left_context);
         let mut pi_star_copy = pi_star.clone();
         pi_star_copy.concatenate(&left_transducer);
-        let pi_star_neg = pi_star_copy.negate_with_symbol_table(alphabet);
+        let mut pi_star_neg = pi_star_copy.negate_with_symbol_table(alphabet);
+        //pi_star_neg.optimize(); // please work
 
         println!("{}", line!());
         // let composed_transducer: SoundVec = compose(pi_star_free_mark, pi_star_neg).unwrap();
         pi_star_free_mark.compose(&pi_star_neg);
 
+        pi_star_free_mark.df("end_of_end_in_string");
         let mut ret = pi_star_free_mark;
-        ret.optimize();
-        rm_epsilon(&mut ret.0).unwrap();
-        ret.determinize();
         ret.optimize();
         ret
     }
@@ -386,9 +385,8 @@ impl SoundFst {
 
 #[cfg(test)]
 mod tests {
-    
 
-    use rustfst::{fst, prelude::rm_epsilon::rm_epsilon, symt, DrawingConfig, utils::transducer};
+    use rustfst::{fst, prelude::rm_epsilon::rm_epsilon, symt, utils::transducer, DrawingConfig};
     use sound_law::SoundLaw;
 
     use crate::sound_law;

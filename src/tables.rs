@@ -15,6 +15,7 @@ pub fn lower_case_latin() -> SymbolTable {
 
 pub fn xsampa_ascii() -> SymbolTable {
     let xsampa_chars: Vec<String> = (' '..='~')
+        .filter(|x| *x != '"') // breaks dot when debugging
         .map(|x| x.to_string())
         .collect();
 

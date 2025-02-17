@@ -342,6 +342,8 @@ pub fn soundlaw_xsampa_to_ipa(s: &str) -> String {
 mod tests {
     use rustfst::symt;
 
+    use crate::tables::xsampa_ascii;
+
     use super::*;
 
     #[test]
@@ -449,5 +451,31 @@ mod tests {
         compose.backwards_fst.df("overflow");
         let transduced = compose.transduce_text_invert("dddddd");
         assert_eq!(transduced.len(), LIMIT);
+    }
+
+    #[test]
+    fn small_cons_disjunction_small_symbol_table() {
+        //let symbol_tabl = xsampa_ascii();
+        let symbol_tabl = symt!["p", "t", "k", "b", "d", "g", "h", "_", "2", "e", "r", "a"];
+        //let strings = vec!["p", "t", "k", "b", "d", "g", "b_h", "d_h", "g_h"];
+        let strings = vec!["p", "t", "k", "b", "d", "g"];
+
+        let fst = SoundLaw::disjunction_vec_fst(&strings, &symbol_tabl);
+
+        let law =
+            SoundLaw::new_with_vec_context("h_2", "a", fst.clone(), fst.clone(), &symbol_tabl);
+        assert_eq!(law.transduce_text("ph_2ter")[0], "p a t e r");
+    }
+    #[test]
+    fn small_cons_disjunction_xsampa() {
+        let symbol_tabl = xsampa_ascii();
+        //let strings = vec!["p", "t", "k", "b", "d", "g", "b_h", "d_h", "g_h"];
+        let strings = vec!["p", "t", "k", "b", "d", "g"];
+
+        let fst = SoundLaw::disjunction_vec_fst(&strings, &symbol_tabl);
+
+        let law =
+            SoundLaw::new_with_vec_context("h_2", "a", fst.clone(), fst.clone(), &symbol_tabl);
+        assert_eq!(law.transduce_text("ph_2ter")[0], "p a t e r");
     }
 }
