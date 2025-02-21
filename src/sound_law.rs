@@ -478,4 +478,15 @@ mod tests {
             SoundLaw::new_with_vec_context("h_2", "a", fst.clone(), fst.clone(), &symbol_tabl);
         assert_eq!(law.transduce_text("ph_2ter")[0], "p a t e r");
     }
+    #[test]
+    fn med_cons_disjunction_xsampa() {
+        let symbol_tabl = xsampa_ascii();
+        let strings = vec!["p", "t", "k", "b", "d", "g", "b_h", "d_h", "g_h"];
+
+        let fst = SoundLaw::disjunction_vec_fst(&strings, &symbol_tabl);
+
+        let law =
+            SoundLaw::new_with_vec_context("h_2", "a", fst.clone(), fst.clone(), &symbol_tabl);
+        assert_eq!(law.transduce_text("ph_2ter")[0], "p a t e r");
+    }
 }
