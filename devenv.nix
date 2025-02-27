@@ -11,6 +11,10 @@
     pkgs.wasm-pack
     pkgs.lld
     pkgs.mold
+    pkgs.linuxPackages_latest.perf
+    pkgs.cargo-flamegraph
+    pkgs.samply
+    pkgs.graphviz
   ];
 
   # https://devenv.sh/languages/
