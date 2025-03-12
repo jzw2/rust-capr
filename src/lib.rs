@@ -1,7 +1,8 @@
 extern crate console_error_panic_hook;
 use std::{borrow::Borrow, future::Future};
 
-use tables::xsampa_ascii;
+use ipa_translate::xsampa_to_ipa;
+use tables::{ipa, xsampa_ascii};
 use trans::SoundFst;
 use wasm_bindgen::prelude::*;
 
@@ -10,9 +11,9 @@ mod sound_law;
 mod tables;
 mod trans;
 
+use rustfst::prelude::VectorFst;
 use sound_law::SoundLaw;
 use trans::SoundWeight;
-use rustfst::prelude::VectorFst;
 
 #[wasm_bindgen]
 pub fn create_law(left: &str, right: &str, from: &str, to: &str) -> SoundLaw {
@@ -21,6 +22,19 @@ pub fn create_law(left: &str, right: &str, from: &str, to: &str) -> SoundLaw {
 
     // SoundLaw::new(from, to, left, right, &latin)
     SoundLaw::new(from, to, left, right, &xsampa)
+}
+
+#[wasm_bindgen]
+pub fn create_law_ipa(left: &str, right: &str, from: &str, to: &str) -> SoundLaw {
+    let table = ipa();
+
+    SoundLaw::new(
+        &xsampa_to_ipa(from),
+        &xsampa_to_ipa(to),
+        &xsampa_to_ipa(left),
+        &xsampa_to_ipa(right),
+        &table,
+    )
 }
 
 #[wasm_bindgen]
@@ -33,6 +47,26 @@ impl Disjunction {
         let fst = SoundLaw::disjunction_vec_fst(&strings, &xsampa);
         Disjunction(fst)
     }
+}
+#[wasm_bindgen]
+pub fn create_with_disjunctions_ipa(
+    left: Disjunction,
+    right: Disjunction,
+    from: &str,
+    to: &str,
+) -> SoundLaw {
+    // let latin = lower_case_latin();
+    let table = ipa();
+
+    // SoundLaw::new(from, to, left, right, &latin)
+    // assumes left and right were created using ipa table
+    SoundLaw::new_with_vec_context(
+        &xsampa_to_ipa(from),
+        &xsampa_to_ipa(to),
+        left.0,
+        right.0,
+        &table,
+    )
 }
 #[wasm_bindgen]
 pub fn create_with_disjunctions(
