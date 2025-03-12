@@ -13,6 +13,19 @@ pub fn lower_case_latin() -> SymbolTable {
     table
 }
 
+pub fn ipa() -> SymbolTable {
+    let mut table = SymbolTable::new();
+    let chars: Vec<String> = ('a'..='z').map(|x| x.to_string()).collect();
+
+    table.add_symbols(chars);
+    let chars: Vec<String> = (0x0250..=0x02AF)
+        .map(|x| char::from_u32(x).unwrap().to_string())
+        .collect();
+
+    table.add_symbols(chars);
+    table
+}
+
 pub fn xsampa_ascii() -> SymbolTable {
     let xsampa_chars: Vec<String> = (' '..='~')
         .filter(|x| *x != '"') // breaks dot when debugging
