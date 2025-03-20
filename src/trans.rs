@@ -1,14 +1,22 @@
+use core::panicking::panic;
+use std::any::Any;
+use std::borrow::BorrowMut;
+use std::sync::atomic::AtomicUsize;
 use std::sync::Arc;
 
 use rustfst::algorithms::compose::compose;
 use rustfst::algorithms::determinize::determinize;
 use rustfst::algorithms::{reverse, tr_sort, ProjectType};
+use rustfst::fst_properties::FstProperties;
 use rustfst::fst_traits::StateIterator;
 use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::encode::{decode, encode};
 use rustfst::prelude::rm_epsilon::rm_epsilon;
 use rustfst::prelude::union::union;
-use rustfst::prelude::{invert, minimize, OLabelCompare, SerializableFst, TropicalWeight};
+use rustfst::prelude::{
+    invert, minimize, FstIntoIterator, FstIterator, ILabelCompare, OLabelCompare, SerializableFst,
+    TropicalWeight,
+};
 use rustfst::{
     algorithms::{concat::concat, project},
     fst_impls::VectorFst,
@@ -18,6 +26,8 @@ use rustfst::{
 };
 use rustfst::{fst, DrawingConfig};
 
+use crate::tables::single_character_class;
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct SoundFst(pub SoundVec);
 
@@ -26,6 +36,8 @@ const DEBUG: bool = true;
 
 #[cfg(not(test))]
 const DEBUG: bool = false;
+
+static CALL_COUNT: AtomicUsize = AtomicUsize::new(0);
 
 pub type SoundVec = VectorFst<SoundWeight>;
 
@@ -75,13 +87,23 @@ impl SoundFst {
     }
 
     pub fn optimize(&mut self) {
-        //rm_epsilon(&mut self.0).unwrap();
+        rm_epsilon(&mut self.0).unwrap(); //hfst also does these things in the same order
+                                          // hfst also has some code for negative weights
         let table = encode(
             &mut self.0,
-            rustfst::prelude::encode::EncodeType::EncodeLabels,
+            rustfst::prelude::encode::EncodeType::EncodeWeightsAndLabels,
         )
         .unwrap();
+        tr_sort(&mut self.0, ILabelCompare {});
+        self.0
+            .compute_and_update_properties_all()
+            .expect("Property error");
+        self.0.set_properties(FstProperties::ACCEPTOR);
         self.0 = determinize(&self.0).unwrap();
+        self.0
+            .compute_and_update_properties_all()
+            .expect("Property error");
+        self.0.set_properties(FstProperties::ACCEPTOR);
         minimize(&mut self.0).unwrap();
         decode(&mut self.0, table).unwrap();
     }
@@ -162,6 +184,8 @@ impl SoundFst {
         alphabet: &SymbolTable,
     ) -> Self {
         // any string that ends in the current transducer, ignoring brackts except for a final <
+        // aka ct
+        // ct = .* ( m1 >> ( m2 >> t ))  ||  !(.* m1)
         let mut transducer = self.clone();
 
         transducer.insert_freely(left_context);
@@ -215,6 +239,53 @@ impl SoundFst {
         negated.concatenate(end);
         negated
     }
+
+    fn single_character_class_fst_context(
+        expand: &[Label],
+        left_context_marker: Label,
+        right_context_marker: Label,
+        expaned_table: &SymbolTable,
+    ) -> SoundFst {
+        let table = single_character_class();
+        //let b = acceptor(labels, weight);
+        let fst: VectorFst<SoundWeight> = fst![1];
+        let sound_fst = SoundFst(fst);
+        let mut ret = sound_fst.replace_context(left_context_marker, right_context_marker, &table);
+
+        let clone = ret.clone();
+
+        for data in clone.0.fst_into_iter() {
+            let state = data.state_id;
+            ret.0.delete_trs(state).expect("error in deleting states");
+            for tr in data.trs {
+                if tr.ilabel == 1 {
+                    for new_label in expand {
+                        ret.0
+                            .emplace_tr(state, *new_label, *new_label, tr.weight, tr.nextstate)
+                            .expect("error in empalce");
+                    }
+                } else if tr.ilabel == 2 {
+                    for symbol_table_label in expaned_table.labels() {
+                        if !expand.contains(&symbol_table_label) && symbol_table_label != 0 {
+                            ret.0
+                                .emplace_tr(
+                                    state,
+                                    symbol_table_label,
+                                    symbol_table_label,
+                                    tr.weight,
+                                    tr.nextstate,
+                                )
+                                .expect("error in empalce");
+                        }
+                    }
+                } else {
+                    panic!("somehow created illegal label");
+                }
+            }
+        }
+        ret
+    }
+
     // take all contexts and replace it with a left marker
     fn replace_context(
         &self,
@@ -222,14 +293,18 @@ impl SoundFst {
         right_context_marker: Label,
         alphabet: &SymbolTable,
     ) -> Self {
+        CALL_COUNT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         println!("starting replace context");
+        // aka ct in hfst
         let end_in_transducer =
             self.end_in_string(left_context_marker, right_context_marker, alphabet);
+        // aka mt in hfst
         let start_bracket =
             Self::begin_bracket(left_context_marker, right_context_marker, alphabet);
 
         println!("{}", line!());
         // iff statement
+        // aka ct and mt
         let start_then_end = Self::if_start_then_end(&end_in_transducer, &start_bracket, alphabet);
 
         let end_ten_start = Self::if_end_then_start(&end_in_transducer, &start_bracket, alphabet);
@@ -239,8 +314,17 @@ impl SoundFst {
         disjunction.union(&end_ten_start);
 
         println!("disjunction {}", line!());
+        disjunction.df(&format!(
+            "negated_replace_context_before_optimize{}",
+            CALL_COUNT.load(std::sync::atomic::Ordering::Relaxed)
+        ));
         disjunction.optimize();
+        disjunction.df(&format!(
+            "negated_replace_context_before{}",
+            CALL_COUNT.load(std::sync::atomic::Ordering::Relaxed)
+        ));
         let mut ret = disjunction.negate_with_symbol_table(alphabet);
+        ret.df("negated_replace_context");
 
         ret.optimize();
         println!("Finished replace context");
