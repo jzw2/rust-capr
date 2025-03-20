@@ -481,7 +481,7 @@ mod tests {
     #[test]
     fn med_cons_disjunction_xsampa() {
         let symbol_tabl = xsampa_ascii();
-        let strings = vec!["p", "t", "k", "b", "d", "g", "b_h", "d_h", "g_h"];
+        let strings = vec!["p", "t", "k", "b", "d", "g", "q", "r", "s"];
 
         let fst = SoundLaw::disjunction_vec_fst(&strings, &symbol_tabl);
 
