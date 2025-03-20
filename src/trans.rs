@@ -14,8 +14,8 @@ use rustfst::prelude::encode::{decode, encode};
 use rustfst::prelude::rm_epsilon::rm_epsilon;
 use rustfst::prelude::union::union;
 use rustfst::prelude::{
-    invert, minimize, FstIntoIterator, FstIterator, ILabelCompare, OLabelCompare, SerializableFst,
-    TropicalWeight,
+    invert, minimize, CoreFst, ExpandedFst, FstIntoIterator, FstIterator, ILabelCompare,
+    OLabelCompare, SerializableFst, TropicalWeight,
 };
 use rustfst::{
     algorithms::{concat::concat, project},
@@ -241,11 +241,34 @@ impl SoundFst {
     }
 
     fn single_character_class_fst_context(
-        expand: &[Label],
+        &self,
         left_context_marker: Label,
         right_context_marker: Label,
         expaned_table: &SymbolTable,
     ) -> SoundFst {
+        let trs: Vec<_>;
+        if self.0.num_states() == 2
+            && self.0.get_trs(1).unwrap().len() == 0
+            && self
+                .0
+                .get_trs(0)
+                .unwrap()
+                .iter()
+                .all(|tr| tr.nextstate == 1)
+        {
+            trs = self
+                .0
+                .get_trs(0)
+                .unwrap()
+                .iter()
+                .map(|tr| tr.ilabel)
+                .collect();
+        } else {
+            //failed
+            return self.replace_context(left_context_marker, right_context_marker, expaned_table);
+        }
+        let expand = &trs;
+
         let table = single_character_class();
         //let b = acceptor(labels, weight);
         let fst: VectorFst<SoundWeight> = fst![1];
