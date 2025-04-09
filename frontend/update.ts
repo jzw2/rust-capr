@@ -42,7 +42,7 @@ export const updateLaw = async (
     message.law.to,
   );
   state.laws.push(law);
-  await state.composition.add_law(law); // mentions that null pointer passed to rust
+  state.composition.add_law(law); // mentions that null pointer passed to rust
   console.log("Finished computation");
   return {
     type: "FinishLoading",
@@ -93,12 +93,15 @@ export const update = (message: Message, state: State): State => {
   } else if (message.type === "ClickDelete") {
     state.composition.rm_law(message.index);
     state.laws.splice(message.index, 1);
+    state.soundLawInputs.splice(message.index, 1);
     state = transduce(state);
   } else if (message.type === "Rearrange") {
     const oldIndex = message.old;
     const newIndex = message.new;
+    const [movedInput] = state.soundLawInputs.splice(oldIndex, 1);
     const [movedLaw] = state.laws.splice(oldIndex, 1);
     state.laws.splice(newIndex, 0, movedLaw);
+    state.soundLawInputs.splice(newIndex, 0, movedInput);
     state.composition = SoundLawComposition.new();
     state.laws.forEach((law) => state.composition.add_law(law));
     state = transduce(state);
