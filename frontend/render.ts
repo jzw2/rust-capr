@@ -225,7 +225,8 @@ export const render = (state: State) => {
   // sound class
   const phonemes = document.querySelector(".phonemes-name");
   if (state.regexType.type == "Disjunction" && phonemes == null) {
-    const area = document.querySelector(".sound-class-area");
+    const area = document.querySelector(".sound-class-area") as HTMLElement;
+    area.innerHTML = "";
     const nameDiv = document.createElement("div");
     const nameHeader = document.createElement("p");
     nameHeader.innerHTML = "Name";
@@ -246,7 +247,8 @@ export const render = (state: State) => {
     state.regexType.type == "Concat" &&
     document.querySelector(".concat-name") == null
   ) {
-    const area = document.querySelector(".sound-class-area");
+    const area = document.querySelector(".sound-class-area") as HTMLElement;
+    area.innerHTML = "";
     const nameDiv = document.createElement("div");
     const nameHeader = document.createElement("p");
     nameHeader.innerHTML = "Name";
