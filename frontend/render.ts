@@ -83,13 +83,33 @@ export const renderInit = () => {
     ".create-sound-class",
   ) as HTMLButtonElement;
   createSoundLine.addEventListener("click", () => {
-    const input = document.querySelector(".phonemes-input") as HTMLInputElement;
-    const name = document.querySelector(".phonemes-name") as HTMLInputElement;
-    if (input && name) {
+    const inputPhonemes = document.querySelector(
+      ".phonemes-input",
+    ) as HTMLInputElement;
+    const namePhonemes = document.querySelector(
+      ".phonemes-name",
+    ) as HTMLInputElement;
+    if (inputPhonemes && namePhonemes) {
       sendMessage({
         type: "AddSoundClass",
-        name: name.value,
-        sounds: input.value.split(" "),
+        regex: { type: "Disjunction" },
+        name: namePhonemes.value,
+        sounds: inputPhonemes.value.split(" "),
+      });
+    }
+
+    const inputConcat = document.querySelector(
+      ".concat-input",
+    ) as HTMLInputElement;
+    const nameConcat = document.querySelector(
+      ".concat-name",
+    ) as HTMLInputElement;
+    if (inputConcat && nameConcat) {
+      sendMessage({
+        type: "AddSoundClass",
+        regex: { type: "Concat" },
+        name: namePhonemes.value,
+        sounds: inputPhonemes.value.split(" "),
       });
     }
   });
@@ -222,8 +242,28 @@ export const render = (state: State) => {
     area?.append(instructions);
 
     area?.append(phonemes);
-  }
+  } else if (
+    state.regexType.type == "Concat" &&
+    document.querySelector(".concat-name") == null
+  ) {
+    const area = document.querySelector(".sound-class-area");
+    const nameDiv = document.createElement("div");
+    const nameHeader = document.createElement("p");
+    nameHeader.innerHTML = "Name";
+    nameDiv.append(nameHeader);
+    const name = document.createElement("input");
+    name.classList.add("concat-name");
+    nameDiv.append(name);
+    area?.append(nameDiv);
 
+    const instructions = document.createElement("p");
+    instructions.innerHTML = "Put the sound classes with one space in between";
+    const phonemes = document.createElement("input");
+    phonemes.classList.add("concat-input");
+    area?.append(instructions);
+
+    area?.append(phonemes);
+  }
   // show sound rules
   const soundList = document.querySelector("#sound-classes");
   if (soundList) {

@@ -1,4 +1,4 @@
-import { SoundLaw, SoundLawComposition } from "./pkg/rust_capr";
+import { SoundLaw, SoundLawComposition } from "../pkg/rust_capr";
 
 export type AddSoundLaw = {
   type: "AddSoundLaw";
@@ -30,19 +30,24 @@ export type Message =
   | { type: "Save" }
   | { type: "Load" }
   | { type: "ChangeRegexType"; regex: RegexType }
-  | { type: "AddSoundClass"; name: string; sounds: string[] }
+  | { type: "AddSoundClass"; regex: RegexType; name: string; sounds: string[] }
   | { type: "DragEnd" };
 
 export type RegexType =
   | { type: "Union" }
   | { type: "Disjunction" }
+  | { type: "Concat" }
   | { type: "Star" };
 
 export abstract class CMessage {
   abstract updateState(state: State): State;
 }
 
-type SoundClass = { type: "Disjunction"; name: string; sounds: string[] };
+type SoundClass = {
+  type: "Disjunction" | "Concat";
+  name: string;
+  sounds: string[];
+};
 
 //todo: refactor so it isn't so big
 export type State = {
