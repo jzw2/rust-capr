@@ -2,13 +2,13 @@ extern crate console_error_panic_hook;
 use std::{borrow::Borrow, future::Future};
 
 use ipa_translate::xsampa_to_ipa;
+use regex::Regex;
 use tables::{ipa, xsampa_ascii};
 use trans::SoundFst;
 use wasm_bindgen::prelude::*;
 
 mod character_class;
 mod negate;
-mod regex;
 mod regex;
 mod sound_law;
 mod tables;
@@ -80,24 +80,15 @@ pub fn create_with_disjunctions_ipa(
 }
 
 #[wasm_bindgen]
-pub fn create_with_arbitrary_law(
-    left: &SoundLaw,
-    right: &SoundLaw,
-    from: &SoundLaw,
-    to: &SoundLaw,
+pub fn create_with_arbitrary_regex(
+    left: &Regex,
+    right: &Regex,
+    from: &Regex,
+    to: &Regex,
 ) -> SoundLaw {
     // let latin = lower_case_latin();
     let table = ipa();
-
-    // SoundLaw::new(from, to, left, right, &latin)
-    // assumes left and right were created using ipa table
-    SoundLaw::new_with_vec_context(
-        &xsampa_to_ipa(from),
-        &xsampa_to_ipa(to),
-        left.0,
-        right.0,
-        &table,
-    )
+    todo!()
 }
 #[wasm_bindgen]
 pub fn create_with_disjunctions(
