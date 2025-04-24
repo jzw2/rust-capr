@@ -36,3 +36,10 @@ pub fn xsampa_ascii() -> SymbolTable {
     table.add_symbols(xsampa_chars);
     table
 }
+pub fn single_character_class() -> SymbolTable {
+    let chars = vec!["C", "NC", "<", ">"];
+
+    let mut table = SymbolTable::new();
+    table.add_symbols(chars);
+    table
+}
