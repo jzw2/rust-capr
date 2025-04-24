@@ -6,7 +6,10 @@ use tables::{ipa, xsampa_ascii};
 use trans::SoundFst;
 use wasm_bindgen::prelude::*;
 
+mod character_class;
 mod negate;
+mod regex;
+mod regex;
 mod sound_law;
 mod tables;
 mod trans;
@@ -47,13 +50,41 @@ impl Disjunction {
         let fst = SoundLaw::disjunction_vec_fst(&strings, &xsampa);
         Disjunction(fst)
     }
+    // TODO change to maybe just pass in the table or somehting like that
+    pub fn new_ipa(strings: Vec<String>) -> Disjunction {
+        let table = ipa();
+        let fst = SoundLaw::disjunction_vec_fst(&strings, &table);
+        Disjunction(fst)
+    }
 }
+
 #[wasm_bindgen]
 pub fn create_with_disjunctions_ipa(
     left: Disjunction,
     right: Disjunction,
     from: &str,
     to: &str,
+) -> SoundLaw {
+    // let latin = lower_case_latin();
+    let table = ipa();
+
+    // SoundLaw::new(from, to, left, right, &latin)
+    // assumes left and right were created using ipa table
+    SoundLaw::new_with_vec_context(
+        &xsampa_to_ipa(from),
+        &xsampa_to_ipa(to),
+        left.0,
+        right.0,
+        &table,
+    )
+}
+
+#[wasm_bindgen]
+pub fn create_with_arbitrary_law(
+    left: &SoundLaw,
+    right: &SoundLaw,
+    from: &SoundLaw,
+    to: &SoundLaw,
 ) -> SoundLaw {
     // let latin = lower_case_latin();
     let table = ipa();
