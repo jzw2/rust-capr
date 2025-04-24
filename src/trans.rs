@@ -1,4 +1,3 @@
-use core::panicking::panic;
 use std::any::Any;
 use std::borrow::BorrowMut;
 use std::sync::atomic::AtomicUsize;
@@ -247,6 +246,7 @@ impl SoundFst {
         expaned_table: &SymbolTable,
     ) -> SoundFst {
         let trs: Vec<_>;
+        self.df("expansion");
         if self.0.num_states() == 2
             && self.0.get_trs(1).unwrap().len() == 0
             && self
@@ -263,7 +263,9 @@ impl SoundFst {
                 .iter()
                 .map(|tr| tr.ilabel)
                 .collect();
+            println!("using expand mehtod");
         } else {
+            println!("unable to use expand method");
             //failed
             return self.replace_context(left_context_marker, right_context_marker, expaned_table);
         }
@@ -273,7 +275,7 @@ impl SoundFst {
         //let b = acceptor(labels, weight);
         let fst: VectorFst<SoundWeight> = fst![1];
         let sound_fst = SoundFst(fst);
-        let mut ret = sound_fst.replace_context(left_context_marker, right_context_marker, &table);
+        let mut ret = sound_fst.replace_context(3, 4, &table);
 
         let clone = ret.clone();
 
@@ -301,11 +303,33 @@ impl SoundFst {
                                 .expect("error in empalce");
                         }
                     }
+                } else if tr.ilabel == 3 {
+                    ret.0
+                        .emplace_tr(
+                            state,
+                            left_context_marker,
+                            left_context_marker,
+                            tr.weight,
+                            tr.nextstate,
+                        )
+                        .unwrap();
+                } else if tr.ilabel == 4 {
+                    ret.0
+                        .emplace_tr(
+                            state,
+                            right_context_marker,
+                            right_context_marker,
+                            tr.weight,
+                            tr.nextstate,
+                        )
+                        .unwrap();
                 } else {
                     panic!("somehow created illegal label");
                 }
             }
         }
+        ret.0.set_input_symbols(Arc::new(expaned_table.clone()));
+        ret.0.set_output_symbols(Arc::new(expaned_table.clone()));
         ret
     }
 
@@ -408,9 +432,14 @@ impl SoundFst {
         cbt.df("cbt");
 
         println!("left context");
-        let mut lct =
-            left_context.replace_context(left_marker, right_marker, &alphabet_with_marker);
-        lct.optimize();
+        let mut left_opt = left_context.clone();
+        left_opt.optimize();
+        let mut lct = left_opt.single_character_class_fst_context(
+            left_marker,
+            right_marker,
+            &alphabet_with_marker,
+        );
+        //lct.optimize();
         lct.df("left_context");
 
         println!("right context");
