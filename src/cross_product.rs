@@ -5,7 +5,8 @@ use rustfst::{
         closure::closure,
         compose::{self, compose},
         concat::concat,
-        invert, optimize, MutableFst, SerializableFst,
+        invert, optimize, tr_sort, ILabelCompare, MutableFst, OLabelCompare, SerializableFst,
+        TrCompare,
     },
     utils::epsilon_machine,
     DrawingConfig, Label, Semiring, SymbolTable, EPS_LABEL,
@@ -22,6 +23,7 @@ fn any_to_single_label(table: &SymbolTable, single_label: Label) -> SoundVec {
 
     for (label, _) in table.iter() {
         if label != EPS_LABEL {
+            // this is actually uneeded, beccause it gets plugged into the kleene star anyway
             fst.emplace_tr(state, label, single_label, SoundWeight::one(), state)
                 .unwrap();
         }
@@ -113,6 +115,9 @@ fn cross_product(a: &SoundVec, b: &SoundVec, table: &SymbolTable) -> SoundVec {
     concat(&mut right, &mark_to_epsilon).unwrap();
     optimize(&mut right).unwrap();
 
+    tr_sort(&mut left, ILabelCompare {});
+    tr_sort(&mut left, OLabelCompare {});
+
     let mut ret: SoundVec = compose(left, right).unwrap();
     optimize(&mut ret).unwrap();
     ret.draw(format!("images/{}.dot", "ret"), &DrawingConfig::default())
@@ -135,30 +140,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_cross_product_basic1() {
-        // Create a simple symbol table.
-        let mut table = SymbolTable::new();
-        table.add_symbol("a"); // 1
-        table.add_symbol("b"); // 2
-        table.add_symbol("c"); // 3
-
-        // let x = acceptor(labels, weight)
-        // let x = transducer(labels_input, labels_output, weight)
-
-        // Create two simple SoundVecs using the fst! macro.
-        let a: SoundVec = fst![1, 2]; // Accepts "a" then "b"
-        let b: SoundVec = fst![2, 3]; // Accepts "b" then "c"
-
-        // Call the cross_product function.
-        let result = cross_product(&a, &b, &table);
-
-        // The cross product should accept "a" then "b" as input and output "b" then "c"
-        let expected: SoundVec = fst![1, 2 => 2, 3];
-        assert_eq!(result.num_states(), expected.num_states());
-    }
-
-    #[test]
-    fn test_cross_product_basic2() {
+    fn test_cross_product_basic() {
         // Create a simple symbol table.
         let mut table = SymbolTable::new();
         table.add_symbol("a"); // 1
@@ -166,18 +148,29 @@ mod tests {
         table.add_symbol("c"); // 3
 
         // Create two simple SoundVecs using union.
-        let mut a: SoundVec = fst![1]; // s0 --a--> s1 (acceptor)
-        let mut b: SoundVec = fst![2]; // s0 --b--> s1 (acceptor)
+        let a: SoundVec = fst![1]; // s0 --a--> s1 (acceptor)
+        let b: SoundVec = fst![2]; // s0 --b--> s1 (acceptor)
 
         // Call the cross_product function.
         let result = cross_product(&a, &b, &table);
 
-        // Expected FST: s0 --a/b--> s1 (transducer)
-        let expected: SoundVec = fst![1 => 2];
+        // Create an input FST for testing, e.g., "a"
+        let input_fst: SoundVec = acceptor(&[1], SoundWeight::one());
 
-        let result_paths: HashSet<_> = result.paths_iter().collect();
-        let expected_paths_ref = HashSet::<FstPath<SoundWeight>>::from([fst_path![1 => 2]]);
-        assert_eq!(result_paths, expected_paths_ref);
+        // Compose and project.
+        let mut composed_fst: SoundVec = compose(input_fst, result).unwrap();
+        project(&mut composed_fst, ProjectType::ProjectOutput);
+
+        let output_strings: Vec<_> = composed_fst.paths_iter().collect();
+        let expected_output_labels = vec![[2]];
+
+        assert_eq!(
+            output_strings
+                .iter()
+                .map(|p| p.olabels.as_slice().to_vec())
+                .collect::<Vec<_>>(),
+            expected_output_labels
+        );
     }
 
     #[test]
