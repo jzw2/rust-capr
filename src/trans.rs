@@ -11,8 +11,8 @@ use rustfst::prelude::encode::{decode, encode};
 use rustfst::prelude::rm_epsilon::rm_epsilon;
 use rustfst::prelude::union::union;
 use rustfst::prelude::{
-    invert, minimize, CoreFst, ExpandedFst, FstIntoIterator, ILabelCompare,
-    OLabelCompare, SerializableFst, TropicalWeight,
+    invert, minimize, CoreFst, ExpandedFst, FstIntoIterator, ILabelCompare, OLabelCompare,
+    SerializableFst, TropicalWeight,
 };
 use rustfst::{
     algorithms::{concat::concat, project},
@@ -25,6 +25,7 @@ use rustfst::{fst, DrawingConfig};
 
 use crate::tables::single_character_class;
 
+// ideally refacotor this instead of having both sound fst and sound law, as it seems kind of redundant
 #[derive(Clone, Debug, PartialEq)]
 pub struct SoundFst(pub SoundVec);
 

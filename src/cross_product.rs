@@ -8,7 +8,11 @@ use rustfst::{
     DrawingConfig, Label, Semiring, SymbolTable, EPS_LABEL,
 };
 
-use crate::trans::{SoundVec, SoundWeight};
+use crate::{
+    regex::Regex,
+    sound_law::SoundLaw,
+    trans::{SoundFst, SoundVec, SoundWeight},
+};
 
 fn any_to_single_label(table: &SymbolTable, single_label: Label) -> SoundVec {
     //table should not have the mark in it
@@ -34,6 +38,7 @@ fn any_to_single_label(table: &SymbolTable, single_label: Label) -> SoundVec {
     fst
 }
 fn loop_machine(input: Label, output: Label) -> SoundVec {
+    // really dumb of me when I could have just used epsilon machine
     let mut fst = SoundVec::new();
     let state = fst.add_state();
     fst.set_final(state, SoundWeight::one()).unwrap();
@@ -45,7 +50,7 @@ fn loop_machine(input: Label, output: Label) -> SoundVec {
 }
 
 //basically stolen from HfstTransducer
-fn cross_product(a: &SoundVec, b: &SoundVec, table: &SymbolTable) -> SoundVec {
+pub fn cross_product(a: &SoundVec, b: &SoundVec, table: &SymbolTable) -> SoundVec {
     let mut a = a.clone();
     let mut b = b.clone();
     tr_sort(&mut a, ILabelCompare {});

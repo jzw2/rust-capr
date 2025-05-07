@@ -1,10 +1,14 @@
-use rustfst::prelude::{concat::concat, union::union, VectorFst};
+use rustfst::{
+    prelude::{concat::concat, union::union, VectorFst},
+    SymbolTable,
+};
 use wasm_bindgen::prelude::*;
 
 use crate::{
+    cross_product::cross_product,
     sound_law::SoundLaw,
     tables::{ipa, xsampa_ascii},
-    trans::SoundWeight,
+    trans::{SoundFst, SoundWeight},
 };
 
 #[wasm_bindgen]
@@ -34,5 +38,14 @@ impl Regex {
         let table = ipa();
         let fst = SoundLaw::disjunction_vec_fst(&strings, &table);
         Regex(fst)
+    }
+}
+
+impl Regex {
+    pub fn to_sound_fst(&self) -> SoundFst {
+        todo!()
+    }
+    pub fn regex_cross_product(a: &Regex, b: &Regex, table: &SymbolTable) -> SoundFst {
+        SoundFst(cross_product(&a.0, &b.0, table))
     }
 }

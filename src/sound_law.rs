@@ -18,6 +18,8 @@ use wasm_bindgen::prelude::wasm_bindgen;
 #[wasm_bindgen]
 #[derive(Clone, Debug)]
 pub struct SoundLaw {
+    // need to rewrite so taht it has not such a flat architucture
+    // and allows more complex such as full regex expression
     from: String,
     to: String,
     left_context: String,
@@ -28,8 +30,10 @@ pub struct SoundLaw {
 
 const LIMIT: usize = 20;
 
+// this is essnetially useless, and I should delte it soon
 #[derive(Debug)]
 struct SoundLawLabels {
+    //
     from: Vec<Label>,
     to: Vec<Label>,
     left_context: Vec<Label>,
