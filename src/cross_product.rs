@@ -36,10 +36,11 @@ fn any_to_single_label(table: &SymbolTable, single_label: Label) -> SoundVec {
 fn loop_machine(input: Label, output: Label) -> SoundVec {
     let mut fst = SoundVec::new();
     let state = fst.add_state();
-    fst.set_final(state, SoundWeight::one());
-    fst.set_start(state);
+    fst.set_final(state, SoundWeight::one()).unwrap();
+    fst.set_start(state).unwrap();
 
-    fst.emplace_tr(state, input, output, SoundWeight::one(), state);
+    fst.emplace_tr(state, input, output, SoundWeight::one(), state)
+        .unwrap();
     fst
 }
 
