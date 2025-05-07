@@ -3,12 +3,10 @@ use core::panic;
 use rustfst::{
     prelude::{
         closure::closure,
-        compose::{self, compose},
+        compose::{compose},
         concat::concat,
         invert, optimize, tr_sort, ILabelCompare, MutableFst, OLabelCompare, SerializableFst,
-        TrCompare,
     },
-    utils::epsilon_machine,
     DrawingConfig, Label, Semiring, SymbolTable, EPS_LABEL,
 };
 
@@ -41,6 +39,7 @@ fn loop_machine(input: Label, output: Label) -> SoundVec {
     let mut fst = SoundVec::new();
     let state = fst.add_state();
     fst.set_final(state, SoundWeight::one());
+    fst.set_start(state);
 
     fst.emplace_tr(state, input, output, SoundWeight::one(), state);
     fst
@@ -48,6 +47,10 @@ fn loop_machine(input: Label, output: Label) -> SoundVec {
 
 //basically stolen from HfstTransducer
 fn cross_product(a: &SoundVec, b: &SoundVec, table: &SymbolTable) -> SoundVec {
+    let mut a = a.clone();
+    let mut b = b.clone();
+    tr_sort(&mut a, ILabelCompare {});
+    tr_sort(&mut b, ILabelCompare {});
     // check to make sure it doens't do something bad
 
     //should probably extract that to a variable
@@ -60,9 +63,11 @@ fn cross_product(a: &SoundVec, b: &SoundVec, table: &SymbolTable) -> SoundVec {
 
     //requires expansion becuase I don't have "unknown"
     let mut any_to_mark: SoundVec = any_to_single_label(table, mark_label);
+    tr_sort(&mut any_to_mark, ILabelCompare {});
 
     //loop machine is actually useless, becuae I put it in the closue anyway
     let mut epsilon_to_mark: SoundVec = loop_machine(EPS_LABEL, mark_label);
+    tr_sort(&mut epsilon_to_mark, ILabelCompare {});
 
     let mut mark_to_any = any_to_mark.clone();
     invert(&mut mark_to_any);
@@ -103,6 +108,7 @@ fn cross_product(a: &SoundVec, b: &SoundVec, table: &SymbolTable) -> SoundVec {
         .draw(format!("images/{}.dot", "mte"), &DrawingConfig::default())
         .unwrap();
 
+    tr_sort(&mut any_to_mark, ILabelCompare {});
     // called a1 in hfst
     let mut left: SoundVec = compose(a.clone(), any_to_mark).unwrap();
     optimize(&mut left).unwrap();
@@ -128,13 +134,12 @@ fn cross_product(a: &SoundVec, b: &SoundVec, table: &SymbolTable) -> SoundVec {
 // add tests or something
 #[cfg(test)]
 mod tests {
-    use std::collections::HashSet;
+    
 
     use rustfst::{
-        fst, fst_path,
-        prelude::{project, CoreFst, ExpandedFst, Fst, ProjectType},
-        utils::{acceptor, transducer},
-        FstPath,
+        fst,
+        prelude::{project, union::union, Fst, ProjectType},
+        utils::acceptor,
     };
 
     use super::*;
@@ -163,6 +168,54 @@ mod tests {
 
         let output_strings: Vec<_> = composed_fst.paths_iter().collect();
         let expected_output_labels = vec![[2]];
+
+        assert_eq!(
+            output_strings
+                .iter()
+                .map(|p| p.olabels.as_slice().to_vec())
+                .collect::<Vec<_>>(),
+            expected_output_labels
+        );
+    }
+
+    #[test]
+    fn test_cross_product_nontrivial() {
+        // Create a symbol table.
+        let mut table = SymbolTable::new();
+        table.add_symbol("a"); // 1
+        table.add_symbol("b"); // 2
+        table.add_symbol("c"); // 3
+        table.add_symbol("d"); // 4
+        table.add_symbol("e"); // 5
+        table.add_symbol("f"); // 6
+        table.add_symbol("g"); // 7
+
+        // Define two more complex FSTs, a and b, using union.
+        // a: s0 --a--> s1, s0 --c--> s2 (acceptor)
+        let mut a: SoundVec = fst![1]; // s0 --a--> s1
+        let a2: SoundVec = fst![3]; // s0 --c--> s2
+        union(&mut a, &a2).unwrap();
+
+        // b: s0 --d--> s1, s0 --f--> s2 (acceptor)
+        let mut b: SoundVec = fst![4]; // s0 --d--> s1
+        let b2: SoundVec = fst![6]; // s0 --f--> s2
+        union(&mut b, &b2).unwrap();
+
+        // Call the cross_product function.
+        let result = cross_product(&a, &b, &table);
+
+        // Create an input FST for testing.  For example, the input "ac"
+        let input_fst: SoundVec = acceptor(&[1, 3], SoundWeight::one()); // a c
+
+        // Compose the result with the input.
+        let mut composed_fst: SoundVec = compose(input_fst, result).unwrap();
+
+        // Project the output labels.
+        project(&mut composed_fst, ProjectType::ProjectOutput);
+
+        // Get the output strings.
+        let output_strings: Vec<_> = composed_fst.paths_iter().collect();
+        let expected_output_labels = vec![[4, 6]]; // Expected output: "df"  ->  [4,6]
 
         assert_eq!(
             output_strings

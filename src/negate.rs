@@ -4,7 +4,7 @@ use rustfst::{
     prelude::{
         determinize::determinize,
         encode::{decode, encode},
-        minimize, CoreFst, MutableFst, StateIterator,
+        minimize, tr_sort, CoreFst, ILabelCompare, MutableFst, OLabelCompare, StateIterator,
     },
     Label, Semiring, SymbolTable,
 };
@@ -17,17 +17,22 @@ impl SoundFst {
     pub fn negate(&self, alphabet: &[Label]) -> Self {
         self.d(line!());
         let mut ret = self.clone();
+        //ret.reverse(); // sfst reverses twice for some reason
+        //ret.reverse();
         ret.d(line!());
         println!("{} Removing epsilons", line!());
         rm_epsilon(&mut ret.0).unwrap();
+
+        tr_sort(&mut ret.0, OLabelCompare {}); // I don't think this changes anything, but hfst has this
+                                               // hfst also has removing the weights from the vector, but I only have one weight
         ret.d(line!());
         println!("{} Determinizing", line!());
         let encoded = encode(
             &mut ret.0,
-            rustfst::prelude::encode::EncodeType::EncodeLabels,
+            rustfst::prelude::encode::EncodeType::EncodeWeightsAndLabels,
         )
         .unwrap();
-
+        tr_sort(&mut ret.0, ILabelCompare {}); // I don't think this changes anything, but hfst has this
         let mut ret: SoundFst = SoundFst(determinize(&ret.0).unwrap());
         //ret.d(line!());
         println!("{} Minimizing", line!());

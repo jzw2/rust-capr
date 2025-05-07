@@ -1,13 +1,12 @@
 extern crate console_error_panic_hook;
-use std::{borrow::Borrow, future::Future};
 
 use ipa_translate::xsampa_to_ipa;
 use regex::Regex;
 use tables::{ipa, xsampa_ascii};
-use trans::SoundFst;
 use wasm_bindgen::prelude::*;
 
 mod character_class;
+mod cross_product;
 mod negate;
 mod regex;
 mod sound_law;
@@ -109,7 +108,7 @@ pub async fn create_law_async(left: &str, right: &str, from: &str, to: &str) -> 
     let xsampa = xsampa_ascii();
 
     // SoundLaw::new(from, to, left, right, &latin)
-    return SoundLaw::new(from, to, left, right, &xsampa);
+    SoundLaw::new(from, to, left, right, &xsampa)
 }
 
 #[cfg(test)]

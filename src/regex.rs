@@ -1,8 +1,11 @@
 use rustfst::prelude::{concat::concat, union::union, VectorFst};
 use wasm_bindgen::prelude::*;
-use wasm_bindgen_futures::js_sys::Symbol;
 
-use crate::trans::SoundWeight;
+use crate::{
+    sound_law::SoundLaw,
+    tables::{ipa, xsampa_ascii},
+    trans::SoundWeight,
+};
 
 #[wasm_bindgen]
 pub struct Regex(VectorFst<SoundWeight>);
@@ -19,5 +22,17 @@ impl Regex {
     //implement the rest later
     pub fn kleen(&mut self) {
         unimplemented!();
+    }
+
+    pub fn new_xsampa_disjunction(strings: Vec<String>) -> Regex {
+        let xsampa = xsampa_ascii();
+        let fst = SoundLaw::disjunction_vec_fst(&strings, &xsampa);
+        Regex(fst)
+    }
+    // TODO change to maybe just pass in the table or somehting like that
+    pub fn new_ipa_disjunction(strings: Vec<String>) -> Regex {
+        let table = ipa();
+        let fst = SoundLaw::disjunction_vec_fst(&strings, &table);
+        Regex(fst)
     }
 }

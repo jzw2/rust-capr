@@ -1,5 +1,3 @@
-use std::any::Any;
-use std::borrow::BorrowMut;
 use std::sync::atomic::AtomicUsize;
 use std::sync::Arc;
 
@@ -13,7 +11,7 @@ use rustfst::prelude::encode::{decode, encode};
 use rustfst::prelude::rm_epsilon::rm_epsilon;
 use rustfst::prelude::union::union;
 use rustfst::prelude::{
-    invert, minimize, CoreFst, ExpandedFst, FstIntoIterator, FstIterator, ILabelCompare,
+    invert, minimize, CoreFst, ExpandedFst, FstIntoIterator, ILabelCompare,
     OLabelCompare, SerializableFst, TropicalWeight,
 };
 use rustfst::{
@@ -199,7 +197,7 @@ impl SoundFst {
         let left_transducer: SoundFst = Self::from_single_label(left_context);
         let mut pi_star_copy = pi_star.clone();
         pi_star_copy.concatenate(&left_transducer);
-        let mut pi_star_neg = pi_star_copy.negate_with_symbol_table(alphabet);
+        let pi_star_neg = pi_star_copy.negate_with_symbol_table(alphabet);
         //pi_star_neg.optimize(); // please work
 
         println!("{}", line!());
@@ -434,7 +432,7 @@ impl SoundFst {
         println!("left context");
         let mut left_opt = left_context.clone();
         left_opt.optimize();
-        let mut lct = left_opt.single_character_class_fst_context(
+        let lct = left_opt.single_character_class_fst_context(
             left_marker,
             right_marker,
             &alphabet_with_marker,
