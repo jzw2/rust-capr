@@ -1,28 +1,37 @@
 use core::panic;
-use std::f32::EPSILON;
 
 use rustfst::{
     prelude::{
         closure::closure,
         compose::{self, compose},
         concat::concat,
-        invert, optimize, MutableFst,
+        invert, optimize, MutableFst, SerializableFst,
     },
     utils::epsilon_machine,
-    Label, Semiring, SymbolTable, EPS_LABEL,
+    DrawingConfig, Label, Semiring, SymbolTable, EPS_LABEL,
 };
-use wasm_bindgen::UnwrapThrowExt;
 
 use crate::trans::{SoundVec, SoundWeight};
 
 fn any_to_single_label(table: &SymbolTable, single_label: Label) -> SoundVec {
+    //table should not have the mark in it
     let mut fst = SoundVec::new();
     let state = fst.add_state();
-    fst.set_final(state, SoundWeight::one());
+    fst.set_final(state, SoundWeight::one()).unwrap();
+    fst.set_start(state).unwrap();
 
     for (label, _) in table.iter() {
-        fst.emplace_tr(state, label, single_label, SoundWeight::one(), state);
+        if label != EPS_LABEL {
+            fst.emplace_tr(state, label, single_label, SoundWeight::one(), state)
+                .unwrap();
+        }
     }
+    fst.draw(
+        format!("images/{}.dot", "single_label"),
+        &DrawingConfig::default(),
+    )
+    .unwrap();
+    println!("{:?}", fst);
 
     fst
 }
@@ -39,14 +48,18 @@ fn loop_machine(input: Label, output: Label) -> SoundVec {
 fn cross_product(a: &SoundVec, b: &SoundVec, table: &SymbolTable) -> SoundVec {
     // check to make sure it doens't do something bad
 
+    //should probably extract that to a variable
     if table.contains_symbol("MARK") {
         panic!("Why did you add MARK as your symbol")
+        //maybe include handling so that it doens't immdeidately crash
     }
     let mut table_with_mark = table.clone();
     let mark_label = table_with_mark.add_symbol("MARK");
 
+    //requires expansion becuase I don't have "unknown"
     let mut any_to_mark: SoundVec = any_to_single_label(table, mark_label);
 
+    //loop machine is actually useless, becuae I put it in the closue anyway
     let mut epsilon_to_mark: SoundVec = loop_machine(EPS_LABEL, mark_label);
 
     let mut mark_to_any = any_to_mark.clone();
@@ -75,6 +88,18 @@ fn cross_product(a: &SoundVec, b: &SoundVec, table: &SymbolTable) -> SoundVec {
     optimize(&mut epsilon_to_mark).unwrap();
     optimize(&mut mark_to_any).unwrap();
     optimize(&mut mark_to_epsilon).unwrap();
+    any_to_mark
+        .draw(format!("images/{}.dot", "atm"), &DrawingConfig::default())
+        .unwrap();
+    epsilon_to_mark
+        .draw(format!("images/{}.dot", "etm"), &DrawingConfig::default())
+        .unwrap();
+    mark_to_any
+        .draw(format!("images/{}.dot", "mta"), &DrawingConfig::default())
+        .unwrap();
+    mark_to_epsilon
+        .draw(format!("images/{}.dot", "mte"), &DrawingConfig::default())
+        .unwrap();
 
     // called a1 in hfst
     let mut left: SoundVec = compose(a.clone(), any_to_mark).unwrap();
@@ -88,9 +113,91 @@ fn cross_product(a: &SoundVec, b: &SoundVec, table: &SymbolTable) -> SoundVec {
     concat(&mut right, &mark_to_epsilon).unwrap();
     optimize(&mut right).unwrap();
 
-    let mut ret = compose(left, right).unwrap();
+    let mut ret: SoundVec = compose(left, right).unwrap();
     optimize(&mut ret).unwrap();
+    ret.draw(format!("images/{}.dot", "ret"), &DrawingConfig::default())
+        .unwrap();
     ret
 }
 
 // add tests or something
+#[cfg(test)]
+mod tests {
+    use std::collections::HashSet;
+
+    use rustfst::{
+        fst, fst_path,
+        prelude::{project, CoreFst, ExpandedFst, Fst, ProjectType},
+        utils::{acceptor, transducer},
+        FstPath,
+    };
+
+    use super::*;
+
+    #[test]
+    fn test_cross_product_basic1() {
+        // Create a simple symbol table.
+        let mut table = SymbolTable::new();
+        table.add_symbol("a"); // 1
+        table.add_symbol("b"); // 2
+        table.add_symbol("c"); // 3
+
+        // let x = acceptor(labels, weight)
+        // let x = transducer(labels_input, labels_output, weight)
+
+        // Create two simple SoundVecs using the fst! macro.
+        let a: SoundVec = fst![1, 2]; // Accepts "a" then "b"
+        let b: SoundVec = fst![2, 3]; // Accepts "b" then "c"
+
+        // Call the cross_product function.
+        let result = cross_product(&a, &b, &table);
+
+        // The cross product should accept "a" then "b" as input and output "b" then "c"
+        let expected: SoundVec = fst![1, 2 => 2, 3];
+        assert_eq!(result.num_states(), expected.num_states());
+    }
+
+    #[test]
+    fn test_cross_product_basic2() {
+        // Create a simple symbol table.
+        let mut table = SymbolTable::new();
+        table.add_symbol("a"); // 1
+        table.add_symbol("b"); // 2
+        table.add_symbol("c"); // 3
+
+        // Create two simple SoundVecs using union.
+        let mut a: SoundVec = fst![1]; // s0 --a--> s1 (acceptor)
+        let mut b: SoundVec = fst![2]; // s0 --b--> s1 (acceptor)
+
+        // Call the cross_product function.
+        let result = cross_product(&a, &b, &table);
+
+        // Expected FST: s0 --a/b--> s1 (transducer)
+        let expected: SoundVec = fst![1 => 2];
+
+        let result_paths: HashSet<_> = result.paths_iter().collect();
+        let expected_paths_ref = HashSet::<FstPath<SoundWeight>>::from([fst_path![1 => 2]]);
+        assert_eq!(result_paths, expected_paths_ref);
+    }
+
+    #[test]
+    fn test_any_to_single_label_basic() {
+        let mut table = SymbolTable::new();
+        table.add_symbol("a"); // 1
+        table.add_symbol("b"); // 2
+        table.add_symbol("c"); // 3
+        let single_label: Label = 5;
+
+        let result = any_to_single_label(&table, single_label);
+
+        // Test by composing with an input string and checking the output.
+        let input_fst: SoundVec = acceptor(&[1, 2, 3], SoundWeight::one());
+        let mut composed_fst: SoundVec = compose(input_fst, result).unwrap();
+        project(&mut composed_fst, ProjectType::ProjectOutput);
+        let output_strings: Vec<_> = composed_fst.paths_iter().collect();
+
+        // assert_eq!(paths[0].ilabels.as_slice(), &[1, 2, 3]);
+        // assert_eq!(paths[0].olabels.as_slice(), &[4, 5]);
+        assert_eq!(output_strings[0].olabels.as_slice(), &[5, 5, 5]);
+    }
+}
