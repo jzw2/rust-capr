@@ -2,10 +2,8 @@ use core::panic;
 
 use rustfst::{
     prelude::{
-        closure::closure,
-        compose::{compose},
-        concat::concat,
-        invert, optimize, tr_sort, ILabelCompare, MutableFst, OLabelCompare, SerializableFst,
+        closure::closure, compose::compose, concat::concat, invert, optimize, tr_sort,
+        ILabelCompare, MutableFst, OLabelCompare, SerializableFst,
     },
     DrawingConfig, Label, Semiring, SymbolTable, EPS_LABEL,
 };
@@ -134,7 +132,6 @@ fn cross_product(a: &SoundVec, b: &SoundVec, table: &SymbolTable) -> SoundVec {
 // add tests or something
 #[cfg(test)]
 mod tests {
-    
 
     use rustfst::{
         fst,
@@ -205,7 +202,26 @@ mod tests {
         let result = cross_product(&a, &b, &table);
 
         // Create an input FST for testing.  For example, the input "ac"
-        let input_fst: SoundVec = acceptor(&[1, 3], SoundWeight::one()); // a c
+        let input_fst: SoundVec = acceptor(&[1], SoundWeight::one()); // a c
+
+        // Compose the result with the input.
+        let mut composed_fst: SoundVec = compose(input_fst, result.clone()).unwrap();
+
+        // Project the output labels.
+        project(&mut composed_fst, ProjectType::ProjectOutput);
+
+        // Get the output strings.
+        let output_strings: Vec<_> = composed_fst.paths_iter().collect();
+        let expected_output_labels = vec![[4], [6]]; // Expected output: "df"  ->  [4,6]
+
+        assert_eq!(
+            output_strings
+                .iter()
+                .map(|p| p.olabels.as_slice().to_vec())
+                .collect::<Vec<_>>(),
+            expected_output_labels
+        );
+        let input_fst: SoundVec = acceptor(&[3], SoundWeight::one()); // a c
 
         // Compose the result with the input.
         let mut composed_fst: SoundVec = compose(input_fst, result).unwrap();
@@ -215,7 +231,7 @@ mod tests {
 
         // Get the output strings.
         let output_strings: Vec<_> = composed_fst.paths_iter().collect();
-        let expected_output_labels = vec![[4, 6]]; // Expected output: "df"  ->  [4,6]
+        let expected_output_labels = vec![[4], [6]]; // Expected output: "df"  ->  [4,6]
 
         assert_eq!(
             output_strings
