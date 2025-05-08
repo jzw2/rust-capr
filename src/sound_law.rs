@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::regex::Regex;
 use crate::trans::SoundFst;
 use crate::trans::SoundVec;
 use crate::trans::SoundWeight;
@@ -102,6 +103,32 @@ impl SoundLaw {
         }
     }
 
+    pub fn create_with_arbitrary_regex(
+        left: &Regex,
+        right: &Regex,
+        from: &Regex,
+        to: &Regex,
+        table: &SymbolTable,
+    ) -> SoundLaw {
+        // let latin = lower_case_latin();
+
+        let transform: SoundFst = Regex::regex_cross_product(from, to, &&table);
+
+        let replace_fst =
+            transform.replace_in_context(left.to_sound_fst(), right.to_sound_fst(), false, &table);
+
+        SoundLaw {
+            from: left.to_string(),
+            to: to.to_string(),
+            left_context: from.to_string(),
+            right_context: to.to_string(),
+            fst: replace_fst,
+            table: table.clone(),
+        }
+    }
+
+    // this should not be the new, one isntea,d it should
+    // be changed to be basedd on the regex creation
     pub fn new(
         from: &str,
         to: &str,

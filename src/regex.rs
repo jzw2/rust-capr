@@ -11,6 +11,7 @@ use crate::{
     trans::{SoundFst, SoundWeight},
 };
 
+//change this to not a new type that also contains information for how it was created
 #[wasm_bindgen]
 pub struct Regex(VectorFst<SoundWeight>);
 
@@ -23,6 +24,12 @@ impl Regex {
         // I don't know why I chose a different name but whatever
         let _ = union(&mut self.0, &other.0);
     }
+
+    pub fn to_string(&self) -> String {
+        // I don't know why I chose a different name but whatever
+        "implement this later".into()
+    }
+
     //implement the rest later
     pub fn kleen(&mut self) {
         unimplemented!();
