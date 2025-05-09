@@ -1,8 +1,7 @@
 extern crate console_error_panic_hook;
 
-use cross_product::cross_product;
 use ipa_translate::xsampa_to_ipa;
-use regex::Regex;
+use regex::RegexFst;
 use tables::{ipa, xsampa_ascii};
 use wasm_bindgen::prelude::*;
 
@@ -82,21 +81,23 @@ pub fn create_with_disjunctions_ipa(
 
 #[wasm_bindgen]
 pub fn create_with_arbitrary_regex(
-    left: &Regex,
-    right: &Regex,
-    from: &Regex,
-    to: &Regex,
+    left: &RegexFst,
+    right: &RegexFst,
+    from: &RegexFst,
+    to: &RegexFst,
 ) -> SoundLaw {
     // let latin = lower_case_latin();
     let table = ipa();
 
-    let transform: SoundFst = Regex::regex_cross_product(from, to, &&table);
+    let transform: SoundFst = RegexFst::regex_cross_product(from, to, &&table);
 
     let replace_fst =
         transform.replace_in_context(left.to_sound_fst(), right.to_sound_fst(), false, &table);
 
     todo!()
 }
+
+//old functoin
 #[wasm_bindgen]
 pub fn create_with_disjunctions(
     left: Disjunction,

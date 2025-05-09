@@ -18,7 +18,7 @@ pub fn ipa() -> SymbolTable {
     let chars: Vec<String> = ('a'..='z').map(|x| x.to_string()).collect();
 
     table.add_symbols(chars);
-    let chars: Vec<String> = (0x0250..=0x02AF)
+    let chars: Vec<String> = (0x0250..=0x02AF) // ipa section in unicode
         .map(|x| char::from_u32(x).unwrap().to_string())
         .collect();
 
@@ -36,6 +36,8 @@ pub fn xsampa_ascii() -> SymbolTable {
     table.add_symbols(xsampa_chars);
     table
 }
+
+// unneeded again due to the approach not actually being useful
 pub fn single_character_class() -> SymbolTable {
     let chars = vec!["C", "NC", "<", ">"];
 

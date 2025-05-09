@@ -9,7 +9,7 @@ use rustfst::{
 };
 
 use crate::{
-    regex::Regex,
+    regex::RegexFst,
     sound_law::SoundLaw,
     trans::{SoundFst, SoundVec, SoundWeight},
 };

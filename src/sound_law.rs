@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::regex::Regex;
+use crate::regex::RegexFst;
 use crate::trans::SoundFst;
 use crate::trans::SoundVec;
 use crate::trans::SoundWeight;
@@ -54,6 +54,7 @@ pub fn get_labels_from_str(s: &str, table: &SymbolTable) -> Option<Vec<Label>> {
 /// `right_context` is b
 
 impl SoundLaw {
+    // should be removed and the regex method replaced
     pub fn disjunction_vec_fst<T: AsRef<str>>(
         strings: &[T],
         table: &SymbolTable,
@@ -70,6 +71,7 @@ impl SoundLaw {
         new_fst
     }
 
+    // should be removed and the regex method replaced
     pub fn new_with_vec_context(
         from: &str,
         to: &str,
@@ -104,18 +106,18 @@ impl SoundLaw {
     }
 
     pub fn create_with_arbitrary_regex(
-        left: &Regex,
-        right: &Regex,
-        from: &Regex,
-        to: &Regex,
+        left: &RegexFst,
+        right: &RegexFst,
+        from: &RegexFst,
+        to: &RegexFst,
         table: &SymbolTable,
     ) -> SoundLaw {
         // let latin = lower_case_latin();
 
-        let transform: SoundFst = Regex::regex_cross_product(from, to, &&table);
+        let transform: SoundFst = RegexFst::regex_cross_product(from, to, table);
 
         let replace_fst =
-            transform.replace_in_context(left.to_sound_fst(), right.to_sound_fst(), false, &table);
+            transform.replace_in_context(left.to_sound_fst(), right.to_sound_fst(), false, table);
 
         SoundLaw {
             from: left.to_string(),
