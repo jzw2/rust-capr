@@ -50,10 +50,18 @@ pub struct RegexFst {
 impl RegexFst {
     pub fn concat(&mut self, other: &RegexFst) {
         let _ = concat(&mut self.fst, &other.fst);
+        self.operator = RegexOperator::Concat(
+            Box::new(self.operator.clone()),
+            Box::new(other.operator.clone()),
+        )
     }
     pub fn disjoint(&mut self, other: &RegexFst) {
         // I don't know why I chose a different name but whatever
         let _ = union(&mut self.fst, &other.fst);
+        self.operator = RegexOperator::Union(
+            Box::new(self.operator.clone()),
+            Box::new(other.operator.clone()),
+        )
     }
 
     pub fn to_string(&self) -> String {
@@ -67,11 +75,11 @@ impl RegexFst {
     }
 
     //quetionable interface, maybe I should wrap the table
-    pub fn new_from_ipa(v: String) -> RegexFst {
+    pub fn new_from_ipa(s: String) -> RegexFst {
         let table = ipa();
 
         // todo implement error handling
-        let v: Vec<_> = v
+        let v: Vec<_> = s
             .chars()
             .map(|c| {
                 table
@@ -81,7 +89,10 @@ impl RegexFst {
             .collect();
 
         let acceptor: SoundVec = acceptor(&v, SoundWeight::one());
-        RegexFst { fst: acceptor }
+        RegexFst {
+            fst: acceptor,
+            operator: RegexOperator::Acceptor(s),
+        }
     }
 }
 
