@@ -12,18 +12,48 @@ use crate::{
     trans::{SoundFst, SoundVec, SoundWeight},
 };
 
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
+enum RegexOperator {
+    Acceptor(String), // use this as the basic operator vs basing it on just a single character
+    Star(Box<RegexOperator>),
+    Concat(Box<RegexOperator>, Box<RegexOperator>),
+    Union(Box<RegexOperator>, Box<RegexOperator>), // empty may be uneeded?
+}
+
+impl RegexOperator {
+    fn to_string(&self) -> String {
+        match self {
+            RegexOperator::Acceptor(x) => x.to_string(),
+            RegexOperator::Star(regex_operator) => format!("({})*", regex_operator.to_string()),
+            RegexOperator::Concat(regex_operator, regex_operator1) => format!(
+                "{}{}",
+                regex_operator.to_string(),
+                regex_operator1.to_string()
+            ),
+            RegexOperator::Union(regex_operator, regex_operator1) => format!(
+                "({} + {})",
+                regex_operator.to_string(),
+                regex_operator1.to_string()
+            ),
+        }
+    }
+}
+
 //change this to not a new type that also contains information for how it was created
 #[wasm_bindgen]
-pub struct RegexFst(VectorFst<SoundWeight>);
-
+#[derive(Debug)]
+pub struct RegexFst {
+    fst: VectorFst<SoundWeight>,
+    operator: RegexOperator,
+}
 #[wasm_bindgen]
 impl RegexFst {
     pub fn concat(&mut self, other: &RegexFst) {
-        let _ = concat(&mut self.0, &other.0);
+        let _ = concat(&mut self.fst, &other.fst);
     }
     pub fn disjoint(&mut self, other: &RegexFst) {
         // I don't know why I chose a different name but whatever
-        let _ = union(&mut self.0, &other.0);
+        let _ = union(&mut self.fst, &other.fst);
     }
 
     pub fn to_string(&self) -> String {
@@ -51,7 +81,7 @@ impl RegexFst {
             .collect();
 
         let acceptor: SoundVec = acceptor(&v, SoundWeight::one());
-        RegexFst(acceptor)
+        RegexFst { fst: acceptor }
     }
 }
 
@@ -60,6 +90,6 @@ impl RegexFst {
         todo!()
     }
     pub fn regex_cross_product(a: &RegexFst, b: &RegexFst, table: &SymbolTable) -> SoundFst {
-        SoundFst(cross_product(&a.0, &b.0, table))
+        SoundFst(cross_product(&a.fst, &b.fst, table))
     }
 }
