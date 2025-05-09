@@ -1,5 +1,10 @@
 use rustfst::{
-    prelude::{concat::concat, union::union, VectorFst},
+    prelude::{
+        closure::{closure, ClosureType},
+        concat::concat,
+        union::union,
+        VectorFst,
+    },
     utils::acceptor,
     Semiring, SymbolTable,
 };
@@ -71,7 +76,8 @@ impl RegexFst {
 
     //implement the rest later
     pub fn kleen(&mut self) {
-        unimplemented!();
+        let _ = closure(&mut self.fst, ClosureType::ClosureStar);
+        self.operator = RegexOperator::Star(Box::new(self.operator.clone()))
     }
 
     //quetionable interface, maybe I should wrap the table
