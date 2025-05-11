@@ -27,6 +27,16 @@ pub fn create_law(left: &str, right: &str, from: &str, to: &str) -> SoundLaw {
 }
 
 #[wasm_bindgen]
+pub fn create_with_arbitrary_regex_ipa(
+    left: &RegexFst,
+    right: &RegexFst,
+    from: &RegexFst,
+    to: &RegexFst,
+) -> SoundLaw {
+    SoundLaw::create_with_arbitrary_regex(left, right, from, to, &ipa())
+}
+
+#[wasm_bindgen]
 pub fn create_law_ipa(left: &str, right: &str, from: &str, to: &str) -> SoundLaw {
     let table = ipa();
 
@@ -77,24 +87,6 @@ pub fn create_with_disjunctions_ipa(
         right.0,
         &table,
     )
-}
-
-#[wasm_bindgen]
-pub fn create_with_arbitrary_regex(
-    left: &RegexFst,
-    right: &RegexFst,
-    from: &RegexFst,
-    to: &RegexFst,
-) -> SoundLaw {
-    // let latin = lower_case_latin();
-    let table = ipa();
-
-    let transform: SoundFst = RegexFst::regex_cross_product(from, to, &&table);
-
-    let replace_fst =
-        transform.replace_in_context(left.to_sound_fst(), right.to_sound_fst(), false, &table);
-
-    todo!()
 }
 
 //old functoin
