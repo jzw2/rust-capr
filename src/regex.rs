@@ -2,6 +2,7 @@ use rustfst::{
     prelude::{
         closure::{closure, ClosureType},
         concat::concat,
+        optimize,
         union::union,
         VectorFst,
     },
@@ -71,7 +72,7 @@ impl RegexFst {
 
     pub fn to_string(&self) -> String {
         // I don't know why I chose a different name but whatever
-        "implement this later".into()
+        self.operator.to_string()
     }
 
     //implement the rest later
@@ -104,7 +105,9 @@ impl RegexFst {
 
 impl RegexFst {
     pub fn to_sound_fst(&self) -> SoundFst {
-        todo!()
+        let mut inner_fst = self.fst.clone();
+        optimize(&mut inner_fst).unwrap();
+        SoundFst(inner_fst)
     }
     pub fn regex_cross_product(a: &RegexFst, b: &RegexFst, table: &SymbolTable) -> SoundFst {
         SoundFst(cross_product(&a.fst, &b.fst, table))
