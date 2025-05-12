@@ -374,7 +374,7 @@ pub fn soundlaw_xsampa_to_ipa(s: &str) -> String {
 mod tests {
     use rustfst::symt;
 
-    use crate::tables::xsampa_ascii;
+    use crate::tables::{ipa, xsampa_ascii};
 
     use super::*;
 
@@ -520,5 +520,18 @@ mod tests {
         let law =
             SoundLaw::new_with_vec_context("h_2", "a", fst.clone(), fst.clone(), &symbol_tabl);
         assert_eq!(law.transduce_text("ph_2ter")[0], "p a t e r");
+    }
+
+    #[test]
+    fn arbitrary_regex_test_simple1() {
+        let table = ipa();
+        let a = RegexFst::new_from_ipa("a".into());
+        let b = RegexFst::new_from_ipa("b".into());
+        let x = RegexFst::new_from_ipa("x".into());
+        let y = RegexFst::new_from_ipa("y".into());
+        let law = SoundLaw::create_with_arbitrary_regex(&a, &b, &x, &y, &table);
+        let transduced = law.transduce_text("axb");
+        assert_eq!(transduced.len(), 1);
+        assert_ne!(transduced[0], "ayb");
     }
 }

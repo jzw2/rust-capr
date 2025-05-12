@@ -106,7 +106,7 @@ impl RegexFst {
 impl RegexFst {
     pub fn to_sound_fst(&self) -> SoundFst {
         let mut inner_fst = self.fst.clone();
-        optimize(&mut inner_fst).unwrap();
+        optimize(&mut inner_fst).unwrap(); // don't want a repeat of last time
         SoundFst(inner_fst)
     }
     pub fn regex_cross_product(a: &RegexFst, b: &RegexFst, table: &SymbolTable) -> SoundFst {
