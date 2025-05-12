@@ -28,11 +28,11 @@ fn any_to_single_label(table: &SymbolTable, single_label: Label) -> SoundVec {
                 .unwrap();
         }
     }
-    fst.draw(
-        format!("images/{}.dot", "single_label"),
-        &DrawingConfig::default(),
-    )
-    .unwrap();
+    // fst.draw(
+    //     format!("images/{}.dot", "single_label"),
+    //     &DrawingConfig::default(),
+    // )
+    // .unwrap();
     println!("{:?}", fst);
 
     fst
@@ -99,18 +99,18 @@ pub fn cross_product(a: &SoundVec, b: &SoundVec, table: &SymbolTable) -> SoundVe
     optimize(&mut epsilon_to_mark).unwrap();
     optimize(&mut mark_to_any).unwrap();
     optimize(&mut mark_to_epsilon).unwrap();
-    any_to_mark
-        .draw(format!("images/{}.dot", "atm"), &DrawingConfig::default())
-        .unwrap();
-    epsilon_to_mark
-        .draw(format!("images/{}.dot", "etm"), &DrawingConfig::default())
-        .unwrap();
-    mark_to_any
-        .draw(format!("images/{}.dot", "mta"), &DrawingConfig::default())
-        .unwrap();
-    mark_to_epsilon
-        .draw(format!("images/{}.dot", "mte"), &DrawingConfig::default())
-        .unwrap();
+    // any_to_mark
+    //     .draw(format!("images/{}.dot", "atm"), &DrawingConfig::default())
+    //     .unwrap();
+    // epsilon_to_mark
+    //     .draw(format!("images/{}.dot", "etm"), &DrawingConfig::default())
+    //     .unwrap();
+    // mark_to_any
+    //     .draw(format!("images/{}.dot", "mta"), &DrawingConfig::default())
+    //     .unwrap();
+    // mark_to_epsilon
+    //     .draw(format!("images/{}.dot", "mte"), &DrawingConfig::default())
+    //     .unwrap();
 
     tr_sort(&mut any_to_mark, ILabelCompare {});
     // called a1 in hfst
@@ -130,8 +130,8 @@ pub fn cross_product(a: &SoundVec, b: &SoundVec, table: &SymbolTable) -> SoundVe
 
     let mut ret: SoundVec = compose(left, right).unwrap();
     optimize(&mut ret).unwrap();
-    ret.draw(format!("images/{}.dot", "ret"), &DrawingConfig::default())
-        .unwrap();
+    // ret.draw(format!("images/{}.dot", "ret"), &DrawingConfig::default())
+    //     .unwrap();
     ret
 }
 
