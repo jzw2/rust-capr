@@ -43,8 +43,8 @@ export abstract class CMessage {
   abstract updateState(state: State): State;
 }
 
-type SoundClass = {
-  type: "Disjunction" | "Concat";
+export type SoundClass = {
+  type: RegexType;
   name: string;
   sounds: string[];
 };

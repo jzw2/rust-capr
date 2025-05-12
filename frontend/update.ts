@@ -1,46 +1,60 @@
 import { sendMessage } from "..";
 import {
+  create_with_arbitrary_regex_ipa,
   create_with_disjunctions,
   Disjunction,
   SoundLawComposition,
+  RegexFst,
+  SoundLaw,
 } from "../pkg/rust_capr";
-import { Message, State, SoundLawInput, AddSoundLaw } from "./types";
+import {
+  Message,
+  State,
+  SoundLawInput,
+  AddSoundLaw,
+  SoundClassName,
+  SoundClass,
+} from "./types";
+
+const disjoint_to_regex = (
+  input: string | SoundClassName,
+  soundClasses: SoundClass[],
+): RegexFst => {
+  let output: RegexFst;
+  if (typeof input == "string") {
+    output = RegexFst.new_from_ipa(input);
+  } else {
+    let x = soundClasses.find((sound_class) => sound_class.name == input.name);
+    // well, I should probably error handle shouldn't I
+    if (x) {
+      // left = x.sounds;
+      let regexfsts = x.sounds.map((sound) => RegexFst.new_from_ipa(sound));
+      output = regexfsts[0]; // should check to make sure it is not emty
+      regexfsts.slice(1).forEach((r) => output.disjoint(r)); //theoritcally works by doing dijsoint with self, but rust prevents this
+    } else {
+      // probably should do better error chekcing
+      output = RegexFst.new_from_ipa("");
+    }
+  }
+  return output;
+};
 
 // Creating sound laws take a decent amout of time
 export const updateLaw = async (
   message: AddSoundLaw,
   state: State,
 ): Promise<Message> => {
-  let left: string[] = [];
-  let right: string[] = [];
+  let left: RegexFst;
+  let right: RegexFst;
   let oldLeft = message.law.left;
-  if (typeof oldLeft == "string") {
-    left = [oldLeft];
-  } else {
-    let x = state.soundClasses.find(
-      (sound_class) => sound_class.name == oldLeft.name,
-    );
-    if (x) {
-      left = x.sounds;
-    }
-  }
+  //great consistency in naming
   let oldright = message.law.right;
-  if (typeof oldright == "string") {
-    right = [oldright];
-  } else {
-    let x = state.soundClasses.find(
-      (sound_class) => sound_class.name == oldright.name,
-    );
-    if (x) {
-      right = x.sounds;
-    }
-  }
-  const law = create_with_disjunctions(
-    Disjunction.new(left),
-    Disjunction.new(right),
-    message.law.from,
-    message.law.to,
-  );
+  left = disjoint_to_regex(oldLeft, state.soundClasses);
+  right = disjoint_to_regex(oldright, state.soundClasses);
+  let from = RegexFst.new_from_ipa(message.law.from); // account for when doing a sound law later
+  let to = RegexFst.new_from_ipa(message.law.to); // account for when doing a sound law later
+
+  let law = create_with_arbitrary_regex_ipa(left, right, from, to);
   state.laws.push(law);
   state.composition.add_law(law); // mentions that null pointer passed to rust
   console.log("Finished computation");
@@ -161,7 +175,7 @@ export const update = (message: Message, state: State): State => {
     state.regexType = message.regex;
   } else if (message.type === "AddSoundClass") {
     state.soundClasses.push({
-      type: "Disjunction",
+      type: message.regex,
       name: message.name,
       sounds: message.sounds,
     });
