@@ -5,7 +5,6 @@ use regex::RegexFst;
 use tables::{ipa, xsampa_ascii};
 use wasm_bindgen::prelude::*;
 
-mod character_class;
 mod cross_product;
 mod negate;
 mod regex;
