@@ -3,16 +3,11 @@ use core::panic;
 use rustfst::{
     prelude::{
         closure::closure, compose::compose, concat::concat, invert, optimize, tr_sort,
-        ILabelCompare, MutableFst, OLabelCompare, SerializableFst,
-    },
-    DrawingConfig, Label, Semiring, SymbolTable, EPS_LABEL,
+        ILabelCompare, MutableFst, OLabelCompare,
+    }, Label, Semiring, SymbolTable, EPS_LABEL,
 };
 
-use crate::{
-    regex::RegexFst,
-    sound_law::SoundLaw,
-    trans::{SoundFst, SoundVec, SoundWeight},
-};
+use crate::trans::{SoundVec, SoundWeight};
 
 fn any_to_single_label(table: &SymbolTable, single_label: Label) -> SoundVec {
     //table should not have the mark in it

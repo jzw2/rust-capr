@@ -13,8 +13,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::{
     cross_product::cross_product,
-    sound_law::SoundLaw,
-    tables::{ipa, xsampa_ascii},
+    tables::ipa,
     trans::{SoundFst, SoundVec, SoundWeight},
 };
 
@@ -77,7 +76,7 @@ impl RegexFst {
 
     //implement the rest later
     pub fn kleen(&mut self) {
-        let _ = closure(&mut self.fst, ClosureType::ClosureStar);
+        closure(&mut self.fst, ClosureType::ClosureStar);
         self.operator = RegexOperator::Star(Box::new(self.operator.clone()))
     }
 

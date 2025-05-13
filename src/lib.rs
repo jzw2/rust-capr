@@ -15,7 +15,7 @@ mod trans;
 
 use rustfst::prelude::VectorFst;
 use sound_law::SoundLaw;
-use trans::{SoundFst, SoundWeight};
+use trans::SoundWeight;
 
 #[wasm_bindgen]
 pub fn create_law(left: &str, right: &str, from: &str, to: &str) -> SoundLaw {
