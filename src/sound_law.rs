@@ -394,7 +394,6 @@ mod tests {
         let law = SoundLaw::new("ca", "d", "ca", "c", &symbol_tabl);
 
         // let input1: SoundVec = fst![3, 1, 3, 1, 3, 1, 3]; // "cacacac"
-        let fst = law.get_fst();
 
         let transduced = law.transduce_text("cacacac");
 

@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use rustfst::{
     prelude::{
         closure::{closure, ClosureType},
@@ -25,22 +27,19 @@ enum RegexOperator {
     Union(Box<RegexOperator>, Box<RegexOperator>), // empty may be uneeded?
 }
 
-impl RegexOperator {
-    fn to_string(&self) -> String {
-        match self {
+impl Display for RegexOperator {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        let s = match self {
             RegexOperator::Acceptor(x) => x.to_string(),
-            RegexOperator::Star(regex_operator) => format!("({})*", regex_operator.to_string()),
-            RegexOperator::Concat(regex_operator, regex_operator1) => format!(
-                "{}{}",
-                regex_operator.to_string(),
-                regex_operator1.to_string()
-            ),
-            RegexOperator::Union(regex_operator, regex_operator1) => format!(
-                "({} + {})",
-                regex_operator.to_string(),
-                regex_operator1.to_string()
-            ),
-        }
+            RegexOperator::Star(regex_operator) => format!("({})*", regex_operator),
+            RegexOperator::Concat(regex_operator, regex_operator1) => {
+                format!("{}{}", regex_operator, regex_operator1)
+            }
+            RegexOperator::Union(regex_operator, regex_operator1) => {
+                format!("({} + {})", regex_operator, regex_operator1)
+            }
+        };
+        write!(f, "{}", s)
     }
 }
 
@@ -69,11 +68,6 @@ impl RegexFst {
         )
     }
 
-    pub fn to_string(&self) -> String {
-        // I don't know why I chose a different name but whatever
-        self.operator.to_string()
-    }
-
     //implement the rest later
     pub fn kleen(&mut self) {
         closure(&mut self.fst, ClosureType::ClosureStar);
@@ -99,6 +93,13 @@ impl RegexFst {
             fst: acceptor,
             operator: RegexOperator::Acceptor(s),
         }
+    }
+}
+
+impl Display for RegexFst {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        // I don't know why I chose a different name but whatever
+        write!(f, "{}", self.operator)
     }
 }
 
