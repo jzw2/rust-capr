@@ -133,7 +133,16 @@ impl SoundFst {
     pub fn df(&self, s: &str) {
         if DEBUG {
             self.0
-                .draw(format!("images/{}.dot", s), &DrawingConfig::default())
+                .draw(
+                    format!("images/{}.dot", s),
+                    &DrawingConfig {
+                        // acceptor: true,
+                        show_weight_one: false,
+                        print_weight: false,
+
+                        ..DrawingConfig::default()
+                    },
+                )
                 .unwrap()
         }
     }
@@ -472,6 +481,7 @@ impl SoundFst {
         result.compose(&rbt);
         println!("done");
         result.df("compose_rbt");
+        result.optimize();
 
         if optional {
             todo!()

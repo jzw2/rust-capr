@@ -170,6 +170,7 @@ mod tests {
         project(&mut composed_fst, ProjectType::ProjectOutput);
 
         let output_strings: Vec<_> = composed_fst.paths_iter().collect();
+        assert_eq!(output_strings.len(), 1);
         let expected_output_labels = vec![[2]];
 
         assert_eq!(
