@@ -116,9 +116,11 @@ impl SoundLaw {
 
         let transform: SoundFst = RegexFst::regex_cross_product(from, to, table);
 
+        transform.df("cross_product");
         let replace_fst =
             transform.replace_in_context(left.to_sound_fst(), right.to_sound_fst(), false, table);
 
+        replace_fst.df("all_regex");
         SoundLaw {
             from: left.to_string(),
             to: to.to_string(),
@@ -526,6 +528,8 @@ mod tests {
     fn arbitrary_regex_test_simple1() {
         let table = ipa();
         let a = RegexFst::new_from_ipa("a".into());
+        a.to_sound_fst().df("regex");
+
         let b = RegexFst::new_from_ipa("b".into());
         let x = RegexFst::new_from_ipa("x".into());
         let y = RegexFst::new_from_ipa("y".into());
