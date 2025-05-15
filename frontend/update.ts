@@ -16,29 +16,6 @@ import {
   SoundClass,
 } from "./types";
 
-const disjoint_to_regex = (
-  input: string | SoundClassName,
-  soundClasses: SoundClass[],
-): RegexFst => {
-  let output: RegexFst;
-  if (typeof input == "string") {
-    output = RegexFst.new_from_ipa(input);
-  } else {
-    let x = soundClasses.find((sound_class) => sound_class.name == input.name);
-    // well, I should probably error handle shouldn't I
-    if (x) {
-      // left = x.sounds;
-      let regexfsts = x.sounds.map((sound) => RegexFst.new_from_ipa(sound));
-      output = regexfsts[0]; // should check to make sure it is not emty
-      regexfsts.slice(1).forEach((r) => output.disjoint(r)); //theoritcally works by doing dijsoint with self, but rust prevents this
-    } else {
-      // probably should do better error chekcing
-      output = RegexFst.new_from_ipa("");
-    }
-  }
-  return output;
-};
-
 // Creating sound laws take a decent amout of time
 export const updateLaw = async (
   message: AddSoundLaw,
@@ -49,8 +26,20 @@ export const updateLaw = async (
   let oldLeft = message.law.left;
   //great consistency in naming
   let oldright = message.law.right;
-  left = disjoint_to_regex(oldLeft, state.soundClasses);
-  right = disjoint_to_regex(oldright, state.soundClasses);
+  if (typeof oldLeft == "string") {
+    left = RegexFst.new_from_ipa(oldLeft);
+  } else {
+    left = state.soundClasses.find(
+      (soundClass) => soundClass.name == oldLeft.name,
+    )!.fst;
+  }
+  if (typeof oldright == "string") {
+    right = RegexFst.new_from_ipa(oldright);
+  } else {
+    right = state.soundClasses.find(
+      (soundClass) => soundClass.name == oldright.name,
+    )!.fst;
+  }
   let from = RegexFst.new_from_ipa(message.law.from); // account for when doing a sound law later
   let to = RegexFst.new_from_ipa(message.law.to); // account for when doing a sound law later
 
@@ -174,10 +163,33 @@ export const update = (message: Message, state: State): State => {
   } else if (message.type === "ChangeRegexType") {
     state.regexType = message.regex;
   } else if (message.type === "AddSoundClass") {
+    let regexType = message.regex;
+    let fst: RegexFst;
+    if (regexType.type == "Disjunction") {
+      let regexfsts = message.sounds.map((sound) =>
+        RegexFst.new_from_ipa(sound),
+      );
+      fst = regexfsts[0]; // should check to make sure it is not emty
+      regexfsts.slice(1).forEach((r) => fst.disjoint(r)); //theoritcally works by doing dijsoint with self, but rust prevents this
+    } else if (regexType.type == "Concat") {
+      let regexfsts = message.sounds.map(
+        (sound) =>
+          // todo fix this
+          state.soundClasses.find((soundClass) => soundClass.name == sound)!
+            .fst,
+      );
+      fst = regexfsts[0]; // should check to make sure it is not emty
+      regexfsts.slice(1).forEach((r) => fst.concat(r)); //theoritcally works by doing dijsoint with self, but rust prevents this
+    } else {
+      // todo! fix this
+      fst = RegexFst.new_from_ipa("error");
+    }
+
     state.soundClasses.push({
       type: message.regex,
       name: message.name,
       sounds: message.sounds,
+      fst: fst,
     });
   } else {
     //whatever

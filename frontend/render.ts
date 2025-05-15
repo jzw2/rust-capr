@@ -108,8 +108,8 @@ export const renderInit = () => {
       sendMessage({
         type: "AddSoundClass",
         regex: { type: "Concat" },
-        name: namePhonemes.value,
-        sounds: inputPhonemes.value.split(" "),
+        name: nameConcat.value,
+        sounds: inputConcat.value.split(" "),
       });
     }
   });

@@ -1,4 +1,4 @@
-import { SoundLaw, SoundLawComposition } from "../pkg/rust_capr";
+import { RegexFst, SoundLaw, SoundLawComposition } from "../pkg/rust_capr";
 
 export type AddSoundLaw = {
   type: "AddSoundLaw";
@@ -47,6 +47,7 @@ export type SoundClass = {
   type: RegexType;
   name: string;
   sounds: string[];
+  fst: RegexFst;
 };
 
 //todo: refactor so it isn't so big
