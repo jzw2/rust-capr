@@ -1,4 +1,5 @@
 import { SoundLaw, SoundLawComposition } from "../pkg/rust_capr";
+import { CreateSoundLaw } from "./CreateSoundLaw";
 import { FileArea } from "./FileArea";
 import { DragType, RegexType, SoundClass, SoundLawInput } from "./types";
 
@@ -16,11 +17,13 @@ export class Main {
   drag: DragType;
 
   fileArea: FileArea;
+  createSoundLaw: CreateSoundLaw;
 
   constructor() {
     this.composition = SoundLawComposition.new();
 
     this.fileArea = new FileArea(this, this.composition);
+    this.createSoundLaw = new CreateSoundLaw();
   }
 
   transduce() {
