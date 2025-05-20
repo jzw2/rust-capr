@@ -13,9 +13,11 @@ class FileArea {
   tableHeader: HTMLTableRowElement;
 
   parent: Main;
-  constructor(parent: Main) {
+  constructor(parent: Main, transducer: SoundLawComposition) {
+    this.tranducer = transducer;
+    this.parent = parent;
     this.table = document.getElementById("file-inputs") as HTMLTableRowElement;
-    let tableHeader = document.getElementById(
+    this.tableHeader = document.getElementById(
       "file-headers",
     ) as HTMLTableRowElement;
 
@@ -57,34 +59,35 @@ class FileArea {
       this.tranducer.transduce_text(s),
     );
 
-    const transpose = transduced[0].map((_, index) =>
-      transduced.map((row) => {
-        if (!row[index]) {
-          return "";
-        }
-        return soundlaw_xsampa_to_ipa(row[index].replaceAll(" ", ""));
-      }),
-    );
+    if (transduced[0]) {
+      const transpose = transduced[0].map((_, index) =>
+        transduced.map((row) => {
+          if (!row[index]) {
+            return "";
+          }
+          return soundlaw_xsampa_to_ipa(row[index].replaceAll(" ", ""));
+        }),
+      );
 
-    transpose.forEach((row) => {
-      const htmlRow = document.createElement("tr");
-      row.forEach((col) => {
-        const item = document.createElement("td");
-        item.textContent = col;
-        htmlRow.appendChild(item);
+      const newChildren = transpose.map((r) => {
+        const row = document.createElement("tr");
+
+        const rowElements = r.map((d) => {
+          const data = document.createElement("td");
+          data.innerText = soundlaw_xsampa_to_ipa(d);
+          return data;
+        });
+        row.append(...rowElements);
+        return row;
       });
-      body.append(htmlRow);
-    });
-    let newChildren = this.fileStrings.map((text) => {
-      const elem = document.createElement("tr");
-      elem.textContent = soundlaw_xsampa_to_ipa(text);
-      return elem;
-    });
-    body.replaceChildren(...newChildren);
+      body.replaceChildren(...newChildren);
+    } else {
+      body.replaceChildren();
+    }
   }
 }
 
-class Main {
+export class Main {
   soundClasses: SoundClass[];
   isLoading: boolean;
   soundLawInputs: SoundLawInput[];
@@ -100,7 +103,9 @@ class Main {
   fileArea: FileArea;
 
   constructor() {
-    this.fileArea = new FileArea(this);
+    this.composition = SoundLawComposition.new();
+
+    this.fileArea = new FileArea(this, this.composition);
   }
 
   transduce() {
