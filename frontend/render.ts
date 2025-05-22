@@ -34,8 +34,8 @@ export const renderInit = () => {
     const rightSelect = document.querySelector(
       "#right-select",
     ) as HTMLInputElement;
-    let l: string | SoundClassName = left.value;
-    let r: string | SoundClassName = right.value;
+    let l: string | SoundClassName = soundlaw_xsampa_to_ipa(left.value);
+    let r: string | SoundClassName = soundlaw_xsampa_to_ipa(right.value);
     if (leftSelect.value !== "") {
       l = { name: leftSelect.value };
     }
@@ -47,8 +47,8 @@ export const renderInit = () => {
       law: {
         left: l,
         right: r,
-        from: from.value,
-        to: to.value,
+        from: soundlaw_xsampa_to_ipa(from.value),
+        to: soundlaw_xsampa_to_ipa(to.value),
       },
     });
   });
@@ -94,7 +94,9 @@ export const renderInit = () => {
         type: "AddSoundClass",
         regex: { type: "Disjunction" },
         name: namePhonemes.value,
-        sounds: inputPhonemes.value.split(" "),
+        sounds: inputPhonemes.value
+          .split(" ")
+          .map((p) => soundlaw_xsampa_to_ipa(p)),
       });
     }
 
