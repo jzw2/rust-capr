@@ -16,6 +16,7 @@ pub fn ipa() -> SymbolTable {
         .collect();
 
     table.add_symbols(spacing);
+    table.add_symbol(" "); //becuase it's annoying when I make a typo
     table
 }
 
