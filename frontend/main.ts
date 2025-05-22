@@ -18,15 +18,26 @@ export class Main {
 
   fileArea: FileArea;
   createSoundLaw: CreateSoundLaw;
+  loadingScreen: HTMLElement;
 
   constructor() {
     this.composition = SoundLawComposition.new();
 
     this.fileArea = new FileArea(this, this.composition);
-    this.createSoundLaw = new CreateSoundLaw();
+    this.createSoundLaw = new CreateSoundLaw(this);
+
+    this.loadingScreen = document.getElementById("loading")!;
   }
 
   transduce() {
     this.fileArea.transduce();
+  }
+
+  displayLoadingScreen(loading: boolean) {
+    if (loading) {
+      this.loadingScreen.style.display = "block";
+    } else {
+      this.loadingScreen.style.display = "none";
+    }
   }
 }
