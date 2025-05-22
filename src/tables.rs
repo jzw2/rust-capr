@@ -11,6 +11,11 @@ pub fn ipa() -> SymbolTable {
         .collect();
 
     table.add_symbols(chars);
+    let spacing: Vec<String> = (0x02B0..=0x02FF) // ipa section in unicode
+        .map(|x| char::from_u32(x).unwrap().to_string())
+        .collect();
+
+    table.add_symbols(spacing);
     table
 }
 
