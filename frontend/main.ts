@@ -32,10 +32,11 @@ export class Main {
     this.soundClassesMap = new Map<string, RegexFst>();
     this.composition = SoundLawComposition.new();
 
-    this.fileArea = new FileArea(this.transduce, this.composition);
+    // javascript is so stupid, so I have to use () => this.transduce
+    this.fileArea = new FileArea(() => this.transduce(), this.composition);
     this.createSoundLaw = new CreateSoundLaw(
       () => this.displayLoadingScreen(true),
-      this.addSoundLaw,
+      (a, b, c, d) => this.addSoundLaw(a, b, c, d),
       this.soundClassesMap,
     );
 
