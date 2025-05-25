@@ -1,3 +1,4 @@
+import { RegexFst } from "../pkg/rust_capr";
 import { Main } from "./main";
 import { SoundClassName } from "./types";
 
@@ -11,7 +12,9 @@ export class CreateSoundLaw {
   leftSelect: HTMLInputElement;
   rightSelect: HTMLInputElement;
   parent: Main;
-  constructor(parent: Main) {
+  soundClasses: Map<string, RegexFst>;
+  constructor(parent: Main, soundClasses: Map<String, RegexFst>) {
+    this.soundClasses = soundClasses;
     this.parent = parent;
     this.left = document.getElementById("left-input") as HTMLInputElement;
     this.right = document.getElementById("right-input") as HTMLInputElement;
@@ -29,21 +32,34 @@ export class CreateSoundLaw {
     ) as HTMLButtonElement;
 
     this.createButton.addEventListener("click", () => {
-      let l: string | SoundClassName = this.left.value;
-      let r: string | SoundClassName = this.right.value;
-      if (this.leftSelect.value !== "") {
-        l = { name: this.leftSelect.value };
-      }
-      if (this.rightSelect.value !== "") {
-        r = { name: this.rightSelect.value };
-      }
       this.parent.displayLoadingScreen(true);
 
-      // Promise.resolve()
-      //   .then(() => updateLaw(message, state))
-      //   .then((res) => sendMessage(res));
+      let leftRegex: RegexFst;
+      let rightRegex: RegexFst;
+      let fromRegex: RegexFst;
+      let toRegex: RegexFst;
+
+      let l: string | SoundClassName = this.left.value;
+      let r: string | SoundClassName = this.right.value;
+      if (this.leftSelect.value === "") {
+        leftRegex = RegexFst.new_from_ipa(this.left.value);
+      } else {
+        // actually check for undefined
+        leftRegex = soundClasses.get(this.leftSelect.value)!;
+      }
+      if (this.rightSelect.value === "") {
+        rightRegex = RegexFst.new_from_ipa(this.right.value);
+      } else {
+        // actually check for undefined
+        rightRegex = soundClasses.get(this.rightSelect.value)!;
+      }
+
+      fromRegex = RegexFst.new_from_ipa(this.from.value);
+      toRegex = RegexFst.new_from_ipa(this.to.value);
+
       setTimeout(() =>
         // create the new law
+        parent.addSoundLaw(leftRegex, rightRegex, fromRegex, toRegex),
       );
     });
   }

@@ -71,6 +71,7 @@ export type DragType =
   | { type: "NoDrag" }
   | { type: "DraggingOver"; old: number; new: number };
 
+// this needs to be updated to include the fst, which can be anarbitrary regex
 export type SoundLawInput = {
   left: string | SoundClassName;
   right: string | SoundClassName;
