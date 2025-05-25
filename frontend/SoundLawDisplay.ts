@@ -1,6 +1,6 @@
 import { SoundLaw } from "../pkg/rust_capr";
 
-class SoundLawDisplay {
+export class SoundLawDisplay {
   laws: SoundLaw[];
   rulesList: HTMLParagraphElement;
   deleteListner: (index: number) => void;

@@ -6,6 +6,7 @@ import {
 } from "../pkg/rust_capr";
 import { CreateSoundLaw } from "./CreateSoundLaw";
 import { FileArea } from "./FileArea";
+import { SoundLawDisplay } from "./SoundLawDisplay";
 import { DragType, RegexType, SoundClass, SoundLawInput } from "./types";
 
 export class Main {
@@ -26,11 +27,33 @@ export class Main {
   createSoundLaw: CreateSoundLaw;
   loadingScreen: HTMLElement;
   soundClassesMap: Map<string, RegexFst>;
+  soundLawDisplay: SoundLawDisplay;
 
   constructor() {
     this.laws = [];
     this.soundClassesMap = new Map<string, RegexFst>();
     this.composition = SoundLawComposition.new();
+
+    let deleteListener = (index: number) => {
+      this.composition.rm_law(index);
+      this.laws.splice(index, 1);
+      // state.soundLawInputs.splice(message.index, 1);
+      this.transduce();
+    };
+
+    let rearrangeListener = (from: number, to: number) {
+      const oldIndex = from;
+    const newIndex = to;
+          // const [movedInput] = this.soundLawInputs.splice(oldIndex, 1);
+          const [movedLaw] = this.laws.splice(oldIndex, 1);
+          this.laws.splice(newIndex, 0, movedLaw);
+          // this.soundLawInputs.splice(newIndex, 0, movedInput);
+          this.composition = SoundLawComposition.new();
+          this.laws.forEach((law) => this.composition.add_law(law));
+          this.transduce();
+    }
+
+    this.soundLawDisplay = new SoundLawDisplay(this.laws, deleteListener, rearrangeListener);
 
     // javascript is so stupid, so I have to use () => this.transduce
     this.fileArea = new FileArea(() => this.transduce(), this.composition);
