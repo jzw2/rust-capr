@@ -52,9 +52,12 @@ export class Main {
       const [movedLaw] = this.laws.splice(oldIndex, 1);
       this.laws.splice(newIndex, 0, movedLaw);
       // this.soundLawInputs.splice(newIndex, 0, movedInput);
-      this.composition = SoundLawComposition.new();
+      this.composition.clear();
+
+      //probably not that that efficient
       this.laws.forEach((law) => this.composition.add_law(law));
       this.transduce();
+      this.soundLawDisplay.render();
     };
 
     this.soundLawDisplay = new SoundLawDisplay(
