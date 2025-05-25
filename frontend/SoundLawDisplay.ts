@@ -20,6 +20,9 @@ export class SoundLawDisplay {
     ) as HTMLParagraphElement;
   }
   render() {
+    this.rulesList.replaceChildren();
+    // console.log(this.laws);
+
     this.laws.forEach((x, index) => {
       let left = x.get_left_context();
       let right = x.get_right_context();

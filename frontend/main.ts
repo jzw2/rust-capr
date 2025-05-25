@@ -6,6 +6,7 @@ import {
 } from "../pkg/rust_capr";
 import { CreateSoundLaw } from "./CreateSoundLaw";
 import { FileArea } from "./FileArea";
+import { ForwardBackwards } from "./ForwardBackwards";
 import { SoundLawDisplay } from "./SoundLawDisplay";
 import { DragType, RegexType, SoundClass, SoundLawInput } from "./types";
 
@@ -28,11 +29,13 @@ export class Main {
   loadingScreen: HTMLElement;
   soundClassesMap: Map<string, RegexFst>;
   soundLawDisplay: SoundLawDisplay;
+  forwardBackwards: ForwardBackwards;
 
   constructor() {
     this.laws = [];
     this.soundClassesMap = new Map<string, RegexFst>();
     this.composition = SoundLawComposition.new();
+    this.forwardBackwards = new ForwardBackwards(this.composition);
 
     let deleteListener = (index: number) => {
       this.composition.rm_law(index);
@@ -41,25 +44,33 @@ export class Main {
       this.transduce();
     };
 
-    let rearrangeListener = (from: number, to: number) {
+    let rearrangeListener = (from: number, to: number) => {
       const oldIndex = from;
-    const newIndex = to;
-          // const [movedInput] = this.soundLawInputs.splice(oldIndex, 1);
-          const [movedLaw] = this.laws.splice(oldIndex, 1);
-          this.laws.splice(newIndex, 0, movedLaw);
-          // this.soundLawInputs.splice(newIndex, 0, movedInput);
-          this.composition = SoundLawComposition.new();
-          this.laws.forEach((law) => this.composition.add_law(law));
-          this.transduce();
-    }
+      const newIndex = to;
+      // const [movedInput] = this.soundLawInputs.splice(oldIndex, 1);
+      const [movedLaw] = this.laws.splice(oldIndex, 1);
+      this.laws.splice(newIndex, 0, movedLaw);
+      // this.soundLawInputs.splice(newIndex, 0, movedInput);
+      this.composition = SoundLawComposition.new();
+      this.laws.forEach((law) => this.composition.add_law(law));
+      this.transduce();
+    };
 
-    this.soundLawDisplay = new SoundLawDisplay(this.laws, deleteListener, rearrangeListener);
+    this.soundLawDisplay = new SoundLawDisplay(
+      this.laws,
+      deleteListener,
+      rearrangeListener,
+    );
 
     // javascript is so stupid, so I have to use () => this.transduce
     this.fileArea = new FileArea(() => this.transduce(), this.composition);
     this.createSoundLaw = new CreateSoundLaw(
       () => this.displayLoadingScreen(true),
-      (a, b, c, d) => this.addSoundLaw(a, b, c, d),
+      (a, b, c, d) => {
+        this.addSoundLaw(a, b, c, d);
+        this.displayLoadingScreen(false);
+        this.soundLawDisplay.render();
+      },
       this.soundClassesMap,
     );
 
@@ -68,6 +79,7 @@ export class Main {
 
   transduce() {
     this.fileArea.transduce();
+    this.forwardBackwards.transduce();
   }
 
   displayLoadingScreen(loading: boolean) {

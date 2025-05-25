@@ -1,13 +1,14 @@
 import { soundlaw_xsampa_to_ipa, SoundLawComposition } from "../pkg/rust_capr";
 
 // probably not the most descriptive name
-class ForwardBackwards {
+export class ForwardBackwards {
   input: HTMLInputElement;
   backwards: HTMLInputElement;
   output: HTMLParagraphElement;
   backwardsOutput: HTMLParagraphElement;
   composition: SoundLawComposition;
-  constructor() {
+  constructor(composition: SoundLawComposition) {
+    this.composition = composition;
     this.input = document.getElementById("input") as HTMLInputElement;
     this.backwards = document.getElementById("backward") as HTMLInputElement;
     this.output = document.getElementById("output") as HTMLParagraphElement;
