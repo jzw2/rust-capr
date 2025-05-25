@@ -94,6 +94,10 @@ impl RegexFst {
             operator: RegexOperator::Acceptor(s),
         }
     }
+
+    pub fn string_form(&self) -> String {
+        self.to_string()
+    }
 }
 
 impl Display for RegexFst {
