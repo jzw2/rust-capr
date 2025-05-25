@@ -42,6 +42,7 @@ export class Main {
       this.laws.splice(index, 1);
       // state.soundLawInputs.splice(message.index, 1);
       this.transduce();
+      this.soundLawDisplay.render();
     };
 
     let rearrangeListener = (from: number, to: number) => {
