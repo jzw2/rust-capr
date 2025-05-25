@@ -2,6 +2,8 @@ import { RegexFst } from "../pkg/rust_capr";
 import { Main } from "./main";
 import { SoundClassName } from "./types";
 
+type NewType = void;
+
 export class CreateSoundLaw {
   left: HTMLInputElement;
   right: HTMLInputElement;
@@ -11,11 +13,28 @@ export class CreateSoundLaw {
 
   leftSelect: HTMLInputElement;
   rightSelect: HTMLInputElement;
-  parent: Main;
   soundClasses: Map<string, RegexFst>;
-  constructor(parent: Main, soundClasses: Map<String, RegexFst>) {
+  setLoadingListener: () => void;
+  createSoundLawListner: (
+    arg0: RegexFst,
+    arg1: RegexFst,
+    arg2: RegexFst,
+    arg3: RegexFst,
+  ) => void;
+
+  constructor(
+    setLoadingListiner: () => void,
+    createSoundLawListner: (
+      arg0: RegexFst,
+      arg1: RegexFst,
+      arg2: RegexFst,
+      arg3: RegexFst,
+    ) => void,
+    soundClasses: Map<string, RegexFst>,
+  ) {
+    this.createSoundLawListner = createSoundLawListner;
+    this.setLoadingListener = setLoadingListiner;
     this.soundClasses = soundClasses;
-    this.parent = parent;
     this.left = document.getElementById("left-input") as HTMLInputElement;
     this.right = document.getElementById("right-input") as HTMLInputElement;
     this.to = document.getElementById("to") as HTMLInputElement;
@@ -32,7 +51,7 @@ export class CreateSoundLaw {
     ) as HTMLButtonElement;
 
     this.createButton.addEventListener("click", () => {
-      this.parent.displayLoadingScreen(true);
+      this.setLoadingListener();
 
       let leftRegex: RegexFst;
       let rightRegex: RegexFst;
@@ -59,7 +78,7 @@ export class CreateSoundLaw {
 
       setTimeout(() =>
         // create the new law
-        parent.addSoundLaw(leftRegex, rightRegex, fromRegex, toRegex),
+        this.createSoundLawListner(leftRegex, rightRegex, fromRegex, toRegex),
       );
     });
   }

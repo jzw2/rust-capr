@@ -32,8 +32,12 @@ export class Main {
     this.soundClassesMap = new Map<string, RegexFst>();
     this.composition = SoundLawComposition.new();
 
-    this.fileArea = new FileArea(this, this.composition);
-    this.createSoundLaw = new CreateSoundLaw(this, this.soundClassesMap);
+    this.fileArea = new FileArea(this.transduce, this.composition);
+    this.createSoundLaw = new CreateSoundLaw(
+      () => this.displayLoadingScreen(true),
+      this.addSoundLaw,
+      this.soundClassesMap,
+    );
 
     this.loadingScreen = document.getElementById("loading")!;
   }

@@ -7,11 +7,11 @@ export class FileArea {
   tranducer: SoundLawComposition;
   table: HTMLTableRowElement;
   tableHeader: HTMLTableRowElement;
+  transduceListner: () => void;
 
-  parent: Main;
-  constructor(parent: Main, transducer: SoundLawComposition) {
+  constructor(transduceListener: () => void, transducer: SoundLawComposition) {
+    this.transduceListner = transduceListener;
     this.tranducer = transducer;
-    this.parent = parent;
     this.table = document.getElementById("file-inputs") as HTMLTableRowElement;
     this.tableHeader = document.getElementById(
       "file-headers",
@@ -27,7 +27,7 @@ export class FileArea {
 
         this.fileStrings = text.split("\n").filter((x) => x !== "");
 
-        this.parent.transduce();
+        this.transduceListner();
         this.renderHeader();
       } else {
         this.fileStrings = [];
