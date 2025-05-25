@@ -122,10 +122,10 @@ impl SoundLaw {
 
         replace_fst.df("all_regex");
         SoundLaw {
-            from: left.to_string(),
+            from: from.to_string(),
             to: to.to_string(),
-            left_context: from.to_string(),
-            right_context: to.to_string(),
+            left_context: left.to_string(),
+            right_context: right.to_string(),
             fst: replace_fst,
             table: table.clone(),
         }
