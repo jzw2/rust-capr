@@ -1,3 +1,4 @@
+import { RegexFst } from "../pkg/rust_capr";
 import { RegexType } from "./types";
 
 export class SoundClassArea {
@@ -7,8 +8,10 @@ export class SoundClassArea {
   area: HTMLDivElement;
   phonemes: HTMLInputElement; // todo: rename to a better name
   name: HTMLInputElement;
+  soundClassesMap: Map<string, RegexFst>;
 
-  constructor() {
+  constructor(soundClassesMap: Map<string, RegexFst>) {
+    this.soundClassesMap = soundClassesMap;
     this.area = document.querySelector(".sound-class-area") as HTMLDivElement;
     this.regexSelect = document.getElementById("regex") as HTMLSelectElement;
     this.regexType = { type: this.regexSelect.value } as RegexType;
@@ -23,7 +26,40 @@ export class SoundClassArea {
       ".create-sound-class",
     ) as HTMLButtonElement;
     this.createSoundClass.addEventListener("click", () => {
-      alert("Create sound law");
+      let nameValue = this.name.value;
+      let sounds = this.phonemes.value.split(" ");
+      if (this.regexType.type == "Disjunction") {
+        let regexfsts = sounds.map((sound) => RegexFst.new_from_ipa(sound));
+        if (regexfsts.length == 0) {
+          alert("don't make something with empty sounds");
+          return;
+        }
+
+        let fst = regexfsts[0]; // should check to make sure it is not emty
+        regexfsts.slice(1).forEach((r) => fst.disjoint(r)); //theoritcally works by doing dijsoint with self, but rust prevents this
+        this.soundClassesMap.set(nameValue, fst);
+      } else if (this.regexType.type == "Concat") {
+        let bad = false;
+        let regexfsts = sounds.map((sound) => {
+          let f = this.soundClassesMap.get(sound);
+          if (!f) {
+            alert(`Sound class for ${sound} not found`);
+            bad = true;
+            return;
+          }
+          return f;
+        });
+        if (bad) {
+          return;
+        }
+        if (regexfsts.length == 0) {
+          alert("Sound classes was empty");
+          return;
+        }
+        let fst = regexfsts[0]!; // should check to make sure it is not emty
+        regexfsts.slice(1).forEach((r) => fst.concat(r!)); //theoritcally works by doing dijsoint with self, but rust prevents this
+        this.soundClassesMap.set(nameValue, fst);
+      }
     });
   }
 
