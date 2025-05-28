@@ -1,5 +1,4 @@
 import { SoundLawComposition, soundlaw_xsampa_to_ipa } from "../pkg/rust_capr";
-import { Main } from "./main";
 
 export class FileArea {
   uploadFile: HTMLInputElement;

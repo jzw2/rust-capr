@@ -16,7 +16,7 @@ import {
 } from "./frontend/types.ts";
 import { update } from "./frontend/update.ts";
 import { render, renderInit } from "./frontend/render.ts";
-import { Main } from "./frontend/main.ts";
+import { Main } from "./frontend/Main.ts";
 
 // Send message needs to have access to the state
 // which isn't created until after the rust stuff gets loaded

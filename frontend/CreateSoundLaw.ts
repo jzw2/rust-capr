@@ -1,5 +1,4 @@
 import { RegexFst } from "../pkg/rust_capr";
-import { Main } from "./main";
 import { SoundClassName } from "./types";
 
 type NewType = void;

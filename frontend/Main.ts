@@ -1,15 +1,16 @@
 import {
-  create_with_arbitrary_regex_ipa,
-  RegexFst,
-  SoundLaw,
   SoundLawComposition,
+  SoundLaw,
+  RegexFst,
+  create_with_arbitrary_regex_ipa,
 } from "../pkg/rust_capr";
 import { CreateSoundLaw } from "./CreateSoundLaw";
 import { FileArea } from "./FileArea";
 import { ForwardBackwards } from "./ForwardBackwards";
 import { SaveButton } from "./SaveButton";
+import { SoundClassArea } from "./SoundClassArea";
 import { SoundLawDisplay } from "./SoundLawDisplay";
-import { DragType, RegexType, SoundClass, SoundLawInput } from "./types";
+import { DragType } from "./types";
 
 export class Main {
   isLoading: boolean;
@@ -32,6 +33,7 @@ export class Main {
   soundLawDisplay: SoundLawDisplay;
   forwardBackwards: ForwardBackwards;
   saveButton: SaveButton;
+  soundClassArea: SoundClassArea;
 
   constructor() {
     this.laws = [];
