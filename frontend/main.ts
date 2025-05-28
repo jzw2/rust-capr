@@ -7,6 +7,7 @@ import {
 import { CreateSoundLaw } from "./CreateSoundLaw";
 import { FileArea } from "./FileArea";
 import { ForwardBackwards } from "./ForwardBackwards";
+import { SaveButton } from "./SaveButton";
 import { SoundLawDisplay } from "./SoundLawDisplay";
 import { DragType, RegexType, SoundClass, SoundLawInput } from "./types";
 
@@ -30,12 +31,14 @@ export class Main {
   soundClassesMap: Map<string, RegexFst>;
   soundLawDisplay: SoundLawDisplay;
   forwardBackwards: ForwardBackwards;
+  saveButton: SaveButton;
 
   constructor() {
     this.laws = [];
     this.soundClassesMap = new Map<string, RegexFst>();
     this.composition = SoundLawComposition.new();
     this.forwardBackwards = new ForwardBackwards(this.composition);
+    this.saveButton = new SaveButton(this.soundClassesMap);
 
     let deleteListener = (index: number) => {
       this.composition.rm_law(index);

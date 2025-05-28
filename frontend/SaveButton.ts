@@ -1,14 +1,15 @@
+import { RegexFst } from "../pkg/rust_capr";
 import { SoundClass } from "./types";
 
-class SaveButton {
+export class SaveButton {
   saveButton: HTMLButtonElement;
   loadButton: HTMLButtonElement;
 
-  soundClasses: SoundClass[];
+  soundClasses: Map<string, RegexFst>;
 
   saveListen: () => void;
   loadListen: () => void;
-  constructor(soundClasses: SoundClass[]) {
+  constructor(soundClasses: Map<string, RegexFst>) {
     this.soundClasses = soundClasses;
 
     this.saveButton = document.getElementById("save") as HTMLButtonElement;
@@ -19,9 +20,11 @@ class SaveButton {
       localStorage.setItem("classes", JSON.stringify(this.soundClasses));
       // try to use rust for this loading side
       // localStorage.setItem("laws", JSON.stringify(state.soundLawInputs));
+      alert("Broken right now, don't use this");
       console.log("Storing classes");
     });
     this.loadButton.addEventListener("click", () => {
+      alert("Broken right now, don't use this");
       //todo!!!!!
       // it would be a lot better to handle this in the rust side of things
       // to make sure that we don't have horrible loading times
