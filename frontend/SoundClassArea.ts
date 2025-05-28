@@ -60,7 +60,20 @@ export class SoundClassArea {
         regexfsts.slice(1).forEach((r) => fst.concat(r!)); //theoritcally works by doing dijsoint with self, but rust prevents this
         this.soundClassesMap.set(nameValue, fst);
       }
+      this.renderSoundClassDisplay();
     });
+  }
+
+  renderSoundClassDisplay() {
+    const soundList = document.querySelector("#sound-classes");
+    if (soundList) {
+      soundList.innerHTML = "";
+      this.soundClassesMap.forEach((fst, name) => {
+        const li = document.createElement("li");
+        li.innerHTML = `${name}: ${fst.string_form()}`;
+        soundList.append(li);
+      });
+    }
   }
 
   render() {
