@@ -84,7 +84,7 @@ impl RegexFst {
             .map(|c| {
                 table
                     .get_label(c.to_string())
-                    .expect("Failed to find character in ipa table")
+                    .expect(&format!("Failed to find character {} in ipa table", &c))
             })
             .collect();
 

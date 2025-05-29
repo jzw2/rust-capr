@@ -6,6 +6,7 @@ import {
   SoundLawComposition,
   RegexFst,
   SoundLaw,
+  soundlaw_xsampa_to_ipa,
 } from "../pkg/rust_capr";
 import {
   Message,
@@ -88,7 +89,10 @@ export const update = (message: Message, state: State): State => {
     state.composition = message.composition;
     state = transduce(state);
   } else if (message.type === "UploadFile") {
-    state.fileStrings = message.contents.split("\n").filter((x) => x !== "");
+    state.fileStrings = message.contents
+      .split("\n")
+      .filter((x) => x !== "")
+      .map((s) => soundlaw_xsampa_to_ipa(s));
     state.transducedFileStrings = state.fileStrings.map((s) =>
       state.composition.transduce_text(s),
     );

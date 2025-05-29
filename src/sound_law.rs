@@ -251,7 +251,12 @@ fn transduce_text_with_symbol_table(
     let labels: Vec<_> = text
         .chars()
         .inspect(|c| println!("{}", c))
-        .map(|c| table.get_label(c.to_string()).unwrap())
+        .map(|c| {
+            table.get_label(c.to_string()).expect(&format!(
+                "Character {} was not found in symbol table",
+                c.to_string()
+            ))
+        })
         .collect();
     let text_fst: VectorFst<_> = acceptor(&labels, SoundWeight::one());
     let mut text_fst: SoundFst = text_fst.into();
