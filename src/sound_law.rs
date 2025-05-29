@@ -554,23 +554,8 @@ mod tests {
 
         let pie_consonants = "p t k b d g b_h d_h g_h k_w g_w g_w_h m n l r w y".split(" ");
 
-        let mut consonant_fsts = pie_consonants
-            .map(|c| RegexFst::new_from_ipa(xsampa_to_ipa(c)))
-            .collect::<Vec<_>>();
-
-        let mut disjoint_consonants = consonant_fsts.pop().unwrap();
-        for fst in consonant_fsts {
-            disjoint_consonants.disjoint(&fst)
-        }
-        let pie_laryngeals = "h x q".split(" ");
-        let mut laryngeal_fsts = pie_laryngeals
-            .map(|c| RegexFst::new_from_ipa(xsampa_to_ipa(c)))
-            .collect::<Vec<_>>();
-
-        let mut disjoint_laryngeals = laryngeal_fsts.pop().unwrap();
-        for fst in laryngeal_fsts {
-            disjoint_laryngeals.disjoint(&fst)
-        }
+        let disjoint_consonants = xsampa_disjoint(pie_consonants);
+        let disjoint_laryngeals = xsampa_disjoint("h x q".split(" "));
 
         let from = disjoint_laryngeals;
 
@@ -588,5 +573,17 @@ mod tests {
         let daughter = law.transduce_text(&d_hugxter);
         assert_eq!(daughter.len(), 1);
         assert_eq!(daughter[0].replace(" ", ""), xsampa_to_ipa("d_hugate:r"));
+    }
+
+    fn xsampa_disjoint(pie_consonants: std::str::Split<'_, &str>) -> RegexFst {
+        let mut consonant_fsts = pie_consonants
+            .map(|c| RegexFst::new_from_ipa(xsampa_to_ipa(c)))
+            .collect::<Vec<_>>();
+
+        let mut disjoint_consonants = consonant_fsts.pop().unwrap();
+        for fst in consonant_fsts {
+            disjoint_consonants.disjoint(&fst)
+        }
+        disjoint_consonants
     }
 }
