@@ -41,7 +41,9 @@ export class Main {
     this.composition = SoundLawComposition.new();
     this.forwardBackwards = new ForwardBackwards(this.composition);
     this.saveButton = new SaveButton(this.soundClassesMap);
-    this.soundClassArea = new SoundClassArea(this.soundClassesMap);
+    this.soundClassArea = new SoundClassArea(this.soundClassesMap, () => {
+      this.createSoundLaw.updateSoundClasses();
+    });
 
     let deleteListener = (index: number) => {
       this.composition.rm_law(index);

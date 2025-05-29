@@ -9,8 +9,13 @@ export class SoundClassArea {
   phonemes: HTMLInputElement; // todo: rename to a better name
   name: HTMLInputElement;
   soundClassesMap: Map<string, RegexFst>;
+  addSoundClassListener: () => void;
 
-  constructor(soundClassesMap: Map<string, RegexFst>) {
+  constructor(
+    soundClassesMap: Map<string, RegexFst>,
+    addSoundClassListener: () => void,
+  ) {
+    this.addSoundClassListener = addSoundClassListener;
     this.soundClassesMap = soundClassesMap;
     this.area = document.querySelector(".sound-class-area") as HTMLDivElement;
     this.regexSelect = document.getElementById("regex") as HTMLSelectElement;
@@ -61,6 +66,7 @@ export class SoundClassArea {
         this.soundClassesMap.set(nameValue, fst);
       }
       this.renderSoundClassDisplay();
+      this.addSoundClassListener();
     });
   }
 

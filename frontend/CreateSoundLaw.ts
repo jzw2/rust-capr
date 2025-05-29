@@ -81,4 +81,22 @@ export class CreateSoundLaw {
       );
     });
   }
+  //take the soundClasses, and updates the selectHTmls with these options
+  updateSoundClasses() {
+    for (const [key, value] of this.soundClasses) {
+      // should check if the value is already in the select
+      // if it is, skip it
+      if (
+        this.leftSelect.querySelector(`option[value="${key}"]`) ||
+        this.rightSelect.querySelector(`option[value="${key}"]`)
+      ) {
+        continue;
+      }
+      const option = document.createElement("option");
+      option.value = key;
+      option.text = key;
+      this.leftSelect.appendChild(option);
+      this.rightSelect.appendChild(option.cloneNode(true));
+    }
+  }
 }
