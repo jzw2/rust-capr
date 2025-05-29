@@ -543,6 +543,50 @@ mod tests {
         let law = SoundLaw::create_with_arbitrary_regex(&a, &b, &x, &y, &table);
         let transduced = law.transduce_text("axb");
         assert_eq!(transduced.len(), 1);
-        assert_ne!(transduced[0], "ayb");
+        assert_eq!(transduced[0], "ayb");
+    }
+    #[test]
+    fn celtic_laryngeal_to_a_between_cons() {
+        let table = ipa();
+        let pie_stops = "p t k b d g b_h d_h g_h k_w g_w g_w_h".split(" ");
+        let pie_resonants = "m n l r".split(" ");
+        let pie_glides = "w y".split(" ");
+
+        let pie_consonants = "p t k b d g b_h d_h g_h k_w g_w g_w_h m n l r w y".split(" ");
+
+        let mut consonant_fsts = pie_consonants
+            .map(|c| RegexFst::new_from_ipa(xsampa_to_ipa(c)))
+            .collect::<Vec<_>>();
+
+        let mut disjoint_consonants = consonant_fsts.pop().unwrap();
+        for fst in consonant_fsts {
+            disjoint_consonants.disjoint(&fst)
+        }
+        let pie_laryngeals = "h x q".split(" ");
+        let mut laryngeal_fsts = pie_laryngeals
+            .map(|c| RegexFst::new_from_ipa(xsampa_to_ipa(c)))
+            .collect::<Vec<_>>();
+
+        let mut disjoint_laryngeals = laryngeal_fsts.pop().unwrap();
+        for fst in laryngeal_fsts {
+            disjoint_laryngeals.disjoint(&fst)
+        }
+
+        let from = disjoint_laryngeals;
+
+        let to = RegexFst::new_from_ipa("a".into());
+        let left = &disjoint_consonants;
+        let right = &disjoint_consonants;
+        let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &table);
+
+        let pxter = xsampa_to_ipa("pxter");
+        let pater = law.transduce_text(&pxter);
+        assert_eq!(pater.len(), 1);
+        assert_eq!(pater[0].replace(" ", ""), xsampa_to_ipa("pater"));
+
+        let d_hugxter = xsampa_to_ipa("d_hugxte:r");
+        let daughter = law.transduce_text(&d_hugxter);
+        assert_eq!(daughter.len(), 1);
+        assert_eq!(daughter[0].replace(" ", ""), xsampa_to_ipa("d_hugate:r"));
     }
 }
