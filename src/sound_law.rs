@@ -292,6 +292,9 @@ impl Default for SoundLawComposition {
 // todo fix memory so I stop cloning
 #[wasm_bindgen]
 impl SoundLawComposition {
+    pub fn clear(&mut self) {
+        self.laws = vec![];
+    }
     pub fn new() -> SoundLawComposition {
         console_error_panic_hook::set_once();
         let fst: SoundVec = SoundVec::new();
