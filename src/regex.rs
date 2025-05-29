@@ -45,7 +45,7 @@ impl Display for RegexOperator {
 
 //change this to not a new type that also contains information for how it was created
 #[wasm_bindgen]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RegexFst {
     fst: VectorFst<SoundWeight>,
     operator: RegexOperator,

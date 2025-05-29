@@ -382,6 +382,8 @@ pub fn soundlaw_xsampa_to_ipa(s: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    use std::env::consts::OS;
+
     use rustfst::symt;
 
     use crate::tables::{ipa, xsampa_ascii};
@@ -575,6 +577,48 @@ mod tests {
         assert_eq!(daughter[0].replace(" ", ""), xsampa_to_ipa("d_hugate:r"));
     }
 
+    #[test]
+    fn celtic_stop_resonant_larygeal_stop() {
+        let table = ipa();
+        let pie_stops = "p t k b d g b_h d_h g_h k_w g_w g_w_h".split(" ");
+        let pie_resonants = "m n l r".split(" ");
+        let pie_glides = "w y".split(" ");
+        let pie_laryngeals = "h x q".split(" ");
+
+        let pie_consonants = "p t k b d g b_h d_h g_h k_w g_w g_w_h m n l r w y".split(" ");
+
+        let disjoint_stops = xsampa_disjoint(pie_stops);
+        let disjoint_consonants = xsampa_disjoint(pie_consonants);
+        let disjoint_laryngeals = xsampa_disjoint(pie_laryngeals);
+        let disjoint_resonants = xsampa_disjoint(pie_resonants);
+
+        let from = RegexFst::new_from_ipa("".into());
+        let to = RegexFst::new_from_ipa("a".into());
+        let mut left = disjoint_consonants.clone();
+        left.concat(&disjoint_resonants);
+        let mut right = disjoint_laryngeals.clone();
+        right.concat(&disjoint_consonants);
+        let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &table);
+
+        // plhno
+        // grhno
+        // grxno
+        // grqno
+
+        let transduced = law.transduce_text(&xsampa_to_ipa("plhno"));
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("plano"));
+
+        let transduced = law.transduce_text(&xsampa_to_ipa("grhno"));
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("grano"));
+        let transduced = law.transduce_text(&xsampa_to_ipa("grxno"));
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("grano"));
+        let transduced = law.transduce_text(&xsampa_to_ipa("grqno"));
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("grano"));
+    }
     fn xsampa_disjoint(pie_consonants: std::str::Split<'_, &str>) -> RegexFst {
         let mut consonant_fsts = pie_consonants
             .map(|c| RegexFst::new_from_ipa(xsampa_to_ipa(c)))
