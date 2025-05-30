@@ -547,6 +547,20 @@ mod tests {
         assert_eq!(transduced.len(), 1);
         assert_eq!(transduced[0], "ayb");
     }
+
+    #[test]
+    fn simple_epsilon_to_character_test() {
+        let table = ipa();
+        let left = RegexFst::new_from_ipa("a".into());
+        let right = RegexFst::new_from_ipa("b".into());
+        let from = RegexFst::new_from_ipa("".into());
+        let to = RegexFst::new_from_ipa("x".into());
+
+        let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &table);
+        let transduced = law.transduce_text(&xsampa_to_ipa("ab"));
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("abx"));
+    }
     #[test]
     fn celtic_small_stop_resonant_larygeal_stop() {
         let table = ipa();
