@@ -548,6 +548,46 @@ mod tests {
         assert_eq!(transduced[0], "ayb");
     }
     #[test]
+    fn celtic_small_stop_resonant_larygeal_stop() {
+        let table = ipa();
+        let pie_resonants = "l r".split(" ");
+        let pie_laryngeals = "h x q".split(" ");
+
+        let pie_consonants = "p l n r".split(" ");
+
+        //let disjoint_stops = xsampa_disjoint(pie_stops);
+        let disjoint_consonants = xsampa_disjoint(pie_consonants);
+        let disjoint_laryngeals = xsampa_disjoint(pie_laryngeals);
+        let disjoint_resonants = xsampa_disjoint(pie_resonants);
+
+        let from = RegexFst::new_from_ipa("".into());
+        let to = RegexFst::new_from_ipa("a".into());
+        let mut left = disjoint_consonants.clone();
+        left.concat(&disjoint_resonants);
+        let mut right = disjoint_laryngeals.clone();
+        right.concat(&disjoint_consonants);
+        let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &table);
+
+        // plhno
+        // grhno
+        // grxno
+        // grqno
+
+        let transduced = law.transduce_text(&xsampa_to_ipa("plhno"));
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("plano"));
+
+        let transduced = law.transduce_text(&xsampa_to_ipa("grhno"));
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("grano"));
+        let transduced = law.transduce_text(&xsampa_to_ipa("grxno"));
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("grano"));
+        let transduced = law.transduce_text(&xsampa_to_ipa("grqno"));
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("grano"));
+    }
+    #[test]
     fn celtic_laryngeal_to_a_between_cons() {
         let table = ipa();
         let pie_stops = "p t k b d g b_h d_h g_h k_w g_w g_w_h".split(" ");
