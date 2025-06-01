@@ -94,6 +94,12 @@ impl RegexFst {
             operator: RegexOperator::Acceptor(s),
         }
     }
+    pub fn is_empty(&self) -> bool {
+        if let RegexOperator::Acceptor(s) = self.operator.clone() {
+            return s == "";
+        }
+        false
+    }
 
     pub fn string_form(&self) -> String {
         self.to_string()
