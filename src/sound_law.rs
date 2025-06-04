@@ -14,10 +14,12 @@ use rustfst::utils::transducer;
 use rustfst::Label;
 use rustfst::Semiring;
 use rustfst::SymbolTable;
+use serde::Deserialize;
+use serde::Serialize;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct SoundLaw {
     // need to rewrite so taht it has not such a flat architucture
     // and allows more complex such as full regex expression
@@ -26,6 +28,8 @@ pub struct SoundLaw {
     left_context: String,
     right_context: String,
     fst: SoundFst,
+
+    #[serde(skip_serializing, skip_deserializing)]
     table: SymbolTable,
 }
 
@@ -114,11 +118,20 @@ impl SoundLaw {
     ) -> SoundLaw {
         // let latin = lower_case_latin();
 
-        let transform: SoundFst = RegexFst::regex_cross_product(from, to, table);
+        let contains_epsilon = from.is_empty();
 
+        // let transform: SoundFst = if contains_epsilon {
+        //     RegexFst::regex_cross_product(to, from, table)
+        // } else {
+        //     RegexFst::regex_cross_product(from, to, table)
+        // };
+        let transform: SoundFst = RegexFst::regex_cross_product(from, to, table);
         transform.df("cross_product");
-        let replace_fst =
+        let mut replace_fst =
             transform.replace_in_context(left.to_sound_fst(), right.to_sound_fst(), false, table);
+        // if contains_epsilon {
+        //     replace_fst.invert();
+        // }
 
         replace_fst.df("all_regex");
         SoundLaw {
@@ -382,7 +395,7 @@ pub fn soundlaw_xsampa_to_ipa(s: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use std::env::consts::OS;
+    use std::{env::consts::OS, fmt::Debug};
 
     use rustfst::symt;
 
@@ -545,7 +558,20 @@ mod tests {
         let law = SoundLaw::create_with_arbitrary_regex(&a, &b, &x, &y, &table);
         let transduced = law.transduce_text("axb");
         assert_eq!(transduced.len(), 1);
-        assert_eq!(transduced[0], "ayb");
+        assert_eq!(transduced[0], "a y b");
+    }
+    #[test]
+    fn simple_character_to_epsilon_test() {
+        let table = ipa();
+        let left = RegexFst::new_from_ipa("a".into());
+        let right = RegexFst::new_from_ipa("b".into());
+        let from = RegexFst::new_from_ipa("x".into());
+        let to = RegexFst::new_from_ipa("".into());
+
+        let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &table);
+        let transduced = law.transduce_text(&xsampa_to_ipa("axb"));
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("ab"));
     }
 
     #[test]
@@ -683,5 +709,22 @@ mod tests {
             disjoint_consonants.disjoint(&fst)
         }
         disjoint_consonants
+    }
+
+    #[test]
+    fn serialize_sound_law() {
+        let symbol_tabl = symt!["a", "b", "c", "d"];
+        let law1 = SoundLaw::new("ca", "d", "ca", "c", &symbol_tabl);
+
+        let json = serde_json::to_string(&law1).expect("serialize should work");
+
+        let mut back_to_law: SoundLaw = serde_json::from_str(&json).expect("deserialized crash");
+        back_to_law.table = symbol_tabl;
+
+        // let input1: SoundVec = fst![3, 1, 3, 1, 3, 1, 3]; // "cacacac"
+
+        let transduced = back_to_law.transduce_text("cacacac");
+
+        assert_eq!(transduced[0], "c a d d c");
     }
 }
