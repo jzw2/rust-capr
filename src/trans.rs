@@ -551,7 +551,24 @@ impl SoundFst {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use serde_json;
 
+    #[test]
+    fn test_serialization() {
+        let symbol_tabl = symt!["a", "b", "c", "d"];
+        let law1 = SoundLaw::new("a", "b", "", "", &symbol_tabl);
+
+        let sound_fst = law1.get_fst().clone();
+
+        let json = serde_json::to_string(&sound_fst).expect("serialize should work");
+
+        let back_to_fst: SoundFst = serde_json::from_str(&json).expect("deserialized crash");
+
+        // Check that it serializes to a JSON string
+
+        assert_eq!(back_to_fst, sound_fst);
+    }
     use rustfst::{fst, prelude::rm_epsilon::rm_epsilon, symt, utils::transducer, DrawingConfig};
     use sound_law::SoundLaw;
 
