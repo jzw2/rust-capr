@@ -1,6 +1,3 @@
-use std::sync::atomic::AtomicUsize;
-use std::sync::Arc;
-
 use rustfst::algorithms::compose::compose;
 use rustfst::algorithms::determinize::determinize;
 use rustfst::algorithms::{reverse, tr_sort, ProjectType};
@@ -11,8 +8,8 @@ use rustfst::prelude::encode::{decode, encode};
 use rustfst::prelude::rm_epsilon::rm_epsilon;
 use rustfst::prelude::union::union;
 use rustfst::prelude::{
-    invert, minimize, CoreFst, ExpandedFst, FstIntoIterator, ILabelCompare, OLabelCompare,
-    SerializableFst, TropicalWeight,
+    invert, minimize, optimize, CoreFst, ExpandedFst, FstIntoIterator, ILabelCompare,
+    OLabelCompare, SerializableFst, TropicalWeight,
 };
 use rustfst::{
     algorithms::{concat::concat, project},
@@ -22,12 +19,40 @@ use rustfst::{
     Label, Semiring, SymbolTable, Tr,
 };
 use rustfst::{fst, DrawingConfig};
+use serde::{Deserialize, Serialize};
+use std::sync::atomic::AtomicUsize;
+use std::sync::Arc;
 
 use crate::tables::single_character_class;
 
 // ideally refacotor this instead of having both sound fst and sound law, as it seems kind of redundant
 #[derive(Clone, Debug, PartialEq)]
 pub struct SoundFst(pub SoundVec);
+
+impl<'de> Deserialize<'de> for SoundFst {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s: String = Deserialize::deserialize(deserializer)?;
+        let fst = SoundVec::from_text_string(&s)
+            .map_err(|_| serde::de::Error::custom("Failed to parse into fst"))?;
+        Ok(SoundFst(fst))
+    }
+}
+
+impl Serialize for SoundFst {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let s = self
+            .0
+            .text()
+            .map_err(|_e| serde::ser::Error::custom("Conversion to text failed"))?;
+        serializer.serialize_str(&s)
+    }
+}
 
 #[cfg(test)]
 const DEBUG: bool = true;
@@ -53,6 +78,14 @@ impl From<SoundFst> for VectorFst<SoundWeight> {
 pub type SoundWeight = TropicalWeight;
 
 impl SoundFst {
+    fn serialize(&self) -> String {
+        self.0.text().unwrap()
+    }
+
+    fn deserialize(&self) -> String {
+        self.0.text().unwrap()
+    }
+
     fn from_single_label(l: Label) -> Self {
         let v: SoundVec = fst![l];
         SoundFst(v)
@@ -85,25 +118,7 @@ impl SoundFst {
     }
 
     pub fn optimize(&mut self) {
-        rm_epsilon(&mut self.0).unwrap(); //hfst also does these things in the same order
-                                          // hfst also has some code for negative weights
-        let table = encode(
-            &mut self.0,
-            rustfst::prelude::encode::EncodeType::EncodeWeightsAndLabels,
-        )
-        .unwrap();
-        tr_sort(&mut self.0, ILabelCompare {});
-        self.0
-            .compute_and_update_properties_all()
-            .expect("Property error");
-        self.0.set_properties(FstProperties::ACCEPTOR);
-        self.0 = determinize(&self.0).unwrap();
-        self.0
-            .compute_and_update_properties_all()
-            .expect("Property error");
-        self.0.set_properties(FstProperties::ACCEPTOR);
-        minimize(&mut self.0).unwrap();
-        decode(&mut self.0, table).unwrap();
+        optimize(&mut self.0).expect("Error in optimize")
     }
 
     pub fn compose(&mut self, other: &SoundFst) {
@@ -143,7 +158,7 @@ impl SoundFst {
                         ..DrawingConfig::default()
                     },
                 )
-                .unwrap()
+                .expect("Drawing failed")
         }
     }
     pub fn d(&self, line: u32) {
@@ -181,7 +196,9 @@ impl SoundFst {
             union(&mut retval, &star.0).unwrap();
         }
 
-        retval.into()
+        let r: Self = retval.into();
+        r.df("replace_end");
+        r
     }
 
     fn end_in_string(
@@ -462,13 +479,15 @@ impl SoundFst {
 
         println!("create replace tranducer");
         let mut rt = self.replace_transducer(left_marker, right_marker, &alphabet_with_marker);
+        rt.df("replace_transducer");
         rt.optimize();
+        rt.df("rt_optimize");
 
         let mut result: SoundFst = ibt.clone();
         println!("composing cbt");
-        result.compose(&cbt);
-        result.df("compose_cbt");
-        println!("composing rct");
+        //result.compose(&cbt);
+        //result.df("compose_cbt");
+        //println!("composing rct");
         result.compose(&rct);
         result.df("compose_rct");
         println!("composing lct");
@@ -481,7 +500,7 @@ impl SoundFst {
         result.compose(&rbt);
         println!("done");
         result.df("compose_rbt");
-        result.optimize();
+        result.optimize(); // I don't know if this is in the original
 
         if optional {
             todo!()
@@ -509,7 +528,9 @@ impl SoundFst {
         marker_transducer.optimize();
 
         let mut ret = marker_transducer.replace(false, alphabet);
+        ret.df("replace_before_opt");
         ret.optimize();
+        ret.df("replace_after_opt");
         ret
     }
 
