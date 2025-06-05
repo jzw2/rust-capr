@@ -11,6 +11,7 @@ use rustfst::{
     utils::acceptor,
     Semiring, SymbolTable,
 };
+use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
 use crate::{
@@ -19,7 +20,7 @@ use crate::{
     trans::{SoundFst, SoundVec, SoundWeight},
 };
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Serialize, Deserialize)]
 enum RegexOperator {
     Acceptor(String), // use this as the basic operator vs basing it on just a single character
     Star(Box<RegexOperator>),
@@ -35,6 +36,7 @@ impl Display for RegexOperator {
             RegexOperator::Concat(regex_operator, regex_operator1) => {
                 format!("{}{}", regex_operator, regex_operator1)
             }
+            // todo fix this so that it doesn't make redundant parenthesis
             RegexOperator::Union(regex_operator, regex_operator1) => {
                 format!("({} + {})", regex_operator, regex_operator1)
             }
@@ -47,13 +49,18 @@ impl Display for RegexOperator {
 #[wasm_bindgen]
 #[derive(Debug, Clone)]
 pub struct RegexFst {
-    fst: VectorFst<SoundWeight>,
+    fst: SoundFst,
     operator: RegexOperator,
 }
 #[wasm_bindgen]
 impl RegexFst {
+    // because wasmbindgen is stupid
+    pub fn dup(&self) -> Self {
+        self.clone()
+    }
+
     pub fn concat(&mut self, other: &RegexFst) {
-        let _ = concat(&mut self.fst, &other.fst);
+        let _ = concat(&mut self.fst.0, &other.fst.0);
         self.operator = RegexOperator::Concat(
             Box::new(self.operator.clone()),
             Box::new(other.operator.clone()),
@@ -61,7 +68,7 @@ impl RegexFst {
     }
     pub fn disjoint(&mut self, other: &RegexFst) {
         // I don't know why I chose a different name but whatever
-        let _ = union(&mut self.fst, &other.fst);
+        let _ = union(&mut self.fst.0, &other.fst.0);
         self.operator = RegexOperator::Union(
             Box::new(self.operator.clone()),
             Box::new(other.operator.clone()),
@@ -70,7 +77,7 @@ impl RegexFst {
 
     //implement the rest later
     pub fn kleen(&mut self) {
-        closure(&mut self.fst, ClosureType::ClosureStar);
+        closure(&mut self.fst.0, ClosureType::ClosureStar);
         self.operator = RegexOperator::Star(Box::new(self.operator.clone()))
     }
 
@@ -90,7 +97,7 @@ impl RegexFst {
 
         let acceptor: SoundVec = acceptor(&v, SoundWeight::one());
         RegexFst {
-            fst: acceptor,
+            fst: SoundFst(acceptor),
             operator: RegexOperator::Acceptor(s),
         }
     }
@@ -116,10 +123,10 @@ impl Display for RegexFst {
 impl RegexFst {
     pub fn to_sound_fst(&self) -> SoundFst {
         let mut inner_fst = self.fst.clone();
-        optimize(&mut inner_fst).unwrap(); // don't want a repeat of last time
-        SoundFst(inner_fst)
+        optimize(&mut inner_fst.0).unwrap(); // don't want a repeat of last time
+        inner_fst
     }
     pub fn regex_cross_product(a: &RegexFst, b: &RegexFst, table: &SymbolTable) -> SoundFst {
-        SoundFst(cross_product(&a.fst, &b.fst, table))
+        SoundFst(cross_product(&a.fst.0, &b.fst.0, table))
     }
 }
