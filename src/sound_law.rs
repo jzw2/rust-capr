@@ -295,6 +295,7 @@ fn transduce_text_with_symbol_table(
 // todo: make a thing for the symbol table to check
 //
 #[wasm_bindgen]
+#[derive(Serialize, Deserialize)]
 pub struct SoundLawComposition {
     laws: Vec<SoundLaw>,
     final_fst: SoundFst,
@@ -655,6 +656,32 @@ mod tests {
         let daughter = law.transduce_text(&d_hugxter);
         assert_eq!(daughter.len(), 1);
         assert_eq!(daughter[0].replace(" ", ""), xsampa_to_ipa("d_hugate:r"));
+    }
+    #[test]
+    fn grano_modified_test() {
+        let table = ipa();
+        let pie_stops = "p t k b d g b_h d_h g_h k_w g_w g_w_h".split(" ");
+        let pie_resonants = "m n l r".split(" ");
+        let pie_glides = "w y".split(" ");
+        let pie_laryngeals = "h x q".split(" ");
+
+        let pie_consonants = "p t k b d g b_h d_h g_h k_w g_w g_w_h m n l r w y".split(" ");
+
+        let disjoint_stops = xsampa_disjoint(pie_stops);
+        let disjoint_consonants = xsampa_disjoint(pie_consonants);
+        let disjoint_laryngeals = xsampa_disjoint(pie_laryngeals);
+        let disjoint_resonants = xsampa_disjoint(pie_resonants);
+
+        let from = RegexFst::new_from_ipa("h".into());
+        let to = RegexFst::new_from_ipa("a".into());
+        let mut left = disjoint_consonants.clone();
+        left.concat(&disjoint_resonants);
+        let right = disjoint_consonants.clone();
+        let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &table);
+
+        let transduced = law.transduce_text(&xsampa_to_ipa("grhno"));
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("grano"));
     }
 
     #[test]
