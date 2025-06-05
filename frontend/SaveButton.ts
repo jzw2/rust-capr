@@ -1,15 +1,17 @@
-import { RegexFst } from "../pkg/rust_capr";
+import { RegexFst, SoundLaw } from "../pkg/rust_capr";
 import { SoundClass } from "./types";
 
 export class SaveButton {
   saveButton: HTMLButtonElement;
   loadButton: HTMLButtonElement;
+  laws: SoundLaw[];
 
   soundClasses: Map<string, RegexFst>;
 
   saveListen: () => void;
   loadListen: () => void;
-  constructor(soundClasses: Map<string, RegexFst>) {
+  constructor(soundClasses: Map<string, RegexFst>, laws: SoundLaw[]) {
+    this.laws = laws;
     this.soundClasses = soundClasses;
 
     this.saveButton = document.getElementById("save") as HTMLButtonElement;

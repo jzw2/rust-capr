@@ -40,7 +40,7 @@ export class Main {
     this.soundClassesMap = new Map<string, RegexFst>();
     this.composition = SoundLawComposition.new();
     this.forwardBackwards = new ForwardBackwards(this.composition);
-    this.saveButton = new SaveButton(this.soundClassesMap);
+    this.saveButton = new SaveButton(this.soundClassesMap, this.laws);
     this.soundClassArea = new SoundClassArea(this.soundClassesMap, () => {
       this.createSoundLaw.updateSoundClasses();
     });

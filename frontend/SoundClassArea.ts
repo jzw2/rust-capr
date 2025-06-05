@@ -1,4 +1,4 @@
-import { RegexFst } from "../pkg/rust_capr";
+import { RegexFst, soundlaw_xsampa_to_ipa } from "../pkg/rust_capr";
 import { RegexType } from "./types";
 
 export class SoundClassArea {
@@ -32,7 +32,7 @@ export class SoundClassArea {
     ) as HTMLButtonElement;
     this.createSoundClass.addEventListener("click", () => {
       let nameValue = this.name.value;
-      let sounds = this.phonemes.value.split(" ");
+      let sounds = soundlaw_xsampa_to_ipa(this.phonemes.value).split(" ");
       if (this.regexType.type == "Disjunction") {
         let regexfsts = sounds.map((sound) => RegexFst.new_from_ipa(sound));
         if (regexfsts.length == 0) {
