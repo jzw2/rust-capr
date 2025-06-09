@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use crate::regex::RegexFst;
+use crate::tables::ipa;
 use crate::trans::SoundFst;
 use crate::trans::SoundVec;
 use crate::trans::SoundWeight;
@@ -231,6 +232,19 @@ impl SoundLaw {
 
 #[wasm_bindgen]
 impl SoundLaw {
+    pub fn to_json(&self) -> String {
+        serde_json::to_string(self).expect("Unwrap json string failed")
+    }
+
+    pub fn from_json(s: &str) -> Self {
+        // just asume an ipa for now
+        let mut ret: Self = serde_json::from_str(s).expect("Unwrap json string failed");
+        let table = Arc::new(ipa());
+        ret.table = ipa(); // kind of wasteful, should change this to not recreate the table very time
+        ret.fst.0.set_input_symbols(Arc::clone(&table));
+        ret.fst.0.set_output_symbols(Arc::clone(&table));
+        ret
+    }
     pub fn get_from(&self) -> String {
         self.from.to_string()
     }
@@ -588,64 +602,55 @@ mod tests {
         assert_eq!(transduced.len(), 1);
         assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("abx"));
     }
+    fn mini_consonants() -> Vec<&'static str> {
+        "p l n r".split(' ').collect()
+    }
+
+    fn small_resonants() -> Vec<&'static str> {
+        "l r".split(' ').collect()
+    }
+
     #[test]
-    fn celtic_small_stop_resonant_larygeal_stop() {
+    fn celtic_small_stop_resonant_laryngeal_stop() {
         let table = ipa();
-        let pie_resonants = "l r".split(" ");
-        let pie_laryngeals = "h x q".split(" ");
 
-        let pie_consonants = "p l n r".split(" ");
-
-        //let disjoint_stops = xsampa_disjoint(pie_stops);
-        let disjoint_consonants = xsampa_disjoint(pie_consonants);
-        let disjoint_laryngeals = xsampa_disjoint(pie_laryngeals);
-        let disjoint_resonants = xsampa_disjoint(pie_resonants);
+        let consonants = xsampa_disjoint(&mini_consonants());
+        let resonants = xsampa_disjoint(&small_resonants());
+        let laryngeals = xsampa_disjoint(&pie_laryngeals()); // reuse full laryngeals
 
         let from = RegexFst::new_from_ipa("".into());
         let to = RegexFst::new_from_ipa("a".into());
-        let mut left = disjoint_consonants.clone();
-        left.concat(&disjoint_resonants);
-        let mut right = disjoint_laryngeals.clone();
-        right.concat(&disjoint_consonants);
+
+        let mut left = consonants.clone();
+        left.concat(&resonants);
+
+        let mut right = laryngeals.clone();
+        right.concat(&consonants);
+
         let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &table);
 
-        // plhno
-        // grhno
-        // grxno
-        // grqno
-
-        let transduced = law.transduce_text(&xsampa_to_ipa("plhno"));
-        assert_eq!(transduced.len(), 1);
-        assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("plano"));
-
-        let transduced = law.transduce_text(&xsampa_to_ipa("grhno"));
-        assert_eq!(transduced.len(), 1);
-        assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("grano"));
-        let transduced = law.transduce_text(&xsampa_to_ipa("grxno"));
-        assert_eq!(transduced.len(), 1);
-        assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("grano"));
-        let transduced = law.transduce_text(&xsampa_to_ipa("grqno"));
-        assert_eq!(transduced.len(), 1);
-        assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("grano"));
+        for (input, expected) in [
+            ("plhno", "plano"),
+            ("grhno", "grano"),
+            ("grxno", "grano"),
+            ("grqno", "grano"),
+        ] {
+            let output = law.transduce_text(&xsampa_to_ipa(input));
+            assert_eq!(output.len(), 1);
+            assert_eq!(output[0].replace(" ", ""), xsampa_to_ipa(expected));
+        }
     }
     #[test]
     fn celtic_laryngeal_to_a_between_cons() {
-        let table = ipa();
-        let pie_stops = "p t k b d g b_h d_h g_h k_w g_w g_w_h".split(" ");
-        let pie_resonants = "m n l r".split(" ");
-        let pie_glides = "w y".split(" ");
+        let data = common_setup();
 
-        let pie_consonants = "p t k b d g b_h d_h g_h k_w g_w g_w_h m n l r w y".split(" ");
-
-        let disjoint_consonants = xsampa_disjoint(pie_consonants);
-        let disjoint_laryngeals = xsampa_disjoint("h x q".split(" "));
-
-        let from = disjoint_laryngeals;
-
+        let from = xsampa_disjoint(&["h", "x", "q"]);
         let to = RegexFst::new_from_ipa("a".into());
-        let left = &disjoint_consonants;
-        let right = &disjoint_consonants;
-        let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &table);
+
+        let left = &data.consonants;
+        let right = &data.consonants;
+
+        let law = SoundLaw::create_with_arbitrary_regex(left, right, &from, &to, &data.table);
 
         let pxter = xsampa_to_ipa("pxter");
         let pater = law.transduce_text(&pxter);
@@ -657,77 +662,136 @@ mod tests {
         assert_eq!(daughter.len(), 1);
         assert_eq!(daughter[0].replace(" ", ""), xsampa_to_ipa("d_hugate:r"));
     }
-    #[test]
     fn grano_modified_test() {
-        let table = ipa();
-        let pie_stops = "p t k b d g b_h d_h g_h k_w g_w g_w_h".split(" ");
-        let pie_resonants = "m n l r".split(" ");
-        let pie_glides = "w y".split(" ");
-        let pie_laryngeals = "h x q".split(" ");
-
-        let pie_consonants = "p t k b d g b_h d_h g_h k_w g_w g_w_h m n l r w y".split(" ");
-
-        let disjoint_stops = xsampa_disjoint(pie_stops);
-        let disjoint_consonants = xsampa_disjoint(pie_consonants);
-        let disjoint_laryngeals = xsampa_disjoint(pie_laryngeals);
-        let disjoint_resonants = xsampa_disjoint(pie_resonants);
+        let data = common_setup();
 
         let from = RegexFst::new_from_ipa("h".into());
         let to = RegexFst::new_from_ipa("a".into());
-        let mut left = disjoint_consonants.clone();
-        left.concat(&disjoint_resonants);
-        let right = disjoint_consonants.clone();
-        let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &table);
+
+        let mut left = data.consonants.clone();
+        left.concat(&data.resonants);
+        let right = data.consonants.clone();
+
+        let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
 
         let transduced = law.transduce_text(&xsampa_to_ipa("grhno"));
         assert_eq!(transduced.len(), 1);
         assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("grano"));
     }
-
     #[test]
-    fn celtic_stop_resonant_larygeal_stop() {
+    fn krissu() {
+        let data = common_setup();
+
+        let mut from = data.coronals.clone();
+        from.concat(&data.coronals); // Important: concat, not extend
+
+        let to = RegexFst::new_from_ipa("ss".into());
+        let left = RegexFst::new_from_ipa("".into());
+        let right = RegexFst::new_from_ipa("".into());
+
+        let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+        let transduced = law.transduce_text(&xsampa_to_ipa("krdtu"));
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("krssu"));
+    }
+    fn pie_stops() -> Vec<&'static str> {
+        "p t k b d g b_h d_h g_h k_w g_w g_w_h".split(' ').collect()
+    }
+
+    fn pie_resonants() -> Vec<&'static str> {
+        "m n l r".split(' ').collect()
+    }
+
+    fn pie_glides() -> Vec<&'static str> {
+        "w y".split(' ').collect()
+    }
+
+    fn pie_laryngeals() -> Vec<&'static str> {
+        "h x q".split(' ').collect()
+    }
+
+    fn pie_consonants() -> Vec<&'static str> {
+        "p t k b d g b_h d_h g_h k_w g_w g_w_h m n l r w y"
+            .split(' ')
+            .collect()
+    }
+
+    fn coronal_stops() -> Vec<&'static str> {
+        "t d d_h".split(' ').collect()
+    }
+
+    struct CommonData {
+        table: SymbolTable,
+        consonants: RegexFst,
+        stops: RegexFst,
+        resonants: RegexFst,
+        laryngeals: RegexFst,
+        coronals: RegexFst,
+    }
+
+    fn common_setup() -> CommonData {
         let table = ipa();
-        let pie_stops = "p t k b d g b_h d_h g_h k_w g_w g_w_h".split(" ");
-        let pie_resonants = "m n l r".split(" ");
-        let pie_glides = "w y".split(" ");
-        let pie_laryngeals = "h x q".split(" ");
+        let consonants = xsampa_disjoint(&pie_consonants());
+        let stops = xsampa_disjoint(&pie_stops());
+        let resonants = xsampa_disjoint(&pie_resonants());
+        let laryngeals = xsampa_disjoint(&pie_laryngeals());
+        let coronals = xsampa_disjoint(&coronal_stops());
 
-        let pie_consonants = "p t k b d g b_h d_h g_h k_w g_w g_w_h m n l r w y".split(" ");
+        CommonData {
+            table,
+            consonants,
+            stops,
+            resonants,
+            laryngeals,
+            coronals,
+        }
+    }
+    #[test]
+    fn celtic_stop_resonant_laryngeal_stop() {
+        let table = ipa();
 
-        let disjoint_stops = xsampa_disjoint(pie_stops);
-        let disjoint_consonants = xsampa_disjoint(pie_consonants);
-        let disjoint_laryngeals = xsampa_disjoint(pie_laryngeals);
-        let disjoint_resonants = xsampa_disjoint(pie_resonants);
+        let pie_stops = "p t k b d g b_h d_h g_h k_w g_w g_w_h"
+            .split(" ")
+            .collect::<Vec<_>>();
+        let pie_resonants = "m n l r".split(" ").collect::<Vec<_>>();
+        let pie_glides = "w y".split(" ").collect::<Vec<_>>();
+        let pie_laryngeals = "h x q".split(" ").collect::<Vec<_>>();
+
+        let pie_consonants = "p t k b d g b_h d_h g_h k_w g_w g_w_h m n l r w y"
+            .split(" ")
+            .collect::<Vec<_>>();
+
+        let disjoint_stops = xsampa_disjoint(&pie_stops);
+        let disjoint_consonants = xsampa_disjoint(&pie_consonants);
+        let disjoint_laryngeals = xsampa_disjoint(&pie_laryngeals);
+        let disjoint_resonants = xsampa_disjoint(&pie_resonants);
 
         let from = RegexFst::new_from_ipa("".into());
         let to = RegexFst::new_from_ipa("a".into());
+
         let mut left = disjoint_consonants.clone();
         left.concat(&disjoint_resonants);
+
         let mut right = disjoint_laryngeals.clone();
         right.concat(&disjoint_consonants);
+
         let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &table);
 
-        // plhno
-        // grhno
-        // grxno
-        // grqno
-
-        let transduced = law.transduce_text(&xsampa_to_ipa("plhno"));
-        assert_eq!(transduced.len(), 1);
-        assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("plano"));
-
-        let transduced = law.transduce_text(&xsampa_to_ipa("grhno"));
-        assert_eq!(transduced.len(), 1);
-        assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("grano"));
-        let transduced = law.transduce_text(&xsampa_to_ipa("grxno"));
-        assert_eq!(transduced.len(), 1);
-        assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("grano"));
-        let transduced = law.transduce_text(&xsampa_to_ipa("grqno"));
-        assert_eq!(transduced.len(), 1);
-        assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("grano"));
+        for (input, expected) in [
+            ("plhno", "plano"),
+            ("grhno", "grano"),
+            ("grxno", "grano"),
+            ("grqno", "grano"),
+        ] {
+            let transduced = law.transduce_text(&xsampa_to_ipa(input));
+            assert_eq!(transduced.len(), 1);
+            assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa(expected));
+        }
     }
-    fn xsampa_disjoint(pie_consonants: std::str::Split<'_, &str>) -> RegexFst {
+    fn xsampa_disjoint(pie_consonants: &[&str]) -> RegexFst {
         let mut consonant_fsts = pie_consonants
+            .iter()
             .map(|c| RegexFst::new_from_ipa(xsampa_to_ipa(c)))
             .collect::<Vec<_>>();
 
