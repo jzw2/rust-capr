@@ -52,7 +52,7 @@ export class SoundClassArea {
             bad = true;
             return;
           }
-          return f;
+          return f.dup();
         });
         if (bad) {
           return;

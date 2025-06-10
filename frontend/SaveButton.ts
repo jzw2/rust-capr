@@ -8,9 +8,13 @@ export class SaveButton {
 
   soundClasses: Map<string, RegexFst>;
 
-  saveListen: () => void;
   loadListen: () => void;
-  constructor(soundClasses: Map<string, RegexFst>, laws: SoundLaw[]) {
+  constructor(
+    soundClasses: Map<string, RegexFst>,
+    laws: SoundLaw[],
+    loadListen: () => void,
+  ) {
+    this.loadListen = loadListen;
     this.laws = laws;
     this.soundClasses = soundClasses;
 
@@ -19,36 +23,43 @@ export class SaveButton {
 
     this.saveButton.addEventListener("click", () => {
       // ideally make this smarter
-      localStorage.setItem("classes", JSON.stringify(this.soundClasses));
-      // try to use rust for this loading side
-      // localStorage.setItem("laws", JSON.stringify(state.soundLawInputs));
-      alert("Broken right now, don't use this");
-      console.log("Storing classes");
+      let stringMap = new Map<string, string>();
+      this.soundClasses.forEach((v, k) => {
+        console.log(v.to_json());
+        stringMap.set(k, v.to_json());
+      });
+      localStorage.setItem("classes", JSON.stringify(stringMap));
+      //console.log(this.soundClasses);
+      console.log(stringMap);
+      console.log("Sound Classes");
+      console.log(JSON.stringify(stringMap));
+
+      let soundLawStrings = this.laws.map((x) => x.to_json());
+      localStorage.setItem("laws", JSON.stringify(soundLawStrings));
+      console.log("Laws");
+      console.log(JSON.stringify(soundLawStrings));
+      alert("Saved!");
     });
     this.loadButton.addEventListener("click", () => {
-      alert("Broken right now, don't use this");
-      //todo!!!!!
-      // it would be a lot better to handle this in the rust side of things
-      // to make sure that we don't have horrible loading times
-      //   const classesStorage = localStorage.getItem("classes");
-      //         if (classesStorage) {
-      //           state.soundClasses = JSON.parse(classesStorage);
-      //         }
-      //         const storage = localStorage.getItem("laws");
-      //         if (storage) {
-      //           state.composition = SoundLawComposition.new();
-      //           state.laws = [];
-      //           state.soundLawInputs = [];
-      //           const laws = JSON.parse(storage) as SoundLawInput[];
-      //           state.isLoading = true;
-      //           setTimeout(() =>
-      //             laws.forEach((law) => {
-      //               state.soundLawInputs.push(law);
-      //               updateLaw({ type: "AddSoundLaw", law: law }, state).then((msg) =>
-      //                 sendMessage(msg),
-      //               );
-      //             }),
-      //           );
+      //alert("Broken right now, don't use this");
+      const classesStorage = localStorage.getItem("classes");
+      if (classesStorage) {
+        let classes = JSON.parse(classesStorage) as Map<string, string>;
+        classes.forEach((v, k) => {
+          this.soundClasses.set(k, RegexFst.from_json(v));
+        });
+      } else {
+        alert("No sound classes found");
+      }
+      const storage = localStorage.getItem("laws");
+      if (storage) {
+        const laws = JSON.parse(storage) as string[];
+        const parsed = laws.map((s) => SoundLaw.from_json(s));
+        this.laws.push(...parsed);
+      } else {
+        alert("No sound laws were found");
+      }
+      loadListen();
     });
   }
 }
