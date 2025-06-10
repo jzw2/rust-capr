@@ -109,6 +109,30 @@ fn a5() -> SoundLawComposition {
     comp
 }
 
+// a6 epenthisis
+
+// a7 requires stress
+
+// a8 requires knowing the begin and end of a word
+
+// a9 can be made easier by just assuming that they started merged, since no sound law depends on the palatals
+//
+//
+//
+fn b1() -> SoundLawComposition {
+    let data = common_setup();
+
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("g_w"));
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("b"));
+    let left = RegexFst::new_from_ipa("".into());
+    let right = RegexFst::new_from_ipa("".into());
+
+    let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let mut comp = SoundLawComposition::new();
+    comp.add_law(&law);
+    comp
+}
 fn mini_consonants() -> Vec<&'static str> {
     "p l n r".split(' ').collect()
 }
@@ -283,15 +307,7 @@ fn celtic_stop_resonant_laryngeal_stop() {
 
 #[test]
 fn gwow() {
-    let data = common_setup();
-
-    let from = RegexFst::new_from_ipa(xsampa_to_ipa("g_w"));
-    let to = RegexFst::new_from_ipa(xsampa_to_ipa("b"));
-    let left = RegexFst::new_from_ipa("".into());
-    let right = RegexFst::new_from_ipa("".into());
-
-    let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
-
+    let law = b1();
     let transduced = law.transduce_text(&xsampa_to_ipa("g_wow"));
     assert_eq!(transduced.len(), 1);
     assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("bow"));
