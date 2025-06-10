@@ -41,6 +41,7 @@ fn a1() -> SoundLawComposition {
     total.add_law(&law3);
     total
 }
+
 fn a2() -> SoundLawComposition {
     let data = common_setup();
 
@@ -73,6 +74,21 @@ fn a2() -> SoundLawComposition {
     total.add_law(&law2);
     total.add_law(&law3);
     total
+}
+
+fn a3() -> SoundLawComposition {
+    let data = common_setup();
+
+    let from = xsampa_disjoint(&["h", "x", "q"]);
+    let to = RegexFst::new_from_ipa("a".into());
+
+    let left = &data.consonants;
+    let right = &data.consonants;
+
+    let law = SoundLaw::create_with_arbitrary_regex(left, right, &from, &to, &data.table);
+    let mut comp = SoundLawComposition::new();
+    comp.add_law(&law);
+    comp
 }
 
 fn mini_consonants() -> Vec<&'static str> {
@@ -115,15 +131,7 @@ fn celtic_small_stop_resonant_laryngeal_stop() {
 }
 #[test]
 fn celtic_laryngeal_to_a_between_cons() {
-    let data = common_setup();
-
-    let from = xsampa_disjoint(&["h", "x", "q"]);
-    let to = RegexFst::new_from_ipa("a".into());
-
-    let left = &data.consonants;
-    let right = &data.consonants;
-
-    let law = SoundLaw::create_with_arbitrary_regex(left, right, &from, &to, &data.table);
+    let law = a3();
 
     let pxter = xsampa_to_ipa("pxter");
     let pater = law.transduce_text(&pxter);
