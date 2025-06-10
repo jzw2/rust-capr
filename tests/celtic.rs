@@ -1,6 +1,46 @@
 use ipa_translate::xsampa_to_ipa;
-use rust_capr::{regex::RegexFst, sound_law::SoundLaw, tables::ipa};
+use rust_capr::{
+    regex::RegexFst,
+    sound_law::{SoundLaw, SoundLawComposition},
+    tables::ipa,
+};
 use rustfst::SymbolTable;
+
+// represent the laryngals as h, x, q
+
+fn a1() -> SoundLawComposition {
+    let data = common_setup();
+
+    let mut from = RegexFst::new_from_ipa(xsampa_to_ipa("xe"));
+
+    let to = RegexFst::new_from_ipa("e".into());
+    let left = RegexFst::new_from_ipa("".into());
+    let right = RegexFst::new_from_ipa("".into());
+
+    let law1 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let mut from = RegexFst::new_from_ipa(xsampa_to_ipa("xe"));
+
+    let to = RegexFst::new_from_ipa("a".into());
+    let left = RegexFst::new_from_ipa("".into());
+    let right = RegexFst::new_from_ipa("".into());
+
+    let law2 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let mut from = RegexFst::new_from_ipa(xsampa_to_ipa("qe"));
+
+    let to = RegexFst::new_from_ipa("o".into());
+    let left = RegexFst::new_from_ipa("".into());
+    let right = RegexFst::new_from_ipa("".into());
+
+    let law3 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let mut total = SoundLawComposition::new();
+    total.add_law(&law1);
+    total.add_law(&law2);
+    total.add_law(&law3);
+    total
+}
 
 fn mini_consonants() -> Vec<&'static str> {
     "p l n r".split(' ').collect()
