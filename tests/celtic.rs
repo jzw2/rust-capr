@@ -2,7 +2,7 @@ use ipa_translate::xsampa_to_ipa;
 use rust_capr::{
     regex::RegexFst,
     sound_law::{SoundLaw, SoundLawComposition},
-    tables::ipa,
+    tables::{ipa, xsampa_ascii},
 };
 use rustfst::SymbolTable;
 
@@ -133,6 +133,44 @@ fn b1() -> SoundLawComposition {
     comp.add_law(&law);
     comp
 }
+
+fn b2() -> SoundLawComposition {
+    let data = common_setup();
+
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("b_h"));
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("b"));
+    let left = RegexFst::new_from_ipa("".into());
+    let right = RegexFst::new_from_ipa("".into());
+
+    let law1 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("d_h"));
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("d"));
+    let left = RegexFst::new_from_ipa("".into());
+    let right = RegexFst::new_from_ipa("".into());
+
+    let law2 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("g_w_h"));
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("g_w"));
+    let left = RegexFst::new_from_ipa("".into());
+    let right = RegexFst::new_from_ipa("".into());
+
+    let law3 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("g_h"));
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("g"));
+    let left = RegexFst::new_from_ipa("".into());
+    let right = RegexFst::new_from_ipa("".into());
+
+    let law4 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let mut comp = SoundLawComposition::new();
+    comp.add_law(&law1);
+    comp.add_law(&law2);
+    comp.add_law(&law3);
+    comp.add_law(&law4);
+    comp
+}
 fn mini_consonants() -> Vec<&'static str> {
     "p l n r".split(' ').collect()
 }
@@ -243,6 +281,7 @@ struct CommonData {
     resonants: RegexFst,
     laryngeals: RegexFst,
     coronals: RegexFst,
+    aspirate_stops: RegexFst,
 }
 
 fn common_setup() -> CommonData {
@@ -252,6 +291,7 @@ fn common_setup() -> CommonData {
     let resonants = xsampa_disjoint(&pie_resonants());
     let laryngeals = xsampa_disjoint(&pie_laryngeals());
     let coronals = xsampa_disjoint(&coronal_stops());
+    let aspirate_stops = xsampa_disjoint(&"b_h d_h g_h g_w_h g_h".split(" ").collect::<Vec<_>>());
 
     CommonData {
         table,
@@ -260,6 +300,7 @@ fn common_setup() -> CommonData {
         resonants,
         laryngeals,
         coronals,
+        aspirate_stops,
     }
 }
 #[test]
