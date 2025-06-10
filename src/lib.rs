@@ -7,9 +7,9 @@ use wasm_bindgen::prelude::*;
 
 mod cross_product;
 mod negate;
-mod regex;
-mod sound_law;
-mod tables;
+pub mod regex;
+pub mod sound_law;
+pub mod tables;
 mod trans;
 
 use rustfst::prelude::VectorFst;

@@ -1,4 +1,7 @@
-use std::fmt::{Display, Formatter};
+use std::{
+    fmt::{Display, Formatter},
+    sync::Arc,
+};
 
 use rustfst::{
     prelude::{
@@ -6,7 +9,7 @@ use rustfst::{
         concat::concat,
         optimize,
         union::union,
-        VectorFst,
+        Fst, VectorFst,
     },
     utils::acceptor,
     Semiring, SymbolTable,
@@ -47,13 +50,27 @@ impl Display for RegexOperator {
 
 //change this to not a new type that also contains information for how it was created
 #[wasm_bindgen]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RegexFst {
     fst: SoundFst,
     operator: RegexOperator,
 }
 #[wasm_bindgen]
 impl RegexFst {
+    // not sure if including json in here is the best in terms of design
+    pub fn to_json(&self) -> String {
+        serde_json::to_string(self).expect("Unwrap json string failed")
+    }
+
+    pub fn from_json(s: &str) -> Self {
+        // just asume an ipa for now
+        let mut ret: Self = serde_json::from_str(s).expect("Unwrap json string failed");
+        let table = Arc::new(ipa());
+        ret.fst.0.set_input_symbols(Arc::clone(&table));
+        ret.fst.0.set_output_symbols(Arc::clone(&table));
+        ret
+    }
+
     // because wasmbindgen is stupid
     pub fn dup(&self) -> Self {
         self.clone()
