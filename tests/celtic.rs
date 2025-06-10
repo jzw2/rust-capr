@@ -91,6 +91,24 @@ fn a3() -> SoundLawComposition {
     comp
 }
 
+// a4 requires suprasegmental for stress
+
+fn a5() -> SoundLawComposition {
+    let data = common_setup();
+
+    let mut from = data.coronals.clone();
+    from.concat(&data.coronals); // Important: concat, not extend
+
+    let to = RegexFst::new_from_ipa("ss".into());
+    let left = RegexFst::new_from_ipa("".into());
+    let right = RegexFst::new_from_ipa("".into());
+
+    let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+    let mut comp = SoundLawComposition::new();
+    comp.add_law(&law);
+    comp
+}
+
 fn mini_consonants() -> Vec<&'static str> {
     "p l n r".split(' ').collect()
 }
@@ -161,16 +179,7 @@ fn grano_modified_test() {
 }
 #[test]
 fn krissu() {
-    let data = common_setup();
-
-    let mut from = data.coronals.clone();
-    from.concat(&data.coronals); // Important: concat, not extend
-
-    let to = RegexFst::new_from_ipa("ss".into());
-    let left = RegexFst::new_from_ipa("".into());
-    let right = RegexFst::new_from_ipa("".into());
-
-    let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+    let law = a5();
 
     let transduced = law.transduce_text(&xsampa_to_ipa("krdtu"));
     assert_eq!(transduced.len(), 1);
@@ -299,9 +308,4 @@ fn xsampa_disjoint(pie_consonants: &[&str]) -> RegexFst {
         disjoint_consonants.disjoint(&fst)
     }
     disjoint_consonants
-}
-
-#[test]
-fn test_add() {
-    assert_eq!(3 + 2, 5);
 }
