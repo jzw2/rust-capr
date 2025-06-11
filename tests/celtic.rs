@@ -411,6 +411,34 @@ fn d2() -> SoundLawComposition {
     comp.add_law(&law);
     comp
 }
+// since lengthening is essentally epenthesis, d3 is hard right now
+
+fn d4() -> SoundLawComposition {
+    let data = common_setup();
+
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("ar"));
+
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("ra"));
+    let left = data.labials.clone();
+    let mut right = data.coronals.clone();
+    right.concat(&data.coronals);
+
+    let law1 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("al"));
+
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("la"));
+    let left = data.labials.clone();
+    let mut right = data.coronals.clone();
+    right.concat(&data.coronals);
+
+    let law2 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+    let mut comp = SoundLawComposition::new();
+    comp.add_law(&law1);
+    comp.add_law(&law2);
+    comp
+}
+
 fn mini_consonants() -> Vec<&'static str> {
     "p l n r".split(' ').collect()
 }
@@ -525,6 +553,7 @@ struct CommonData {
     vowels: RegexFst,
     liquids: RegexFst,
     nasals: RegexFst,
+    labials: RegexFst,
 }
 
 fn common_setup() -> CommonData {
@@ -538,6 +567,7 @@ fn common_setup() -> CommonData {
     let vowels = xsampa_disjoint(&"a e i o u".split(" ").collect::<Vec<_>>());
     let liquids = xsampa_disjoint(&"l r".split(" ").collect::<Vec<_>>());
     let nasals = xsampa_disjoint(&"n m".split(" ").collect::<Vec<_>>());
+    let labials = xsampa_disjoint(&"p b m w".split(" ").collect::<Vec<_>>());
 
     CommonData {
         table,
@@ -550,6 +580,7 @@ fn common_setup() -> CommonData {
         vowels,
         liquids,
         nasals,
+        labials,
     }
 }
 #[test]
