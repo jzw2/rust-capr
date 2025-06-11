@@ -189,6 +189,47 @@ fn b4() -> SoundLawComposition {
     comp.add_law(&law);
     comp
 }
+// b5 is an epenthesis rule
+
+// b6 requires knowing how syllable boundries for the laryngeals
+
+// b7 is complicated
+
+fn b8() -> SoundLawComposition {
+    let data = common_setup();
+
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("e:"));
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("i:"));
+    let left = RegexFst::new_from_ipa("".into());
+    let right = RegexFst::new_from_ipa("".into());
+
+    let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+    let mut comp = SoundLawComposition::new();
+    comp.add_law(&law);
+    comp
+}
+
+// b9 requires final syllable knowledge
+//
+// b10 literally doesn't exist
+//
+// b11
+
+fn b11() -> SoundLawComposition {
+    let data = common_setup();
+
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa(":"));
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa(""));
+    let left = data.vowels.clone();
+    let mut right = data.resonants.clone();
+    right.concat(&data.consonants);
+
+    let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let mut comp = SoundLawComposition::new();
+    comp.add_law(&law);
+    comp
+}
 fn mini_consonants() -> Vec<&'static str> {
     "p l n r".split(' ').collect()
 }
@@ -300,6 +341,7 @@ struct CommonData {
     laryngeals: RegexFst,
     coronals: RegexFst,
     aspirate_stops: RegexFst,
+    vowels: RegexFst,
 }
 
 fn common_setup() -> CommonData {
@@ -310,6 +352,7 @@ fn common_setup() -> CommonData {
     let laryngeals = xsampa_disjoint(&pie_laryngeals());
     let coronals = xsampa_disjoint(&coronal_stops());
     let aspirate_stops = xsampa_disjoint(&"b_h d_h g_h g_w_h g_h".split(" ").collect::<Vec<_>>());
+    let vowels = xsampa_disjoint(&"a e i o u".split(" ").collect::<Vec<_>>());
 
     CommonData {
         table,
@@ -319,6 +362,7 @@ fn common_setup() -> CommonData {
         laryngeals,
         coronals,
         aspirate_stops,
+        vowels,
     }
 }
 #[test]
