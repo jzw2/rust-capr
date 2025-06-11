@@ -230,6 +230,24 @@ fn b11() -> SoundLawComposition {
     comp.add_law(&law);
     comp
 }
+
+fn c1() -> SoundLawComposition {
+    let data = common_setup();
+
+    let mut from = data.stops.clone();
+    from.disjoint(&RegexFst::new_from_ipa("s".into()));
+
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("x"));
+    let left = RegexFst::new_from_ipa(xsampa_to_ipa(""));
+    let right = data.stops.clone();
+
+    let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let mut comp = SoundLawComposition::new();
+    comp.add_law(&law);
+    comp
+}
+
 fn mini_consonants() -> Vec<&'static str> {
     "p l n r".split(' ').collect()
 }
