@@ -338,6 +338,21 @@ fn c7() -> SoundLawComposition {
     comp.add_law(&law);
     comp
 }
+fn c8() -> SoundLawComposition {
+    let data = common_setup();
+
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("uw"));
+
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("ow"));
+    let left = RegexFst::new_from_ipa(xsampa_to_ipa(""));
+    let right = data.consonants.clone();
+
+    let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let mut comp = SoundLawComposition::new();
+    comp.add_law(&law);
+    comp
+}
 fn mini_consonants() -> Vec<&'static str> {
     "p l n r".split(' ').collect()
 }
