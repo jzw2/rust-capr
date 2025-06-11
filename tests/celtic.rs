@@ -247,6 +247,21 @@ fn c1() -> SoundLawComposition {
     comp.add_law(&law);
     comp
 }
+fn c2() -> SoundLawComposition {
+    let data = common_setup();
+
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("p"));
+
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("b"));
+    let left = RegexFst::new_from_ipa(xsampa_to_ipa(""));
+    let right = data.liquids.clone();
+
+    let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let mut comp = SoundLawComposition::new();
+    comp.add_law(&law);
+    comp
+}
 
 fn mini_consonants() -> Vec<&'static str> {
     "p l n r".split(' ').collect()
@@ -360,6 +375,7 @@ struct CommonData {
     coronals: RegexFst,
     aspirate_stops: RegexFst,
     vowels: RegexFst,
+    liquids: RegexFst,
 }
 
 fn common_setup() -> CommonData {
@@ -371,6 +387,7 @@ fn common_setup() -> CommonData {
     let coronals = xsampa_disjoint(&coronal_stops());
     let aspirate_stops = xsampa_disjoint(&"b_h d_h g_h g_w_h g_h".split(" ").collect::<Vec<_>>());
     let vowels = xsampa_disjoint(&"a e i o u".split(" ").collect::<Vec<_>>());
+    let liquids = xsampa_disjoint(&"l r".split(" ").collect::<Vec<_>>());
 
     CommonData {
         table,
@@ -381,6 +398,7 @@ fn common_setup() -> CommonData {
         coronals,
         aspirate_stops,
         vowels,
+        liquids,
     }
 }
 #[test]
