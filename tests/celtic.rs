@@ -438,6 +438,24 @@ fn d4() -> SoundLawComposition {
     comp.add_law(&law2);
     comp
 }
+fn d5() -> SoundLawComposition {
+    let data = common_setup();
+
+    let from = data.laryngeals.clone();
+
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa(""));
+    let mut left = data.vowels.clone();
+    left.concat(&RegexFst::new_from_ipa("y".into()));
+    let mut right = data.coronals.clone();
+    right.concat(&data.coronals);
+
+    let law1 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let mut comp = SoundLawComposition::new();
+    comp.add_law(&law1);
+    comp.add_law(&law2);
+    comp
+}
 
 fn mini_consonants() -> Vec<&'static str> {
     "p l n r".split(' ').collect()
