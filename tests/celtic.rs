@@ -353,6 +353,49 @@ fn c8() -> SoundLawComposition {
     comp.add_law(&law);
     comp
 }
+fn d1() -> SoundLawComposition {
+    let data = common_setup();
+
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("rf"));
+
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("rr"));
+    let left = RegexFst::new_from_ipa(xsampa_to_ipa(""));
+    let right = data.consonants.clone();
+
+    let law1 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("lf"));
+
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("ll"));
+    let left = RegexFst::new_from_ipa(xsampa_to_ipa(""));
+    let right = data.consonants.clone();
+
+    let law2 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    // this needs to come first so it doesn't bleed
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("rst"));
+
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("rt"));
+    let left = RegexFst::new_from_ipa(xsampa_to_ipa(""));
+    let right = data.consonants.clone();
+
+    let law3 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("rs"));
+
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("rr"));
+    let left = RegexFst::new_from_ipa(xsampa_to_ipa(""));
+    let right = data.consonants.clone();
+
+    let law4 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let mut comp = SoundLawComposition::new();
+    comp.add_law(&law1); // 3 needs to come before
+    comp.add_law(&law2); // 3 needs to come before
+    comp.add_law(&law3); // 3 needs to come before
+    comp.add_law(&law4); // 3 needs to come before
+    comp
+}
 fn mini_consonants() -> Vec<&'static str> {
     "p l n r".split(' ').collect()
 }
