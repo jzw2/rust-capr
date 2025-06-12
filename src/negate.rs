@@ -20,13 +20,13 @@ impl SoundFst {
         //ret.reverse(); // sfst reverses twice for some reason
         //ret.reverse();
         ret.d(line!());
-        println!("{} Removing epsilons", line!());
+        //println!("{} Removing epsilons", line!());
         rm_epsilon(&mut ret.0).unwrap();
 
         tr_sort(&mut ret.0, OLabelCompare {}); // I don't think this changes anything, but hfst has this
                                                // hfst also has removing the weights from the vector, but I only have one weight
         ret.d(line!());
-        println!("{} Determinizing", line!());
+        //println!("{} Determinizing", line!());
         let encoded = encode(
             &mut ret.0,
             rustfst::prelude::encode::EncodeType::EncodeWeightsAndLabels,
@@ -35,7 +35,7 @@ impl SoundFst {
         tr_sort(&mut ret.0, ILabelCompare {}); // I don't think this changes anything, but hfst has this
         let mut ret: SoundFst = SoundFst(determinize(&ret.0).unwrap());
         //ret.d(line!());
-        println!("{} Minimizing", line!());
+        //println!("{} Minimizing", line!());
         minimize(&mut ret.0).unwrap();
         decode(&mut ret.0, encoded).unwrap();
         ret.d(line!());
@@ -140,7 +140,7 @@ mod tests {
         assert!(!accepts(&negate_fst, &input1));
         assert!(!accepts(&negate_fst, &input2));
 
-        dbg!(&negate_fst);
+        // dbg!(&negate_fst);
         assert!(accepts(&negate_fst, &input3));
     }
 
@@ -237,8 +237,8 @@ mod tests {
         let det_fst: SoundFst = SoundFst(fst);
 
         let negate_fst = det_fst.negate(&alpha);
-        dbg!(&negate_fst);
-        dbg!(&det_fst);
+        // dbg!(&negate_fst);
+        // dbg!(&det_fst);
         //negate_fst.draw("negate_test.txt", &DrawingConfig::default());
 
         let any_input = vec![1, 2, 3];
@@ -262,7 +262,7 @@ mod tests {
         let fst = SoundFst(fst);
 
         let negate_fst = fst.negate(&alpha);
-        dbg!(&negate_fst);
+        // dbg!(&negate_fst);
 
         let just1 = vec![1];
         assert!(accepts(&fst, &just1));
@@ -283,7 +283,7 @@ mod tests {
         let fst = SoundFst(fst);
 
         let negate_fst = fst.negate(&alpha);
-        dbg!(&negate_fst);
+        // dbg!(&negate_fst);
 
         let just1 = vec![1];
         assert!(accepts(&fst, &just1));
@@ -315,7 +315,7 @@ mod tests {
         let star = SoundFst(star);
 
         let negate_fst = star.negate(&alpha);
-        dbg!(&negate_fst);
+        // dbg!(&negate_fst);
 
         let fst = star;
 

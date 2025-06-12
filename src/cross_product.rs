@@ -4,7 +4,8 @@ use rustfst::{
     prelude::{
         closure::closure, compose::compose, concat::concat, invert, optimize, tr_sort,
         ILabelCompare, MutableFst, OLabelCompare,
-    }, Label, Semiring, SymbolTable, EPS_LABEL,
+    },
+    Label, Semiring, SymbolTable, EPS_LABEL,
 };
 
 use crate::trans::{SoundVec, SoundWeight};
@@ -28,7 +29,7 @@ fn any_to_single_label(table: &SymbolTable, single_label: Label) -> SoundVec {
     //     &DrawingConfig::default(),
     // )
     // .unwrap();
-    println!("{:?}", fst);
+    // println!("{:?}", fst);
 
     fst
 }

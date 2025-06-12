@@ -26,6 +26,7 @@ use std::sync::Arc;
 use crate::tables::single_character_class;
 
 // ideally refacotor this instead of having both sound fst and sound law, as it seems kind of redundant
+// also maybe
 #[derive(Clone, Debug, PartialEq)]
 pub struct SoundFst(pub SoundVec);
 
@@ -214,20 +215,20 @@ impl SoundFst {
 
         transducer.insert_freely(left_context);
         transducer.insert_freely(right_context);
-        println!("{}", line!());
+        // println!("{}", line!());
 
         let pi_star = Self::any_star(alphabet);
         let mut pi_star_free_mark = Self::any_star(alphabet);
         pi_star_free_mark.concatenate(&transducer);
 
-        println!("{}", line!());
+        // println!("{}", line!());
         let left_transducer: SoundFst = Self::from_single_label(left_context);
         let mut pi_star_copy = pi_star.clone();
         pi_star_copy.concatenate(&left_transducer);
         let pi_star_neg = pi_star_copy.negate_with_symbol_table(alphabet);
         //pi_star_neg.optimize(); // please work
 
-        println!("{}", line!());
+        // println!("{}", line!());
         // let composed_transducer: SoundVec = compose(pi_star_free_mark, pi_star_neg).unwrap();
         pi_star_free_mark.compose(&pi_star_neg);
 
@@ -374,7 +375,7 @@ impl SoundFst {
         let start_bracket =
             Self::begin_bracket(left_context_marker, right_context_marker, alphabet);
 
-        println!("{}", line!());
+        // println!("{}", line!());
         // iff statement
         // aka ct and mt
         let start_then_end = Self::if_start_then_end(&end_in_transducer, &start_bracket, alphabet);
@@ -385,7 +386,7 @@ impl SoundFst {
         let mut disjunction = start_then_end;
         disjunction.union(&end_ten_start);
 
-        println!("disjunction {}", line!());
+        // println!("disjunction {}", line!());
         disjunction.df(&format!(
             "negated_replace_context_before_optimize{}",
             CALL_COUNT.load(std::sync::atomic::Ordering::Relaxed)
@@ -399,7 +400,7 @@ impl SoundFst {
         ret.df("negated_replace_context");
 
         ret.optimize();
-        println!("Finished replace context");
+        // println!("Finished replace context");
         ret
     }
 
@@ -447,16 +448,16 @@ impl SoundFst {
         let left_marker = alphabet_with_marker.add_symbol("left_marker");
         let right_marker = alphabet_with_marker.add_symbol("right_marker");
 
-        println!("inserting boundry markers");
+        // println!("inserting boundry markers");
         let ibt: SoundFst = Self::insert_boundry_markers(alphabet, left_marker, right_marker);
-        println!("removing boundry markers");
+        // println!("removing boundry markers");
         let rbt: SoundFst = Self::remove_boundry_markers(alphabet, left_marker, right_marker); // remove boundry markers
 
-        println!("constriaingin boundry markers");
+        // println!("constriaingin boundry markers");
         let cbt = Self::constrain_boundry_markers(&alphabet_with_marker, left_marker, right_marker);
         cbt.df("cbt");
 
-        println!("left context");
+        // println!("left context");
         let mut left_opt = left_context.clone();
         left_opt.optimize();
         let lct = left_opt.single_character_class_fst_context(
@@ -467,7 +468,7 @@ impl SoundFst {
         //lct.optimize();
         lct.df("left_context");
 
-        println!("right context");
+        // println!("right context");
         let mut right_rev: SoundFst = right_context;
         right_rev.reverse();
         right_rev.optimize();
@@ -477,28 +478,28 @@ impl SoundFst {
         rct.optimize();
         rct.df("right_context");
 
-        println!("create replace tranducer");
+        // println!("create replace tranducer");
         let mut rt = self.replace_transducer(left_marker, right_marker, &alphabet_with_marker);
         rt.df("replace_transducer");
         rt.optimize();
         rt.df("rt_optimize");
 
         let mut result: SoundFst = ibt.clone();
-        println!("composing cbt");
+        // println!("composing cbt");
         //result.compose(&cbt);
         //result.df("compose_cbt");
         //println!("composing rct");
         result.compose(&rct);
         result.df("compose_rct");
-        println!("composing lct");
+        // println!("composing lct");
         result.compose(&lct);
-        println!("composing lt");
+        // println!("composing lt");
         result.df("compose_lct");
         result.compose(&rt);
         result.df("compose_rt");
-        println!("composing rbt");
+        // println!("composing rbt");
         result.compose(&rbt);
-        println!("done");
+        // println!("done");
         result.df("compose_rbt");
         result.optimize(); // I don't know if this is in the original
 

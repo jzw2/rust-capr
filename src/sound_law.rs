@@ -277,7 +277,7 @@ fn transduce_text_with_symbol_table(
     let t = fst;
     let labels: Vec<_> = text
         .chars()
-        .inspect(|c| println!("{}", c))
+        //.inspect(|c| println!("{}", c))
         .map(|c| {
             table.get_label(c.to_string()).expect(&format!(
                 "Character {} was not found in symbol table",
@@ -327,6 +327,11 @@ impl Default for SoundLawComposition {
 impl SoundLawComposition {
     pub fn clear(&mut self) {
         self.laws = vec![];
+    }
+    pub fn append(&mut self, other: SoundLawComposition) {
+        for law in other.laws {
+            self.add_law(&law);
+        }
     }
     pub fn new() -> SoundLawComposition {
         console_error_panic_hook::set_once();

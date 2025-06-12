@@ -1,6 +1,7 @@
 use rustfst::SymbolTable;
 
 // figure out how to maek this static
+// requires a type change, otherwise I basically have to clone, which has minimal performance gains
 pub fn ipa() -> SymbolTable {
     let mut table = SymbolTable::new();
     let chars: Vec<String> = ('a'..='z').map(|x| x.to_string()).collect();
@@ -20,6 +21,7 @@ pub fn ipa() -> SymbolTable {
     table
 }
 
+// likely uneeded, but I think I use it in some test cases
 pub fn xsampa_ascii() -> SymbolTable {
     let xsampa_chars: Vec<String> = (' '..='~')
         .filter(|x| *x != '"') // breaks dot when debugging
