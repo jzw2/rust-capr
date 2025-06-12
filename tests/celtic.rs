@@ -453,7 +453,6 @@ fn d5() -> SoundLawComposition {
 
     let mut comp = SoundLawComposition::new();
     comp.add_law(&law1);
-    comp.add_law(&law2);
     comp
 }
 
@@ -650,6 +649,105 @@ fn gwow() {
     let transduced = law.transduce_text(&xsampa_to_ipa("g_wow"));
     assert_eq!(transduced.len(), 1);
     assert_eq!(transduced[0].replace(" ", ""), xsampa_to_ipa("bow"));
+}
+
+#[test]
+fn giant_test() {
+    let mut laws = vec![
+        a1(),
+        a2(),
+        a3(),
+        //a4(),
+        a5(),
+        //a6(),
+        //a7(),
+        //a8(),
+        //a9(),
+        b1(),
+        b2(),
+        //b3(),
+        b4(),
+        //b5(),
+        //b6(),
+        //b7(),
+        b8(),
+        //b9(),
+        //b10(),
+        b11(),
+        c1(),
+        c2(),
+        c3(),
+        c4(),
+        c5(),
+        c6(),
+        c7(),
+        c8(),
+        d1(),
+        d2(),
+        //d3(),
+        d4(),
+        d5(),
+    ];
+
+    println!("Finish building sound laws");
+    let mut total = laws.remove(0);
+    for l in laws {
+        total.append(l);
+    }
+
+    let test_cases = [
+        ("phte:r", "fati:r"),
+        ("krdtu", "krissu"),
+        ("plhno", "fla:no"),
+        ("grhno", "grano"),
+        ("grxno", "grano"),
+        ("grqno", "grano"),
+        ("g_wow", "bow"),
+        ("b_hero", "bero"),
+        ("terhtro", "taratro"),
+        ("dnt", "danto"),
+        ("hre:g", "ri:g"),
+        ("hepirom", "efirom"),
+        ("xwehnto", "winto"),
+        ("sixmdo", "sindo"),
+        ("septm", "sextam"), // might glitch out if I don't provide the laryngeal deletion
+        ("prptu", "frixtu"),
+        ("piprqse", "pibrase"),
+        ("supno", "sowno"),
+        ("deqno", "da:no"),
+        ("reyd", "re:do"),
+        ("newyo", "nowyo"),
+    ];
+
+    let mut failures = vec![];
+
+    for (input, expected) in test_cases {
+        let transduced = total.transduce_text(&xsampa_to_ipa(input));
+
+        if transduced.len() != 1 {
+            failures.push(format!(
+                "Input {:?}: expected 1 result, got {}",
+                input,
+                transduced.len()
+            ));
+            continue; // Skip further checks for this input if the length is wrong
+        }
+
+        let actual = transduced[0].replace(" ", "");
+        let expected_ipa = xsampa_to_ipa(expected);
+        println!("{} -> {}, expected {}", input, actual, expected_ipa);
+
+        if actual != expected_ipa {
+            failures.push(format!(
+                "Input {:?}: expected {:?}, got {:?}",
+                input, expected_ipa, actual
+            ));
+        }
+    }
+
+    if !failures.is_empty() {
+        panic!("Some transductions failed:\n{}", failures.join("\n"));
+    }
 }
 
 fn xsampa_disjoint(pie_consonants: &[&str]) -> RegexFst {
