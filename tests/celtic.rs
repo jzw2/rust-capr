@@ -4,7 +4,67 @@ use rust_capr::{
     sound_law::{SoundLaw, SoundLawComposition},
     tables::{ipa, xsampa_ascii},
 };
-use rustfst::SymbolTable;
+use rustfst::{Label, SymbolTable};
+
+/// puts it after the string
+fn noninitial(labels: &[Label], table: &SymbolTable) -> Vec<Label> {
+    let noninitialIndex = table
+        .get_label("noninitial")
+        .expect("Failed to find noninitial label");
+    let vowels = "a e i o u"
+        .split(" ")
+        .map(|x| table.get_label(x).expect("Failed to find label"))
+        .collect::<Vec<_>>();
+    let mut new = Vec::new();
+    let mut first = true;
+    for c in labels {
+        new.push(*c);
+
+        if vowels.contains(c) {
+            if first {
+                first = false;
+            } else {
+                new.push(noninitialIndex);
+            }
+        }
+    }
+    new
+}
+
+//the labels are in ipa
+fn xsampa_to_labels(xsampa: &str) -> Vec<Label> {
+    let table = ipa();
+    let s: Vec<_> = xsampa_to_ipa(xsampa)
+        .chars()
+        .map(|x| table.get_label(x.to_string()).unwrap())
+        .collect();
+    s
+}
+
+fn labels_to_ipa(labels: &[Label]) -> String {
+    let table = ipa();
+    let s: String = labels
+        .into_iter()
+        .map(|x| table.get_symbol(*x).unwrap())
+        .collect::<Vec<_>>()
+        .join(" ");
+    s
+}
+
+#[test]
+fn noninitial_test() {
+    let table = ipa();
+    let labels = xsampa_to_labels("d_hugxte:r");
+    let labels = noninitial(&labels, &table);
+    let ipa = labels_to_ipa(&labels);
+
+    assert_eq!(ipa, "d ʰ u ɡ x t e noninitial ː r");
+}
+
+fn preprocess(s: &[Label], table: &SymbolTable) -> Vec<Label> {
+    let s = noninitial(s, table);
+    s
+}
 
 // represent the laryngals as h, x, q
 
@@ -92,6 +152,9 @@ fn a3() -> SoundLawComposition {
 }
 
 // a4 requires suprasegmental for stress
+fn a4() -> SoundLawComposition {
+    todo!()
+}
 
 fn a5() -> SoundLawComposition {
     let data = common_setup();
@@ -574,7 +637,9 @@ struct CommonData {
 }
 
 fn common_setup() -> CommonData {
-    let table = ipa();
+    let mut table = ipa();
+    table.add_symbol("noninitial");
+
     let consonants = xsampa_disjoint(&pie_consonants());
     let stops = xsampa_disjoint(&pie_stops());
     let resonants = xsampa_disjoint(&pie_resonants());
