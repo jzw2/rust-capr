@@ -156,7 +156,7 @@ impl SoundLaw {
     ) -> SoundLaw {
         let labels =
             [left_context, right_context, from, to].map(|s| get_labels_from_str(s, table).unwrap());
-        dbg!(&labels);
+        // dbg!(&labels);
 
         // the left and right contexts fst
         let left_context_fst: VectorFst<_> = acceptor(&labels[0], SoundWeight::one());
@@ -274,7 +274,6 @@ fn transduce_text_with_symbol_table(
     table: &SymbolTable,
     text: &str,
 ) -> Vec<String> {
-    let t = fst;
     let labels: Vec<_> = text
         .chars()
         //.inspect(|c| println!("{}", c))
@@ -285,6 +284,11 @@ fn transduce_text_with_symbol_table(
             ))
         })
         .collect();
+    transduce_from_labels(fst, table, &labels)
+}
+
+fn transduce_from_labels(fst: &SoundFst, table: &SymbolTable, labels: &[Label]) -> Vec<String> {
+    let t = fst;
     let text_fst: VectorFst<_> = acceptor(&labels, SoundWeight::one());
     let mut text_fst: SoundFst = text_fst.into();
 
@@ -306,6 +310,7 @@ fn transduce_text_with_symbol_table(
 
     output
 }
+
 // todo: make a thing for the symbol table to check
 //
 #[wasm_bindgen]
