@@ -6,9 +6,19 @@ use rust_capr::{
 };
 use rustfst::{Label, SymbolTable};
 
+// boundry symbols
+fn boundry(labels: &[Label], table: &SymbolTable) -> Vec<Label> {
+    let boundry = table
+        .get_label("boundry")
+        .expect("Failed to find boundry label");
+    let mut ret = labels.to_vec();
+    ret.insert(0, boundry);
+    ret
+}
+
 /// puts it after the string
 fn noninitial(labels: &[Label], table: &SymbolTable) -> Vec<Label> {
-    let noninitialIndex = table
+    let noninitial_index = table
         .get_label("noninitial")
         .expect("Failed to find noninitial label");
     let vowels = "a e i o u"
@@ -24,7 +34,7 @@ fn noninitial(labels: &[Label], table: &SymbolTable) -> Vec<Label> {
             if first {
                 first = false;
             } else {
-                new.push(noninitialIndex);
+                new.push(noninitial_index);
             }
         }
     }
@@ -63,6 +73,7 @@ fn noninitial_test() {
 
 fn preprocess(s: &[Label], table: &SymbolTable) -> Vec<Label> {
     let s = noninitial(s, table);
+    let s = boundry(&s, table);
     s
 }
 
@@ -174,7 +185,7 @@ fn a5() -> SoundLawComposition {
     let data = common_setup();
 
     let mut from = data.coronals.clone();
-    from.concat(&data.coronals); // Important: concat, not extend
+    from.concat(&data.coronals);
 
     let to = RegexFst::new_from_ipa("ss".into());
     let left = RegexFst::new_from_ipa("".into());
@@ -223,10 +234,24 @@ fn a6() -> SoundLawComposition {
     total.add_law(&law3);
     total
 }
-// a7 requires stress
+// a7 requires stress, and also seems to fail to anotate it in all periods
 
 // a8 requires knowing the begin and end of a word
+fn a8() -> SoundLawComposition {
+    let data = common_setup();
 
+    let mut from = data.laryngeals.clone();
+
+    let to = RegexFst::new_from_ipa("a".into());
+    let mut left = RegexFst::new_from_label(data.table.get_label("#").unwrap());
+    left.concat(&data.liquids.clone());
+    let right = data.consonants.clone();
+
+    let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+    let mut comp = SoundLawComposition::new();
+    comp.add_law(&law);
+    comp
+}
 // a9 can be made easier by just assuming that they started merged, since no sound law depends on the palatals
 //
 //
