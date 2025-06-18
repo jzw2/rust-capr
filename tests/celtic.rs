@@ -311,6 +311,28 @@ fn b2() -> SoundLawComposition {
 
 // b3 has epenthesis
 
+fn b3() -> SoundLawComposition {
+    let data = common_setup();
+
+    let from = RegexFst::new_from_ipa("r".to_string());
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("ri"));
+    let left = data.consonants.clone();
+    let mut right = data.stops.clone();
+
+    let law1 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let from = RegexFst::new_from_ipa("l".to_string());
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("li"));
+    let left = data.consonants.clone();
+    let mut right = data.stops.clone();
+
+    let law2 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let mut comp = SoundLawComposition::new();
+    comp.add_law(&law1);
+    comp.add_law(&law2);
+    comp
+}
 fn b4() -> SoundLawComposition {
     let data = common_setup();
 
