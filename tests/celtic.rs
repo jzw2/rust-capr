@@ -350,6 +350,28 @@ fn b4() -> SoundLawComposition {
 }
 // b5 is an epenthesis rule
 
+fn b5() -> SoundLawComposition {
+    let data = common_setup();
+
+    let from = RegexFst::new_from_ipa("r".to_string());
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("ar"));
+    let left = data.consonants.clone();
+    let mut right = data.consonants.clone();
+
+    let law1 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let from = RegexFst::new_from_ipa("l".to_string());
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("al"));
+    let left = data.consonants.clone();
+    let mut right = data.consonants.clone();
+
+    let law2 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let mut comp = SoundLawComposition::new();
+    comp.add_law(&law1);
+    comp.add_law(&law2);
+    comp
+}
 // b6 requires knowing how syllable boundries for the laryngeals
 
 // b7 is complicated
