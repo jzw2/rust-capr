@@ -18,6 +18,8 @@ pub fn ipa() -> SymbolTable {
 
     table.add_symbols(spacing);
     table.add_symbol(" "); //becuase it's annoying when I make a typo
+    table.add_symbol("noninitial");
+    table.add_symbol("pretonic");
     table
 }
 

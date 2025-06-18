@@ -12,7 +12,7 @@ use rustfst::{
         Fst, VectorFst,
     },
     utils::acceptor,
-    Semiring, SymbolTable,
+    Label, Semiring, SymbolTable,
 };
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
@@ -26,6 +26,7 @@ use crate::{
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Serialize, Deserialize)]
 enum RegexOperator {
     Acceptor(String), // use this as the basic operator vs basing it on just a single character
+    SingleLabel(Label),
     Star(Box<RegexOperator>),
     Concat(Box<RegexOperator>, Box<RegexOperator>),
     Union(Box<RegexOperator>, Box<RegexOperator>), // empty may be uneeded?
@@ -43,6 +44,7 @@ impl Display for RegexOperator {
             RegexOperator::Union(regex_operator, regex_operator1) => {
                 format!("({} + {})", regex_operator, regex_operator1)
             }
+            RegexOperator::SingleLabel(s) => s.to_string(),
         };
         write!(f, "{}", s)
     }
@@ -96,6 +98,15 @@ impl RegexFst {
     pub fn kleen(&mut self) {
         closure(&mut self.fst.0, ClosureType::ClosureStar);
         self.operator = RegexOperator::Star(Box::new(self.operator.clone()))
+    }
+
+    // might be redudant to use both strings and labels
+    pub fn new_from_label(label: Label) -> Self {
+        let acceptor: SoundVec = acceptor(&[label], SoundWeight::one());
+        RegexFst {
+            fst: SoundFst(acceptor),
+            operator: RegexOperator::SingleLabel(label),
+        }
     }
 
     //quetionable interface, maybe I should wrap the table
