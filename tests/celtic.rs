@@ -373,7 +373,35 @@ fn b5() -> SoundLawComposition {
     comp
 }
 // b6 requires knowing how syllable boundries for the laryngeals
+// I'm just going to implenent unconditional dropping
+fn b6() -> SoundLawComposition {
+    let data = common_setup();
 
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("x"));
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa(""));
+    let left = RegexFst::new_from_ipa("".into());
+    let right = RegexFst::new_from_ipa("".into());
+
+    let law1 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("h"));
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa(""));
+    let left = RegexFst::new_from_ipa("".into());
+    let right = RegexFst::new_from_ipa("".into());
+
+    let law2 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("q"));
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa(""));
+    let left = RegexFst::new_from_ipa("".into());
+    let right = RegexFst::new_from_ipa("".into());
+
+    let law3 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let mut comp = SoundLawComposition::new();
+    comp.add_law(&law1);
+    comp.add_law(&law2);
+    comp.add_law(&law3);
+    comp
+}
 // b7 is complicated
 
 fn b8() -> SoundLawComposition {
