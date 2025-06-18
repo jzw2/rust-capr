@@ -187,7 +187,42 @@ fn a5() -> SoundLawComposition {
 }
 
 // a6 epenthisis
+fn a6() -> SoundLawComposition {
+    let data = common_setup();
 
+    let mut from = RegexFst::new_from_ipa(xsampa_to_ipa("h"));
+
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("a:"));
+    let mut left = data.consonants.clone();
+    left.concat(&data.resonants.clone());
+    let right = data.consonants.clone();
+
+    let law1 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let mut from = RegexFst::new_from_ipa(xsampa_to_ipa("x"));
+
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("a:"));
+    let mut left = data.consonants.clone();
+    left.concat(&data.resonants.clone());
+    let right = data.consonants.clone();
+
+    let law2 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let mut from = RegexFst::new_from_ipa(xsampa_to_ipa("q"));
+
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("a:"));
+    let mut left = data.consonants.clone();
+    left.concat(&data.resonants.clone());
+    let right = data.consonants.clone();
+
+    let law3 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let mut total = SoundLawComposition::new();
+    total.add_law(&law1);
+    total.add_law(&law2);
+    total.add_law(&law3);
+    total
+}
 // a7 requires stress
 
 // a8 requires knowing the begin and end of a word
