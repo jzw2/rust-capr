@@ -153,7 +153,21 @@ fn a3() -> SoundLawComposition {
 
 // a4 requires suprasegmental for stress
 fn a4() -> SoundLawComposition {
-    todo!()
+    let data = common_setup();
+
+    let mut from = data.laryngeals.clone();
+    from.concat(&RegexFst::new_from_label(
+        data.table.get_label("noninitial").unwrap(),
+    ));
+    let to = RegexFst::new_from_ipa("".into());
+
+    let left = &data.stops.clone();
+    let right = &data.stops.clone();
+
+    let law = SoundLaw::create_with_arbitrary_regex(left, right, &from, &to, &data.table);
+    let mut comp = SoundLawComposition::new();
+    comp.add_law(&law);
+    comp
 }
 
 fn a5() -> SoundLawComposition {
