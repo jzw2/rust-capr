@@ -128,7 +128,7 @@ impl SoundLaw {
         // };
         let transform: SoundFst = RegexFst::regex_cross_product(from, to, table);
         transform.df("cross_product");
-        let mut replace_fst =
+        let replace_fst =
             transform.replace_in_context(left.to_sound_fst(), right.to_sound_fst(), false, table);
         // if contains_epsilon {
         //     replace_fst.invert();
@@ -278,10 +278,8 @@ fn transduce_text_with_symbol_table(
         .chars()
         //.inspect(|c| println!("{}", c))
         .map(|c| {
-            table.get_label(c.to_string()).expect(&format!(
-                "Character {} was not found in symbol table",
-                c.to_string()
-            ))
+            table.get_label(c.to_string()).unwrap_or_else(|| panic!("Character {} was not found in symbol table",
+                c))
         })
         .collect();
     transduce_from_labels(fst, table, &labels)
@@ -289,7 +287,7 @@ fn transduce_text_with_symbol_table(
 
 fn transduce_from_labels(fst: &SoundFst, table: &SymbolTable, labels: &[Label]) -> Vec<String> {
     let t = fst;
-    let text_fst: VectorFst<_> = acceptor(&labels, SoundWeight::one());
+    let text_fst: VectorFst<_> = acceptor(labels, SoundWeight::one());
     let mut text_fst: SoundFst = text_fst.into();
 
     let table = Arc::new(table.clone());
@@ -420,7 +418,7 @@ pub fn soundlaw_xsampa_to_ipa(s: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use std::{env::consts::OS, fmt::Debug};
+    
 
     use rustfst::symt;
 

@@ -1,14 +1,12 @@
 use rustfst::algorithms::compose::compose;
 use rustfst::algorithms::determinize::determinize;
 use rustfst::algorithms::{reverse, tr_sort, ProjectType};
-use rustfst::fst_properties::FstProperties;
 use rustfst::fst_traits::StateIterator;
 use rustfst::prelude::closure::{closure, ClosureType};
-use rustfst::prelude::encode::{decode, encode};
 use rustfst::prelude::rm_epsilon::rm_epsilon;
 use rustfst::prelude::union::union;
 use rustfst::prelude::{
-    invert, minimize, optimize, CoreFst, ExpandedFst, FstIntoIterator, ILabelCompare,
+    invert, optimize, CoreFst, ExpandedFst, FstIntoIterator,
     OLabelCompare, SerializableFst, TropicalWeight,
 };
 use rustfst::{
@@ -553,7 +551,7 @@ impl SoundFst {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json;
+    
 
     #[test]
     fn test_serialization() {
@@ -575,7 +573,7 @@ mod tests {
 
     use crate::sound_law;
 
-    use super::*;
+    
 
     #[test]
     fn simple_replace_multiple() {

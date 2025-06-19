@@ -2,7 +2,7 @@ use ipa_translate::xsampa_to_ipa;
 use rust_capr::{
     regex::RegexFst,
     sound_law::{SoundLaw, SoundLawComposition},
-    tables::{ipa, xsampa_ascii},
+    tables::ipa,
 };
 use rustfst::{Label, SymbolTable};
 
@@ -54,7 +54,7 @@ fn xsampa_to_labels(xsampa: &str) -> Vec<Label> {
 fn labels_to_ipa(labels: &[Label]) -> String {
     let table = ipa();
     let s: String = labels
-        .into_iter()
+        .iter()
         .map(|x| table.get_symbol(*x).unwrap())
         .collect::<Vec<_>>()
         .join(" ");
@@ -73,8 +73,8 @@ fn noninitial_test() {
 
 fn preprocess(s: &[Label], table: &SymbolTable) -> Vec<Label> {
     let s = noninitial(s, table);
-    let s = boundry(&s, table);
-    s
+    
+    boundry(&s, table)
 }
 
 // represent the laryngals as h, x, q
@@ -82,7 +82,7 @@ fn preprocess(s: &[Label], table: &SymbolTable) -> Vec<Label> {
 fn a1() -> SoundLawComposition {
     let data = common_setup();
 
-    let mut from = RegexFst::new_from_ipa(xsampa_to_ipa("he"));
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("he"));
 
     let to = RegexFst::new_from_ipa("e".into());
     let left = RegexFst::new_from_ipa("".into());
@@ -90,7 +90,7 @@ fn a1() -> SoundLawComposition {
 
     let law1 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
 
-    let mut from = RegexFst::new_from_ipa(xsampa_to_ipa("xe"));
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("xe"));
 
     let to = RegexFst::new_from_ipa("a".into());
     let left = RegexFst::new_from_ipa("".into());
@@ -98,7 +98,7 @@ fn a1() -> SoundLawComposition {
 
     let law2 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
 
-    let mut from = RegexFst::new_from_ipa(xsampa_to_ipa("qe"));
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("qe"));
 
     let to = RegexFst::new_from_ipa("o".into());
     let left = RegexFst::new_from_ipa("".into());
@@ -116,15 +116,15 @@ fn a1() -> SoundLawComposition {
 fn a2() -> SoundLawComposition {
     let data = common_setup();
 
-    let mut from = RegexFst::new_from_ipa(xsampa_to_ipa("eh"));
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("eh"));
 
-    let to = RegexFst::new_from_ipa(xsampa_to_ipa("e:").into());
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("e:"));
     let left = RegexFst::new_from_ipa("".into());
     let right = RegexFst::new_from_ipa("".into());
 
     let law1 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
 
-    let mut from = RegexFst::new_from_ipa(xsampa_to_ipa("eq"));
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("eq"));
 
     let to = RegexFst::new_from_ipa(xsampa_to_ipa("a:"));
     let left = RegexFst::new_from_ipa("".into());
@@ -132,7 +132,7 @@ fn a2() -> SoundLawComposition {
 
     let law2 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
 
-    let mut from = RegexFst::new_from_ipa(xsampa_to_ipa("eq"));
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("eq"));
 
     let to = RegexFst::new_from_ipa(xsampa_to_ipa("o:"));
     let left = RegexFst::new_from_ipa("".into());
@@ -201,7 +201,7 @@ fn a5() -> SoundLawComposition {
 fn a6() -> SoundLawComposition {
     let data = common_setup();
 
-    let mut from = RegexFst::new_from_ipa(xsampa_to_ipa("h"));
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("h"));
 
     let to = RegexFst::new_from_ipa(xsampa_to_ipa("a:"));
     let mut left = data.consonants.clone();
@@ -210,7 +210,7 @@ fn a6() -> SoundLawComposition {
 
     let law1 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
 
-    let mut from = RegexFst::new_from_ipa(xsampa_to_ipa("x"));
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("x"));
 
     let to = RegexFst::new_from_ipa(xsampa_to_ipa("a:"));
     let mut left = data.consonants.clone();
@@ -219,7 +219,7 @@ fn a6() -> SoundLawComposition {
 
     let law2 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
 
-    let mut from = RegexFst::new_from_ipa(xsampa_to_ipa("q"));
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("q"));
 
     let to = RegexFst::new_from_ipa(xsampa_to_ipa("a:"));
     let mut left = data.consonants.clone();
@@ -240,7 +240,7 @@ fn a6() -> SoundLawComposition {
 fn a8() -> SoundLawComposition {
     let data = common_setup();
 
-    let mut from = data.laryngeals.clone();
+    let from = data.laryngeals.clone();
 
     let to = RegexFst::new_from_ipa("a".into());
     let mut left = RegexFst::new_from_label(data.table.get_label("#").unwrap());
@@ -317,14 +317,14 @@ fn b3() -> SoundLawComposition {
     let from = RegexFst::new_from_ipa("r".to_string());
     let to = RegexFst::new_from_ipa(xsampa_to_ipa("ri"));
     let left = data.consonants.clone();
-    let mut right = data.stops.clone();
+    let right = data.stops.clone();
 
     let law1 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
 
     let from = RegexFst::new_from_ipa("l".to_string());
     let to = RegexFst::new_from_ipa(xsampa_to_ipa("li"));
     let left = data.consonants.clone();
-    let mut right = data.stops.clone();
+    let right = data.stops.clone();
 
     let law2 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
 
@@ -356,14 +356,14 @@ fn b5() -> SoundLawComposition {
     let from = RegexFst::new_from_ipa("r".to_string());
     let to = RegexFst::new_from_ipa(xsampa_to_ipa("ar"));
     let left = data.consonants.clone();
-    let mut right = data.consonants.clone();
+    let right = data.consonants.clone();
 
     let law1 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
 
     let from = RegexFst::new_from_ipa("l".to_string());
     let to = RegexFst::new_from_ipa(xsampa_to_ipa("al"));
     let left = data.consonants.clone();
-    let mut right = data.consonants.clone();
+    let right = data.consonants.clone();
 
     let law2 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
 

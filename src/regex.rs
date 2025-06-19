@@ -9,7 +9,7 @@ use rustfst::{
         concat::concat,
         optimize,
         union::union,
-        Fst, VectorFst,
+        Fst,
     },
     utils::acceptor,
     Label, Semiring, SymbolTable,
@@ -119,7 +119,7 @@ impl RegexFst {
             .map(|c| {
                 table
                     .get_label(c.to_string())
-                    .expect(&format!("Failed to find character {} in ipa table", &c))
+                    .unwrap_or_else(|| panic!("Failed to find character {} in ipa table", &c))
             })
             .collect();
 
@@ -131,7 +131,7 @@ impl RegexFst {
     }
     pub fn is_empty(&self) -> bool {
         if let RegexOperator::Acceptor(s) = self.operator.clone() {
-            return s == "";
+            return s.is_empty();
         }
         false
     }
