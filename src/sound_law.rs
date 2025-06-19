@@ -119,7 +119,7 @@ impl SoundLaw {
     ) -> SoundLaw {
         // let latin = lower_case_latin();
 
-        let contains_epsilon = from.is_empty();
+        // let contains_epsilon = from.is_empty();
 
         // let transform: SoundFst = if contains_epsilon {
         //     RegexFst::regex_cross_product(to, from, table)
@@ -278,8 +278,9 @@ fn transduce_text_with_symbol_table(
         .chars()
         //.inspect(|c| println!("{}", c))
         .map(|c| {
-            table.get_label(c.to_string()).unwrap_or_else(|| panic!("Character {} was not found in symbol table",
-                c))
+            table
+                .get_label(c.to_string())
+                .unwrap_or_else(|| panic!("Character {} was not found in symbol table", c))
         })
         .collect();
     transduce_from_labels(fst, table, &labels)
@@ -418,7 +419,6 @@ pub fn soundlaw_xsampa_to_ipa(s: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    
 
     use rustfst::symt;
 

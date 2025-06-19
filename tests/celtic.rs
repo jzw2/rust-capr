@@ -73,7 +73,7 @@ fn noninitial_test() {
 
 fn preprocess(s: &[Label], table: &SymbolTable) -> Vec<Label> {
     let s = noninitial(s, table);
-    
+
     boundry(&s, table)
 }
 
@@ -717,6 +717,7 @@ fn celtic_laryngeal_to_a_between_cons() {
     assert_eq!(daughter.len(), 1);
     assert_eq!(daughter[0].replace(" ", ""), xsampa_to_ipa("d_hugate:r"));
 }
+[#test]
 fn grano_modified_test() {
     let data = common_setup();
 
@@ -748,10 +749,6 @@ fn pie_stops() -> Vec<&'static str> {
 
 fn pie_resonants() -> Vec<&'static str> {
     "m n l r".split(' ').collect()
-}
-
-fn pie_glides() -> Vec<&'static str> {
-    "w y".split(' ').collect()
 }
 
 fn pie_laryngeals() -> Vec<&'static str> {
@@ -826,7 +823,6 @@ fn celtic_stop_resonant_laryngeal_stop() {
         .split(" ")
         .collect::<Vec<_>>();
 
-    let disjoint_stops = xsampa_disjoint(&pie_stops);
     let disjoint_consonants = xsampa_disjoint(&pie_consonants);
     let disjoint_laryngeals = xsampa_disjoint(&pie_laryngeals);
     let disjoint_resonants = xsampa_disjoint(&pie_resonants);

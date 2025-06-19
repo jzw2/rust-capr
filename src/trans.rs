@@ -6,8 +6,8 @@ use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::rm_epsilon::rm_epsilon;
 use rustfst::prelude::union::union;
 use rustfst::prelude::{
-    invert, optimize, CoreFst, ExpandedFst, FstIntoIterator,
-    OLabelCompare, SerializableFst, TropicalWeight,
+    invert, optimize, CoreFst, ExpandedFst, FstIntoIterator, OLabelCompare, SerializableFst,
+    TropicalWeight,
 };
 use rustfst::{
     algorithms::{concat::concat, project},
@@ -551,7 +551,6 @@ impl SoundFst {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
 
     #[test]
     fn test_serialization() {
@@ -572,8 +571,6 @@ mod tests {
     use sound_law::SoundLaw;
 
     use crate::sound_law;
-
-    
 
     #[test]
     fn simple_replace_multiple() {
