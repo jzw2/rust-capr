@@ -868,21 +868,21 @@ fn giant_test() {
         a1(),
         a2(),
         a3(),
-        //a4(),
+        a4(),
         a5(),
-        //a6(),
-        //a7(),
-        //a8(),
-        //a9(),
+        a6(),
+        // a7(),
+        a8(),
+        // a9(),
         b1(),
         b2(),
-        //b3(),
+        b3(),
         b4(),
-        //b5(),
-        //b6(),
-        //b7(),
+        b5(),
+        b6(),
+        // b7(),
         b8(),
-        //b9(),
+        // b9(),
         //b10(),
         b11(),
         c1(),
@@ -914,20 +914,27 @@ fn giant_test() {
         ("grxno", "grano"),
         ("grqno", "grano"),
         ("g_wow", "bow"),
+        ("krd", "krid"),
         ("b_hero", "bero"),
         ("terhtro", "taratro"),
         ("dnt", "danto"),
-        ("hre:g", "ri:g"),
+        ("b_hrso", "barso"),
+        ("klheto", "kaleto"),
+        ("wlho", "walo"),
+        ("hre:g", "ri:g"), // b8
         ("hepirom", "efirom"),
-        ("xwehnto", "winto"),
-        ("sixmdo", "sindo"),
-        ("septm", "sextam"), // might glitch out if I don't provide the laryngeal deletion
-        ("prptu", "frixtu"),
-        ("piprqse", "pibrase"),
+        ("xwehnto", "winto"),   // b11
+        ("sixmdo", "sindo"),    // b11
+        ("septm", "sextam"),    // might glitch out if I don't provide the laryngeal deletion
+        ("prptu", "frixtu"),    // c1
+        ("mrg_wto", "mrixto"),  // c1
+        ("xmlgto", "mlixto"),   // c1
+        ("piprqse", "pibrase"), // c2
         ("supno", "sowno"),
-        ("deqno", "da:no"),
-        ("reyd", "re:do"),
+        ("deqno", "da:no"), // c5
+        ("reyd", "re:d"),
         ("newyo", "nowyo"),
+        ("supno", "sowno"),
     ];
 
     let mut failures = vec![];
@@ -946,7 +953,13 @@ fn giant_test() {
 
         let actual = transduced[0].replace(" ", "");
         let expected_ipa = xsampa_to_ipa(expected);
-        println!("{} -> {}, expected {}", input, actual, expected_ipa);
+        println!(
+            "{}: {} -> {}, expected {}",
+            actual == expected_ipa,
+            input,
+            actual,
+            expected_ipa
+        );
 
         if actual != expected_ipa {
             failures.push(format!(

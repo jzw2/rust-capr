@@ -367,7 +367,7 @@ impl SoundFst {
         alphabet: &SymbolTable,
     ) -> Self {
         CALL_COUNT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        println!("starting replace context");
+        // println!("starting replace context");
         // aka ct in hfst
         let end_in_transducer =
             self.end_in_string(left_context_marker, right_context_marker, alphabet);
