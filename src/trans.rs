@@ -6,8 +6,8 @@ use rustfst::prelude::closure::{closure, ClosureType};
 use rustfst::prelude::rm_epsilon::rm_epsilon;
 use rustfst::prelude::union::union;
 use rustfst::prelude::{
-    invert, optimize, CoreFst, ExpandedFst, FstIntoIterator, OLabelCompare, SerializableFst,
-    TropicalWeight,
+    invert, optimize, CoreFst, ExpandedFst, FstIntoIterator, FstIterator, OLabelCompare,
+    SerializableFst, TropicalWeight,
 };
 use rustfst::{
     algorithms::{concat::concat, project},
@@ -79,10 +79,21 @@ pub type SoundWeight = TropicalWeight;
 impl SoundFst {
     pub fn ignore(&mut self, label: Label) {
         for state in self.0.states_iter() {
+            let trs = self.0.get_trs(state).unwrap();
+
+            let filtered = trs
+                .iter()
+                .filter(|tr| tr.ilabel != label && tr.olabel != label);
+            self.0.delete_trs(state).unwrap();
+            for tr in filtered {
+                self.0.add_tr(state, tr.clone()).unwrap();
+            }
+
             self.0
                 .emplace_tr(state, label, label, SoundWeight::one(), state)
                 .unwrap();
         }
+        self.optimize();
     }
     fn serialize(&self) -> String {
         self.0.text().unwrap()
@@ -718,5 +729,22 @@ mod tests {
         assert_eq!(vec[0].istring().unwrap(), "a");
         assert_eq!(vec[1].ostring().unwrap(), "x");
         assert_eq!(vec[1].istring().unwrap(), "a");
+    }
+
+    // probably shouldn't put htis test here, and put it in the other file
+    #[test]
+    fn ignore_test() {
+        let symbol_tabl = symt!["a", "b", "c", "d", "q"];
+        let mut law = SoundLaw::new("ca", "d", "ca", "c", &symbol_tabl);
+        law.ignore(5);
+
+        let transduced = law.transduce_text("qcacacac");
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0], "q c a d d c");
+
+        let transduced = law.transduce_text("caqcacac");
+        assert_eq!(transduced.len(), 2);
+        assert_eq!(transduced[0], "c a q c a d c");
+        assert_eq!(transduced[1], "c a q d d c");
     }
 }
