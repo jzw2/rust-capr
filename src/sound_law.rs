@@ -232,6 +232,11 @@ impl SoundLaw {
 
 #[wasm_bindgen]
 impl SoundLaw {
+    // probably shouldn't put this here, since it kind of breaks
+    // the encapsulation
+    pub fn ignore(&mut self, label: Label) {
+        self.fst.ignore(label);
+    }
     pub fn to_json(&self) -> String {
         serde_json::to_string(self).expect("Unwrap json string failed")
     }
