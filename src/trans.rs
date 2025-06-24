@@ -77,6 +77,13 @@ impl From<SoundFst> for VectorFst<SoundWeight> {
 pub type SoundWeight = TropicalWeight;
 
 impl SoundFst {
+    pub fn ignore(&mut self, label: Label) {
+        for state in self.0.states_iter() {
+            self.0
+                .emplace_tr(state, label, label, SoundWeight::one(), state)
+                .unwrap();
+        }
+    }
     fn serialize(&self) -> String {
         self.0.text().unwrap()
     }
