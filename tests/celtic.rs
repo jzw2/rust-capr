@@ -367,9 +367,24 @@ fn b5() -> SoundLawComposition {
 
     let law2 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
 
+    let from = RegexFst::new_from_ipa("n".to_string());
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("an"));
+    let left = data.consonants.clone();
+    let right = data.consonants.clone();
+
+    let law3 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+    let from = RegexFst::new_from_ipa("m".to_string());
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("am"));
+    let left = data.consonants.clone();
+    let right = data.consonants.clone();
+
+    let law4 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
     let mut comp = SoundLawComposition::new();
     comp.add_law(&law1);
     comp.add_law(&law2);
+    comp.add_law(&law3);
+    comp.add_law(&law4);
     comp
 }
 // b6 requires knowing how syllable boundries for the laryngeals
@@ -717,7 +732,8 @@ fn celtic_laryngeal_to_a_between_cons() {
     assert_eq!(daughter.len(), 1);
     assert_eq!(daughter[0].replace(" ", ""), xsampa_to_ipa("d_hugate:r"));
 }
-[#test]
+
+#[test]
 fn grano_modified_test() {
     let data = common_setup();
 
@@ -863,7 +879,6 @@ fn giant_test() {
     let mut laws = vec![
         a1(),
         a2(),
-        a3(),
         a4(),
         a6(),
         // a7(),
@@ -875,14 +890,15 @@ fn giant_test() {
         a5(), // conflict with b3
         b4(),
         b5(),
-        b6(),
+        a3(), // CHC > CaC
+        b6(), // laryngeal deletion
         // b7(),
         b8(),
         // b9(),
         //b10(),
         b11(),
         c1(),
-        c2(),
+        // c2(), // seems just wrong, likely restricted to non initially
         c3(),
         c4(),
         c5(),
