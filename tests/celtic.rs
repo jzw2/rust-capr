@@ -1,7 +1,7 @@
 use ipa_translate::xsampa_to_ipa;
 use rust_capr::{
     regex::RegexFst,
-    sound_law::{SoundLaw, SoundLawComposition},
+    sound_law::{transduce_from_labels, SoundLaw, SoundLawComposition},
     tables::ipa,
 };
 use rustfst::{Label, SymbolTable};
@@ -772,7 +772,7 @@ fn pie_laryngeals() -> Vec<&'static str> {
 }
 
 fn pie_consonants() -> Vec<&'static str> {
-    "p t k b d g b_h d_h g_h k_w g_w g_w_h m n l r w y"
+    "p t k b d g b_h d_h g_h k_w g_w g_w_h m n l r w y s"
         .split(' ')
         .collect()
 }
@@ -941,29 +941,29 @@ fn giant_test() {
         ("prptu", "frixtu"),    // c1
         ("mrg_wto", "mrixto"),  // c1
         ("xmlgto", "mlixto"),   // c1
-        ("piprqse", "pibrase"), // c2
-        ("supno", "sowno"),
-        ("deqno", "da:no"), // c5
+        ("piprqse", "fibrase"), // c2
+        ("supno", "sowno"),     // p is not accounted for
+        ("deqno", "da:no"),     // c5
         ("reyd", "re:d"),
         ("newyo", "nowyo"),
         ("supno", "sowno"),
         // random ones
-        ("potr", "fatar"),
+        ("potr", "fatar"), // cannot account for a
         ("phte:r", "fati:r"),
-        ("pelhu", "filu"),
+        ("pelhu", "filu"), // says it preserves e grade, but don't know where i comes from
         ("plew", "flow"),
-        ("kapr", "gabro"),
-        ("d_hg_hesi", "gdesi"),
+        ("kapr", "gabro"),      // initial consonant is irregular
+        ("d_hg_hesi", "gdesi"), //metathesis
         ("d_hg_ho:m", "gdon"),
         ("g_helq", "gelo"),
         ("genhos", "genos"),
         ("genu", "genu"),
         ("g_hyemo", "gyemo"),
-        ("k_wend_h", "k_wendso"),
-        ("k_wey", "k_we:s"),
-        ("k_wetwores", "k_wtwores"),
+        ("k_wend_h", "k_wendso"), // so element at the end seems tob e an addition
+        ("k_wey", "k_we:s"),      // s includes the nomintive ending
+        ("k_wetwores", "k_wetwores"),
         ("k_wid", "k_wid"),
-        ("kuwo:n", "k_won"),
+        ("kwo:n", "k_won"), // not sure baout u element
         ("kmti", "kanti"),
         ("kewxro", "kawaro"),
         ("klexro", "kla:ro"),
@@ -976,7 +976,8 @@ fn giant_test() {
         ("mexte:r", "ma:ti:r"),
         ("med_hyo", "medyo"),
         ("nexu", "na:wa:"),
-        ("neb_ow", "nemos"),
+        ("nemo", "nem"),
+        ("neb_hos", "nemos"),
         ("newos", "nowyo"),
         ("nok_wt", "noxt"),
     ];
@@ -1012,6 +1013,31 @@ fn giant_test() {
             ));
         }
     }
+    let table = ipa();
+    let input = "wirho";
+    let mut labels: Vec<_> = "wi"
+        .chars()
+        .map(|c| table.get_label(c.to_string()).unwrap())
+        .collect();
+    let pretonic = table.get_label("pretonic").unwrap();
+    labels.push(pretonic);
+    let mut rest = "hro"
+        .chars()
+        .map(|c| table.get_label(c.to_string()).unwrap())
+        .collect();
+    labels.append(&mut rest);
+    let transduced = transduce_from_labels(total.get_final_fst(), &table, &labels);
+
+    let actual = transduced[0].replace(" ", "");
+    let expected = "wiro";
+    let expected_ipa = xsampa_to_ipa(expected);
+    println!(
+        "{}: {} -> {}, expected {}",
+        actual == expected_ipa,
+        input,
+        actual,
+        expected_ipa
+    );
 
     if !failures.is_empty() {
         panic!("Some transductions failed:\n{}", failures.join("\n"));
