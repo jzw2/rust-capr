@@ -237,6 +237,14 @@ impl SoundLaw {
     pub fn ignore(&mut self, label: Label) {
         self.fst.ignore(label);
     }
+    //hard code them in for now
+    pub fn ignore_meta(&mut self) {
+        let ipa = ipa();
+        let s1 = ipa.get_label("noninitial").unwrap();
+        let s2 = ipa.get_label("pretonic").unwrap();
+        self.ignore(s1);
+        self.ignore(s2);
+    }
     pub fn to_json(&self) -> String {
         serde_json::to_string(self).expect("Unwrap json string failed")
     }
