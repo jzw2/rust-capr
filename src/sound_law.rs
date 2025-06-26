@@ -299,7 +299,7 @@ fn transduce_text_with_symbol_table(
     transduce_from_labels(fst, table, &labels)
 }
 
-fn transduce_from_labels(fst: &SoundFst, table: &SymbolTable, labels: &[Label]) -> Vec<String> {
+pub fn transduce_from_labels(fst: &SoundFst, table: &SymbolTable, labels: &[Label]) -> Vec<String> {
     let t = fst;
     let text_fst: VectorFst<_> = acceptor(labels, SoundWeight::one());
     let mut text_fst: SoundFst = text_fst.into();
@@ -336,6 +336,11 @@ pub struct SoundLawComposition {
 impl Default for SoundLawComposition {
     fn default() -> Self {
         Self::new()
+    }
+}
+impl SoundLawComposition {
+    pub fn get_final_fst(&self) -> &SoundFst {
+        &self.final_fst
     }
 }
 
