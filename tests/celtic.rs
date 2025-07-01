@@ -124,7 +124,7 @@ fn a2() -> SoundLawComposition {
 
     let law1 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
 
-    let from = RegexFst::new_from_ipa(xsampa_to_ipa("eq"));
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("ex"));
 
     let to = RegexFst::new_from_ipa(xsampa_to_ipa("a:"));
     let left = RegexFst::new_from_ipa("".into());
@@ -472,12 +472,14 @@ fn c1() -> SoundLawComposition {
     comp
 }
 fn c2() -> SoundLawComposition {
+    // must be incorrect or something
+    // original has untrestrcited context
     let data = common_setup();
 
     let from = RegexFst::new_from_ipa(xsampa_to_ipa("p"));
 
     let to = RegexFst::new_from_ipa(xsampa_to_ipa("b"));
-    let left = RegexFst::new_from_ipa(xsampa_to_ipa(""));
+    let left = data.vowels.clone();
     let right = data.liquids.clone();
 
     let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
@@ -772,7 +774,7 @@ fn pie_laryngeals() -> Vec<&'static str> {
 }
 
 fn pie_consonants() -> Vec<&'static str> {
-    "p t k b d g b_h d_h g_h k_w g_w g_w_h m n l r w y s"
+    "p t k b d g b_h d_h g_h k_w g_w g_w_h m n l r w y s h x q"
         .split(' ')
         .collect()
 }
@@ -922,14 +924,14 @@ fn giant_test() {
         ("phte:r", "fati:r"),
         ("krdtu", "krissu"),
         ("plhno", "fla:no"),
-        ("grhno", "grano"),
-        ("grxno", "grano"),
-        ("grqno", "grano"),
+        ("grhno", "gra:no"),
+        ("grxno", "gra:no"),
+        ("grqno", "gra:no"),
         ("g_wow", "bow"),
         ("krd", "krid"),
         ("b_hero", "bero"),
         ("terhtro", "taratro"),
-        ("dnt", "danto"),
+        ("dnt", "dant"), //original danto
         ("b_hrso", "barso"),
         ("klheto", "kaleto"),
         ("wlho", "walo"),
@@ -955,6 +957,8 @@ fn giant_test() {
         ("kapr", "gabro"),      // initial consonant is irregular
         ("d_hg_hesi", "gdesi"), //metathesis
         ("d_hg_ho:m", "gdon"),
+        ("gexr", "ga:ri"),
+        ("g_hexns", "gansi"),
         ("g_helq", "gelo"),
         ("genhos", "genos"),
         ("genu", "genu"),
@@ -969,17 +973,59 @@ fn giant_test() {
         ("klexro", "kla:ro"),
         ("klewos", "kluwos"),
         ("krewx", "kru:"),
-        ("leg_h", "lego"),
+        ("leg_h", "leg"), // original lego/ legyo
         ("leyk_w", "link_wo"),
+        ("leyd", "loydo"),
         ("lewko", "lowko"),
         ("hlud_h", "lud"),
+        ("mexk", "mako"),
         ("mexte:r", "ma:ti:r"),
         ("med_hyo", "medyo"),
+        ("mel", "mallo"),
         ("nexu", "na:wa:"),
         ("nemo", "nem"),
         ("neb_hos", "nemos"),
         ("newos", "nowyo"),
         ("nok_wt", "noxt"),
+        ("qektoh", "oxtu:"),
+        ("qeyno", "oyno"),
+        ("reyd_h", "re:do"),
+        ("reyh", "re:no"),
+        ("re:g", "ri:g"),
+        ("re:gnix", "ri:gani:"),
+        ("hrewd_h", "rowdo"),
+        ("sexg", "sagyo"),
+        ("sexl", "salano"),
+        ("sxl", "saltro"),
+        ("smxel", "samali"),
+        ("sext", "sa:ti"),
+        ("sed", "sedo"),
+        ("seno", "seno"),
+        ("sent", "sentu"),
+        ("soru", "serwa:"),
+        ("spelhg_h", "sfelga:"),
+        ("sperxg", "sfraxto"),
+        ("sisk_wo", "sisku"),
+        ("stex", "sista"),
+        ("sek_w", "sk_wetlo"),
+        ("skeqt", "ska:to"),
+        ("skrib_h", "skri:bba:"),
+        ("slewk", "slunko"),
+        ("snex", "sna:"),
+        ("sneyg_w_h", "snig_w"),
+        ("srewm", "srowman"),
+        ("stomn", "stamna:"),
+        ("xste:r", "stera:"),
+        ("sterk", "stronko"),
+        ("hsu", "su"),
+        ("swexdu", "swa:du"),
+        ("tenh", "torano"),
+        ("treyes", "tri:s"),
+        ("tu", "tuh"),
+        ("uper", "ufor"),
+        ("wid_hu", "widu"),
+        ("xwehnto", "winto"),
+        ("yemho", "yemono"),
     ];
 
     let mut failures = vec![];
