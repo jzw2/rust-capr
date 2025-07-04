@@ -459,11 +459,12 @@ fn c1() -> SoundLawComposition {
     let data = common_setup();
 
     let mut from = data.stops.clone();
-    from.disjoint(&RegexFst::new_from_ipa("s".into()));
+    //from.disjoint(&RegexFst::new_from_ipa("s".into()));
 
     let to = RegexFst::new_from_ipa(xsampa_to_ipa("x"));
     let left = RegexFst::new_from_ipa(xsampa_to_ipa(""));
-    let right = data.stops.clone();
+    let mut right = data.stops.clone();
+    right.disjoint(&RegexFst::new_from_ipa("s".into()));
 
     let law = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
 
@@ -674,6 +675,21 @@ fn d5() -> SoundLawComposition {
     left.concat(&RegexFst::new_from_ipa("y".into()));
     let mut right = data.coronals.clone();
     right.concat(&data.coronals);
+
+    let law1 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
+
+    let mut comp = SoundLawComposition::new();
+    comp.add_law(&law1);
+    comp
+}
+fn nasal_assimiliation() -> SoundLawComposition {
+    let data = common_setup();
+
+    let from = RegexFst::new_from_ipa(xsampa_to_ipa("m"));
+
+    let to = RegexFst::new_from_ipa(xsampa_to_ipa("n"));
+    let mut left = RegexFst::new_from_ipa("".to_string());
+    let mut right = data.coronals.clone();
 
     let law1 = SoundLaw::create_with_arbitrary_regex(&left, &right, &from, &to, &data.table);
 
@@ -900,7 +916,7 @@ fn giant_test() {
         //b10(),
         b11(),
         c1(),
-        // c2(), // seems just wrong, likely restricted to non initially
+        c2(), // seems just wrong, likely restricted to non initially
         c3(),
         c4(),
         c5(),
@@ -912,6 +928,7 @@ fn giant_test() {
         //d3(),
         d4(),
         d5(),
+        nasal_assimiliation(),
     ];
 
     println!("Finish building sound laws");
@@ -957,14 +974,14 @@ fn giant_test() {
         ("kapr", "gabro"),      // initial consonant is irregular
         ("d_hg_hesi", "gdesi"), //metathesis
         ("d_hg_ho:m", "gdon"),
-        ("gexr", "ga:ri"),
-        ("g_hexns", "gansi"),
-        ("g_helq", "gelo"),
+        ("gexr", "ga:r"),    // original ga:ri
+        ("g_hexns", "gans"), //original gansi
+        ("g_helq", "gel"),   // original gelo
         ("genhos", "genos"),
         ("genu", "genu"),
         ("g_hyemo", "gyemo"),
-        ("k_wend_h", "k_wendso"), // so element at the end seems tob e an addition
-        ("k_wey", "k_we:s"),      // s includes the nomintive ending
+        ("k_wend_h", "k_wend"), // so element at the end seems tob e an addition kwendso
+        ("k_wey", "k_we:s"),    // s includes the nomintive ending
         ("k_wetwores", "k_wetwores"),
         ("k_wid", "k_wid"),
         ("kwo:n", "k_won"), // not sure baout u element
@@ -973,8 +990,8 @@ fn giant_test() {
         ("klexro", "kla:ro"),
         ("klewos", "kluwos"),
         ("krewx", "kru:"),
-        ("leg_h", "leg"), // original lego/ legyo
-        ("leyk_w", "link_wo"),
+        ("leg_h", "leg"),     // original lego/ legyo
+        ("leyk_w", "link_w"), // oroginal link_wo
         ("leyd", "loydo"),
         ("lewko", "lowko"),
         ("hlud_h", "lud"),
@@ -989,26 +1006,26 @@ fn giant_test() {
         ("nok_wt", "noxt"),
         ("qektoh", "oxtu:"),
         ("qeyno", "oyno"),
-        ("reyd_h", "re:do"),
+        ("reyd_h", "re:d"), // original re:do
         ("reyh", "re:no"),
         ("re:g", "ri:g"),
         ("re:gnix", "ri:gani:"),
-        ("hrewd_h", "rowdo"),
+        ("hrewd_h", "rowd"), //oroginal rowdo
         ("sexg", "sagyo"),
         ("sexl", "salano"),
-        ("sxl", "saltro"),
+        ("sxl", "sal"), //  original saltro
         ("smxel", "samali"),
-        ("sext", "sa:ti"),
-        ("sed", "sedo"),
+        ("sext", "sa:t"), //original sa:ti
+        ("sed", "sed"),   //original sedo
         ("seno", "seno"),
-        ("sent", "sentu"),
+        ("sent", "sent"), //original sentu
         ("soru", "serwa:"),
         ("spelhg_h", "sfelga:"),
         ("sperxg", "sfraxto"),
         ("sisk_wo", "sisku"),
         ("stex", "sista"),
         ("sek_w", "sk_wetlo"),
-        ("skeqt", "ska:to"),
+        ("skeqt", "ska:t"), // original ska:to
         ("skrib_h", "skri:bba:"),
         ("slewk", "slunko"),
         ("snex", "sna:"),
@@ -1019,9 +1036,9 @@ fn giant_test() {
         ("sterk", "stronko"),
         ("hsu", "su"),
         ("swexdu", "swa:du"),
-        ("tenh", "torano"),
+        ("tenh", "torano"), // metathesis
         ("treyes", "tri:s"),
-        ("tu", "tuh"),
+        ("tuh", "tu"),
         ("uper", "ufor"),
         ("wid_hu", "widu"),
         ("xwehnto", "winto"),
@@ -1039,7 +1056,16 @@ fn giant_test() {
                 input,
                 transduced.len()
             ));
-            continue; // Skip further checks for this input if the length is wrong
+            // continue; // Skip further checks for this input if the length is wrong
+            let actual = transduced[1].replace(" ", "");
+            let expected_ipa = xsampa_to_ipa(expected);
+            println!(
+                "{}: {} -> {}, expected {}",
+                actual == expected_ipa,
+                input,
+                actual,
+                expected_ipa
+            );
         }
 
         let actual = transduced[0].replace(" ", "");
