@@ -31,6 +31,7 @@ For instance spanish _caesar_
 - Sound Change is regular
 - Well, probably not that regular
 - Context based sound law changes
+- Also that certain sound changes are universal
 
 
 Somehting somthing let's get started with sound laws.
@@ -67,6 +68,13 @@ It is important to note that this a rough convention. The notation is inadequate
 
 - Solves also a different type of problem
 
+== Sound Changes as a study of itself
+
+- Index Diachronica
+  - More or less just a list
+- Otherewise no comprehensive analysis
+- Other ad hoc sound law transducers
+
 
  = Finite State Trandsducers
 
@@ -84,7 +92,7 @@ Given a set $Sigma$ a _string_ can be defined recursively defined as being eithe
 - $c dot S$ where $c in Sigma$ and $S$ is a string
 The set $Sigma$ is usually called the _alphabet_ and the members _characters_. By convention, strings are usually put in double quotes and the $dot$ operator ommited. Examples: todo
 
-A formal _language_ can be defined a (potentiall infiite) set of strings. 
+A formal _language_ can be defined a (potentiall infiite) set of strings. Can be used to define natural language such as English, spansih, but can also be used to define more artifical lanuages, such as all prime numbers represented in decimal. 
 
 
 A deterministic finite state machine can be defined as  $(Q, s, Sigma, F, delta)$, where 
@@ -95,8 +103,35 @@ A deterministic finite state machine can be defined as  $(Q, s, Sigma, F, delta)
 - $F subset Q$ the set of final states
 - $delta: Q times X -> Q$ the transition function that maps each state to its next state when given a character
 
+A finite state machine $M$ can then be used to define a language $L$ by stating that a word is in $L$ if and only if $M$ accepts $L$.
 
-Next a string a defined as 
+A finite state machine $(Q, s, Sigma, F, delta)$ accepts a string $S$ when one of the following conditions are met:
+
+- $S = epsilon$ and $s in F$ 
+- $S = c dot S'$ and $delta(q, c) = q'$ and $M' = (Q, q', Sigma, F, delta)$ accepts $S'$
+
+todo: add an example with a picture
+
+A related construct is the nondeterministic finite state machine.
+A nondeterministic finite state machine can be defined as  $(Q, s, Sigma, F, delta)$, where 
+
+- $Q$ is the set of states
+- $s in Q$ is the start state
+- $Sigma$ is the _alphabet_, a set of characters
+- $F subset Q$ the set of final states
+- $delta: Q times X -> P(Q)$, $P$ being the powerset function. The nondeterministic transition function that maps each state and character to possible states.
+
+The only difference here is the transition function, which can now map to multiple or zero states, in additon to just one state.
+
+The non determinstic finite state machine also has a similar accepts function. 
+
+A finite state machine $(Q, s, Sigma, F, delta)$ accepts a string $S$ when one of the following conditions are met:
+
+- $S = epsilon$ and $s in F$ 
+- $S = c dot S'$ and there exists a $q$ $delta(q, c) = q'$ and $M' = (Q, q', Sigma, F, delta)$ accepts $S'$
+
+A deterministic finite state machine is trivially a non deterministic finite state machine. However, it may be surprising to know the the converse is also true: any 
+
 
 
   
