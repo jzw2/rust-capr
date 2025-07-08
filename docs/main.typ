@@ -43,13 +43,67 @@ Usually they write them in teh form $A > B$ where $A$ is a phoneme that gets cha
 
 To represent context laws they usually
 
-$ A > B \/ X #underline(extent: 5pt, [ --- ]) Y $
+$ A > B \/ X#box(width: 0.5cm, clip: true, outset: (y: 1em), underline(extent: 1000cm, sym.space.nobreak))Y $
 
-$A  B \/\; C\_ \; D$
- so that ~ is ~
+where the variables $A, B, X, Y$ can represent strings, or potentiall features. The variables $X, Y$ represent the left hand side and right hand side contexts. 
+
+It is important to note that this a rough convention. The notation is inadequate to describe all types of sound law change. Authors will usually need to supplement this notation with english language explanations.
 
 
-it #sym.tilde.basic
+- formal notation -> auto trandcution
+- current standrad is primitve keep in your head
+- verifcation of sound laws
+- old neogrammarian "all sound laws are regular" may be outdated and flawed
+
+  - we want them to be ideally be regular
+  - but if not regular, there may be some use after all
+  - we want to say that high regularity = high evidence
+  - we want a tool to help guage how regualr theoreis are
+  - additionally these tools may be help us find different kinds of "relatedness"
+      - Borrowing
+      - Japanese readings for instance
+      - Romance doublets into latin
+      - better modelling of wave based linguistics
+
+- Solves also a different type of problem
+
+
+ = Finite State Trandsducers
+
+ == Finite State Automata
+
+ Finite state autmata (or finite state machine) are a mathematical model basic form of autmata that can be used ot model a variety of phenomona. The most relvant usage is in string recognition.
+
+ 
+ == Formal Definition
+
+To talk about strings, a formal definition is required.
+
+Given a set $Sigma$ a _string_ can be defined recursively defined as being either
+- $epsilon$, the empty string
+- $c dot S$ where $c in Sigma$ and $S$ is a string
+The set $Sigma$ is usually called the _alphabet_ and the members _characters_. By convention, strings are usually put in double quotes and the $dot$ operator ommited. Examples: todo
+
+A formal _language_ can be defined a (potentiall infiite) set of strings. 
+
+
+A deterministic finite state machine can be defined as  $(Q, s, Sigma, F, delta)$, where 
+
+- $Q$ is the set of states
+- $s in Q$ is the start state
+- $Sigma$ is the _alphabet_, a set of characters
+- $F subset Q$ the set of final states
+- $delta: Q times X -> Q$ the transition function that maps each state to its next state when given a character
+
+
+Next a string a defined as 
+
+
+  
+
+
+
+
 
 
 
