@@ -1,0 +1,5 @@
+
+rustfst: 
+  type: Repository
+  title: rustfst
+  url: https://github.com/garvys-org/rustfst
