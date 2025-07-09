@@ -133,9 +133,17 @@ A finite state machine $(Q, s, Sigma, F, delta)$ accepts a string $S$ when one o
 A deterministic finite state machine is trivially a non deterministic finite state machine. However, it may be surprising to know the the converse is also true: any 
 
 
+= Infastructure
 
+The project is made to imitate 
+
+= Case Study Celtic
+
+I used @celtic
   
 
+
+#bibliography("bib.bib")
 
 
 
