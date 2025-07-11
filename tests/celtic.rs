@@ -981,7 +981,7 @@ fn giant_test() {
         ("genu", "genu"),
         ("g_hyemo", "gyemo"),
         ("k_wend_h", "k_wend"), // so element at the end seems tob e an addition kwendso
-        ("k_wey", "k_we:s"),    // s includes the nomintive ending
+        ("k_wey", "k_we:"),     //original kwe:s // s includes the nomintive ending
         ("k_wetwores", "k_wetwores"),
         ("k_wid", "k_wid"),
         ("kwo:n", "k_won"), // not sure baout u element
@@ -991,16 +991,16 @@ fn giant_test() {
         ("klewos", "kluwos"),
         ("krewx", "kru:"),
         ("leg_h", "leg"),     // original lego/ legyo
-        ("leyk_w", "link_w"), // oroginal link_wo
+        ("link_w", "link_w"), // oroginal link_wo // original leyk_w, but n infix added
         ("leyd", "loydo"),
         ("lewko", "lowko"),
         ("hlud_h", "lud"),
-        ("mexk", "mako"),
-        ("mexte:r", "ma:ti:r"),
+        ("mexk", "mak"), // original mako
+        ("mexte:r", "ma:ti:"),
         ("med_hyo", "medyo"),
-        ("mel", "mallo"),
+        ("mel", "mall"),
         ("nexu", "na:wa:"),
-        ("nemo", "nem"),
+        ("nem", "nem"), // original nemo
         ("neb_hos", "nemos"),
         ("newos", "nowyo"),
         ("nok_wt", "noxt"),
@@ -1027,7 +1027,7 @@ fn giant_test() {
         ("sek_w", "sk_wetlo"),
         ("skeqt", "ska:t"), // original ska:to
         ("skrib_h", "skri:bba:"),
-        ("slewk", "slunko"),
+        ("slunk", "slunko"), //original slewk
         ("snex", "sna:"),
         ("sneyg_w_h", "snig_w"),
         ("srewm", "srowman"),
