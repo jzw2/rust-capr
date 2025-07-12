@@ -1,13 +1,13 @@
 
 #import "@preview/ascii-ipa:2.0.0": *
 
-#set page(margin: 1.75in)
+#set page(margin: 1in)
 #set par(leading: 0.55em, spacing: 0.55em, first-line-indent: 1.8em, justify: true)
 #set text(font: "New Computer Modern")
 #show raw: set text(font: "New Computer Modern Mono")
 #show heading: set block(above: 1.4em, below: 1em)
 
-
+#set page(numbering: "1")
 = Intro
 
 
@@ -71,6 +71,7 @@ It is important to note that this a rough convention. The notation is inadequate
 == Sound Changes as a study of itself
 
 - Index Diachronica
+  @diachronica
   - More or less just a list
 - Otherewise no comprehensive analysis
 - Other ad hoc sound law transducers
@@ -133,17 +134,151 @@ A finite state machine $(Q, s, Sigma, F, delta)$ accepts a string $S$ when one o
 A deterministic finite state machine is trivially a non deterministic finite state machine. However, it may be surprising to know the the converse is also true: any 
 
 
+
+=== Applications for fst
+
+A common library is openfst @openfst.  Hfst @hfst uses openfst @openfst as a potential backend.
+
+Hfst itself is used as tool for morphological analysis. This was described using the xerox tools described in  #cite(<beesley2003finite>, form: "prose") using the 
 = Infastructure
 
-The project is made to imitate 
+The project is made using rustfst @rustfst, which is a rust language port of the C++ library @openfst. 
+
+The project tries to provide a similar function to hfst @hfst.
+
+The original project was to provide a similar function to the one given in capr @capr
+
+
 
 = Case Study Celtic
 
-I used @celtic
+
+== Background Information
+
+== Celtic
+
+Celtic is a centum language spoken my the celts, with moder descendents being Gaulic @celtic todo add more
+
+
+
+The case study examines #cite(<celtic>, form: "prose").
+
   
 
 
-#bibliography("bib.bib")
+#table(
+  columns: 5,
+  table.header[*Pie Stem*][*Transduced Result*][*Proto Celtic Root*][*Correct*][*Notes*],
+  [phte:r], [fatiːr], [fatiːr], [true], [no comment],
+  [krdtu], [krissu], [krissu], [true], [no comment],
+  [plhno], [flaːno], [flaːno], [true], [no comment],
+  [plhno], [blaːno], [flaːno], [false], [Wrong initial],
+  [grhno], [ɡraːno], [ɡraːno], [true], [no comment],
+  [grxno], [ɡraːno], [ɡraːno], [true], [no comment],
+  [grqno], [ɡraːno], [ɡraːno], [true], [no comment],
+  [g_wow], [bow], [bow], [true], [no comment],
+  [krd], [krid], [krid], [true], [no comment],
+  [b_hero], [bero], [bero], [true], [no comment],
+  [terhtro], [teratro], [taratro], [false], [Spurious _e_ to _a_],
+  [dnt], [dant], [dant], [true], [original danto],
+  [b_hrso], [barso], [barso], [true], [no comment],
+  [klheto], [kleto], [kaleto], [false], [_a_ inserted],
+  [wlho], [walo], [walo], [true], [no comment],
+  [hre:g], [riːɡ], [riːɡ], [true], [b8],
+  [hepirom], [efirom], [efirom], [true], [no comment],
+  [xwehnto], [winto], [winto], [true], [b11],
+  [sixmdo], [siando], [sindo], [false], [Law incorrectly feeds],
+  [septm], [sextm], [sextam], [false], [Fails to append add an _a_],
+  [prptu], [frixtu], [frixtu], [true], [c1],
+  [prptu], [brixtu], [frixtu], [false], [Wrong initial],
+  [mrg_wto], [mrixto], [mrixto], [true], [c1],
+  [xmlgto], [amlixto], [mlixto], [false], [Incorrectly feeds _a_ insertion],
+  [piprqse], [fibraːse], [fibrase], [false], [c2],
+  [supno], [sowno], [sowno], [true], [p is not accounted for],
+  [deqno], [daːno], [daːno], [true], [c5],
+  [reyd], [reːd], [reːd], [true], [no comment],
+  [newyo], [nowyo], [nowyo], [true], [no comment],
+  [potr], [fotr], [fatar], [false], [cannot account for a vocalism],
+  [pelhu], [felu], [filu], [false], [says it preserves e grade, but don't know where i comes from],
+  [plew], [flow], [flow], [true], [no comment],
+  [plew], [blow], [flow], [false], [no comment],
+  [kapr], [kabr], [ɡabro], [false], [initial consonant is irregular],
+  [d_hg_hesi], [xɡesi], [ɡdesi], [false], [metathesis],
+  [d_hg_ho:m], [xɡaːm], [ɡdon], [false], [metathesis],
+  [gexr], [ɡaːr], [ɡaːr], [true], [original ga:ri],
+  [g_hexns], [ɡans], [ɡans], [true], [original gansi],
+  [g_helq], [ɡel], [ɡel], [true], [original gelo],
+  [genhos], [ɡenos], [ɡenos], [true], [no comment],
+  [genu], [ɡenu], [ɡenu], [true], [no comment],
+  [g_hyemo], [ɡyemo], [ɡyemo], [true], [no comment],
+  [k_wend_h], [kʷend], [kʷend], [true], [so element at the end seems to be an addition kwendso],
+  [k_wey], [kʷeː], [kʷeː], [true], [original kwe:s s includes the nominative ending],
+  [k_wetwores], [kʷetwores], [kʷetwores], [true], [no comment],
+  [k_wid], [kʷid], [kʷid], [true], [no comment],
+  [kwo:n], [kwaːn], [kʷon], [false], [not sure about u element],
+  [kmti], [kanti], [kanti], [true], [no comment],
+  [kewxro], [kowaro], [kawaro], [false], [no comment],
+  [klexro], [klaːro], [klaːro], [true], [no comment],
+  [klewos], [klowos], [kluwos], [false], [no comment],
+  [krewx], [krow], [kruː], [false], [no comment],
+  [leg_h], [leɡ], [leɡ], [true], [original lego/ legyo],
+ [link_w], [linkʷ], [linkʷ], [true], [original link_wo original leyk_w, but n infix added],
+  [leyd], [leːd], [loydo], [false], [incorrect vowel, may be from _o_ grade],
+  [lewko], [lowko], [lowko], [true], [no comment],
+  [hlud_h], [lud], [lud], [true], [no comment],
+  [mexk], [maːk], [mak], [false], [original mako],
+  [mexte:r], [maːtiːr], [maːtiː], [false], [no comment],
+  [med_hyo], [medyo], [medyo], [true], [no comment],
+  [mel], [mel], [mall], [false], [Does not account for double vowel],
+  [nexu], [naːu], [naːwaː], [false], [no comment],
+  [nem], [nem], [nem], [true], [original nemo],
+  [neb_hos], [nebos], [nemos], [false], [no comment],
+  [newos], [nowos], [nowyo], [false], [no comment],
+  [nok_wt], [noxt], [noxt], [true], [no comment],
+  [qektoh], [oxto], [oxtuː], [false], [no comment],
+  [qeyno], [oyno], [oyno], [true], [no comment],
+  [reyd_h], [reːd], [reːd], [true], [original re:do],
+  [reyh], [reː], [reːno], [false], [no comment],
+  [re:g], [riːɡ], [riːɡ], [true], [no comment],
+  [re:gnix], [riːɡni], [riːɡaniː], [false], [no comment],
+  [hrewd_h], [rowd], [rowd], [true], [original rowdo],
+  [sexg], [saːɡ], [saɡyo], [false], [no comment],
+  [sexl], [saːl], [salano], [false], [no comment],
+  [sxl], [sal], [sal], [true], [original saltro],
+  [smxel], [smal], [samali], [false], [no comment],
+  [sext], [saːt], [saːt], [true], [original sa:ti],
+  [sed], [sed], [sed], [true], [original sedo],
+  [seno], [seno], [seno], [true], [no comment],
+  [sent], [sent], [sent], [true], [original sentu],
+  [soru], [soru], [serwaː], [false], [no comment],
+  [spelhg_h], [sfelaɡ], [sfelɡaː], [false], [no comment],
+  [sperxg], [sferaɡ], [sfraxto], [false], [no comment],
+  [sisk_wo], [siskʷo], [sisku], [false], [no comment],
+  [stex], [staː], [sista], [false], [no comment],
+  [sek_w], [sekʷ], [skʷetlo], [false], [no comment],
+  [skeqt], [skaːt], [skaːt], [true], [original ska:to],
+  [skrib_h], [skrib], [skriːbbaː], [false], [no comment],
+  [slunk], [slunk], [slunko], [false], [original slewk],
+  [snex], [snaː], [snaː], [true], [no comment],
+  [sneyg_w_h], [sneːb], [sniɡʷ], [false], [no comment],
+  [srewm], [srowm], [srowman], [false], [no comment],
+  [stomn], [stomn], [stamnaː], [false], [no comment],
+  [xste:r], [stiːr], [steraː], [false], [no comment],
+  [sterk], [sterk], [stronko], [false], [no comment],
+  [hsu], [su], [su], [true], [no comment],
+  [swexdu], [swaːdu], [swaːdu], [true], [no comment],
+  [tenh], [ten], [torano], [false], [metathesis],
+  [treyes], [treːes], [triːs], [false], [no comment],
+  [tuh], [tu], [tu], [true], [no comment],
+  [uper], [ufer], [ufor], [false], [no comment],
+  [wid_hu], [widu], [widu], [true], [no comment],
+  [xwehnto], [winto], [winto], [true], [no comment],
+  [yemho], [yemo], [yemono], [false], [no comment],
+  [wirho], [wipretonicro], [wiro], [false], [],
+)
+
+#bibliography(("bib.bib", "bib.yaml"))
+
 
 
 
