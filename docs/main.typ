@@ -102,7 +102,7 @@ A deterministic finite state machine can be defined as  $(Q, s, Sigma, F, delta)
 - $s in Q$ is the start state
 - $Sigma$ is the _alphabet_, a set of characters
 - $F subset Q$ the set of final states
-- $delta: Q times X -> Q$ the transition function that maps each state to its next state when given a character
+- $delta: Q times Sigma -> Q$ the transition function that maps each state to its next state when given a character
 
 A finite state machine $M$ can then be used to define a language $L$ by stating that a word is in $L$ if and only if $M$ accepts $L$.
 
@@ -120,7 +120,7 @@ A nondeterministic finite state machine can be defined as  $(Q, s, Sigma, F, del
 - $s in Q$ is the start state
 - $Sigma$ is the _alphabet_, a set of characters
 - $F subset Q$ the set of final states
-- $delta: Q times X -> P(Q)$, $P$ being the powerset function. The nondeterministic transition function that maps each state and character to possible states.
+- $delta: Q times Sigma -> P(Q)$, $P$ being the powerset function. The nondeterministic transition function that maps each state and character to possible states.
 
 The only difference here is the transition function, which can now map to multiple or zero states, in additon to just one state.
 
@@ -129,9 +129,14 @@ The non determinstic finite state machine also has a similar accepts function.
 A finite state machine $(Q, s, Sigma, F, delta)$ accepts a string $S$ when one of the following conditions are met:
 
 - $S = epsilon$ and $s in F$ 
-- $S = c dot S'$ and there exists a $q$ $delta(q, c) = q'$ and $M' = (Q, q', Sigma, F, delta)$ accepts $S'$
+- $S = c dot S'$ and there exists a $q$ such that $delta(q, c) = q'$ and $M' = (Q, q', Sigma, F, delta)$ accepts $S'$
 
-A deterministic finite state machine is trivially a non deterministic finite state machine. However, it may be surprising to know the the converse is also true: any 
+A deterministic finite state machine is trivially a non deterministic finite state machine. However, it may be surprising to know the the converse is also true: any non deterministic finite state machine can be turned into a deterministic finite state machine which accepts the same language.
+
+
+Additionally, a further extension of non deterministic machines can be created to also accept epsilon transitions, i.e. $delta: Q times (Sigma union { epsilon }) -> P(Q)$, $P$ being the powerset function.  Again, this may be shown that any epsilon extended finite state machine can be turned into an equivalent machine without the epsilons. Due to this, it usually does not matter whether it is called a deterministic finite state machine or a non determinstic finite state machine and the specifics can be relegated as an implementation detail. In ge
+
+== 
 
 
 
@@ -157,7 +162,7 @@ The original project was to provide a similar function to the one given in capr 
 
 == Celtic
 
-Celtic is a centum language spoken my the celts, with moder descendents being Gaulic @celtic todo add more
+Celtic is an Indo-European language family. This includes members such as Irish, Scottish, Welsh, and Gaulish. @celtic The language which these language descended from is called Proto-Celtic, because it has not been directly attested, and has been reconstructed from it's living descendants.  
 
 
 
