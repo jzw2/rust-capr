@@ -91,9 +91,16 @@ To talk about strings, a formal definition is required.
 Given a set $Sigma$ a _string_ can be defined recursively defined as being either
 - $epsilon$, the empty string
 - $c dot S$ where $c in Sigma$ and $S$ is a string
-The set $Sigma$ is usually called the _alphabet_ and the members _characters_. By convention, strings are usually put in double quotes and the $dot$ operator ommited. Examples: todo
+The set $Sigma$ is usually called the _alphabet_ and the members _characters_. The $dot$ operator can be extended to a concatentation operator of two strings where
 
-A formal _language_ can be defined a (potentiall infiite) set of strings. Can be used to define natural language such as English, spansih, but can also be used to define more artifical lanuages, such as all prime numbers represented in decimal. 
+- $epsilon dot S = S$
+- $(c dot S_1) dot S_2 = c dot (S_1 dot S_2)$ 
+
+A string is a common example of a _monoid_ because the $dot$ operator is associative, and $epsilon$ is the identity. 
+By convention, strings are usually put in double quotes and the $dot$ operator commonly ommited. Examples: todo
+
+
+A formal _language_ can be defined a (potentially infinite) set of strings. Can be used to define natural language such as English, spansih, but can also be used to define more artifical lanuages, such as all prime numbers represented in decimal. 
 
 
 A deterministic finite state machine can be defined as  $(Q, s, Sigma, F, delta)$, where 
@@ -134,10 +141,28 @@ A finite state machine $(Q, s, Sigma, F, delta)$ accepts a string $S$ when one o
 A deterministic finite state machine is trivially a non deterministic finite state machine. However, it may be surprising to know the the converse is also true: any non deterministic finite state machine can be turned into a deterministic finite state machine which accepts the same language.
 
 
-Additionally, a further extension of non deterministic machines can be created to also accept epsilon transitions, i.e. $delta: Q times (Sigma union { epsilon }) -> P(Q)$, $P$ being the powerset function.  Again, this may be shown that any epsilon extended finite state machine can be turned into an equivalent machine without the epsilons. Due to this, it usually does not matter whether it is called a deterministic finite state machine or a non determinstic finite state machine and the specifics can be relegated as an implementation detail. In ge
+Additionally, a further extension of non deterministic machines can be created to also accept epsilon transitions, i.e. $delta: Q times (Sigma union { epsilon }) -> P(Q)$, $P$ being the powerset function. Note that the previous acceptance function is still valid due to the semantics of $epsilon$.
 
-== 
+Again, this may be shown that any epsilon extended finite state machine can be turned into an equivalent machine without the epsilons. Due to this, it usually does not matter whether it is called a deterministic finite state machine or a non determinstic finite state machine and the specifics can be relegated as an implementation detail. In general, they can be referred as (FSM) finite state machines.
 
+== Elementary Results in FSMs
+
+Given an alphabet $Sigma$, a regular expression can be recursively defined as
+
+
+- $epsilon$ the empty regular expression.
+- $c$ where $c in Sigma$ the singleton character
+- $R_1 dot R_2$ where $R_1$ and $R_2$ are also regular expressions, concatention.
+- $R_1 | R_2$ where $R_1$ and $R_2$ are also regular expressions, disjunction.
+- $R_1^*$ where $R_1$ is a regular expression, the Kleene Star.
+
+Given a particular expression $R$, we can define the semantics for $R$ matching a string $S$ if
+
+- $R = epsilon$ and $S = epsilon$
+- $R = c$, where $c in Sigma$ and  and $S = c$
+- $R = R_1 dot R_2$ and there exists $S_1$ and $S_2$ such that $S = S_1 dot S_2$ and $R_1$ matches $S_1$ and $R_2$ matches $S_2$
+- $R = R_1 | R_2$ and $R_1$ matches $S$ or $R_2$ matches $S$
+- $R = R_1^*$ and $S = epsilon$ or $S = S_1 dot S_2$  and $R_1$ matches $S_1$ and $R_1*$  matches $S_2$.
 
 
 === Applications for fst
@@ -160,10 +185,17 @@ The original project was to provide a similar function to the one given in capr 
 
 == Background Information
 
-== Celtic
+=== Celtic
 
 Celtic is an Indo-European language family. This includes members such as Irish, Scottish, Welsh, and Gaulish. @celtic The language which these language descended from is called Proto-Celtic, because it has not been directly attested, and has been reconstructed from it's living descendants.  
 
+=== Proto-Indo-European
+
+Proto-Indo-European (PIE) is the reconstructed ancestor of many languages of Europe. Its descendants include Germanic Languages (English, German, etc), Slavic Languages (Russian, Polish, Ukranian), Romance Languages (Spanish, French, Italian, etc), and many languages of India. 
+
+The grammar of PIE is reconstructed to be complex. The scope is quite large, but the most relevant details will be covered.
+
+Freqeuntly 
 
 
 The case study examines #cite(<celtic>, form: "prose").
