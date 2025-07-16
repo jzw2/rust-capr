@@ -172,6 +172,32 @@ A common library is openfst @openfst.  Hfst @hfst uses openfst @openfst as a pot
 Hfst itself is used as tool for morphological analysis. This was described using the xerox tools described in  #cite(<beesley2003finite>, form: "prose") using the 
 = Infastructure
 
+== CAPR
+
+This project was initially inspired by #cite(<capr>, form: "prose"), in which the CAPR system was described. It provides an innovative approach to using FSTs to model historical linguistics.
+
+#cite(<capr>, form: "prose") was to create a architecture that ultimately a useful tool for the linguist. The linguist has data and theorizes that some group of languages are related. The linguist then has to come up with protoforms and sound laws that would fit the data. The tool does not come up with theories, rather the linguist comes up with the idea, and the system tests to what extent the theory holds.
+
+Unlike other approaches, the CAPR system allows a system closer to the traditional pen and paper process by developing a theory incrementally: initial hypothesis may be incorrect, but will be gradually refined.
+
+More concretely, the system is a web application where the linguist provides the set of data cognates. The linguist then provides the the sound laws by inputting a the sound laws in the form of transducers. The sound laws need to specify which languages the laws to apply to, since CAPR requires that there be at least two descendant languages when constructing proto forms. The sound laws get fed into a backend server that turns the HFST rules and turns them into transducers. The backend then looks at each cognate set and performs the backward transduction according to the sound laws for the respective language. The backward transduction creates potentially multiple protowords. If the protowrod appears in multiple reverse transductions for different descendant languages, then this shows that the sound laws are valid for word, and the words is displayed to the linguist. 
+
+
+There are some areas which in which the original CAPR seemed to be lacking.
+
+The first is simply installation. The original repository had a docker container. This did simplify installation somewhat, but the either the code was buggy, or I installed something wrong, or I didn't do some configuration or whatever. I don't really know something someting it like kind of just didn't work. The averae linguist is potentially not that technlogoically literate and also doesn't reall yhave that mu. Compare to like other transducers that I have to cite. 
+
+
+Another potential inconvenience is the the dependence on HFST. Though it is not necessarily bad, I think there some things that could be done better. For instance it forces a server client architctue, meaning the linguist is forced to install something, or the have to rent out a server that transduces the thing for everyone or they have to like the things blah blah you know you just want liek a simple web page that does everytig locally. You got a no click install just go to a webpage and bam you are there. 
+
+You also have to learn HFST, which I guess its not bad, but i does require some getting used to. The concatenation must still be done manually and the it's also just like you hvae to type in code and whatever. It would be nicer if there was somehting more visual and like you doesn't work as bad. 
+
+
+
+== Project Desciption
+
+
+
 The project is made using rustfst @rustfst, which is a rust language port of the C++ library @openfst. 
 
 The project tries to provide a similar function to hfst @hfst.
