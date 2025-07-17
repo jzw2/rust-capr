@@ -10,13 +10,10 @@
   faculty: "philosphiakckaj intitustu",
   school: "tuebingn",
   departmentordivision: "Seminar fur sprachwssensvhf",
-  abstract: [Abstract goes here],
-  publications: [Publications go here.],
   //termsandabbreviations: [Enter terms and abbreviations as table or similar], // uncomment if want in thesis
   // layabstract: [Lay abstract goes here], // uncomment if want in thesis
-  acknowledgements: [I'd like to acknoledge myself],
   // theauthor: [If desired, a brief statement for External Examiners giving the candidate’s degree(s) and research experience, even if the latter consists only of the work done for this thesis.], // uncomment if want in thesis
-  year: "2024",
+  year: "2025",
   font: "times", // choices are: "times", "palatino", "roboto", "noto_sans" 
   fontsize: 11pt, // can be any reasonable value
 )
@@ -48,24 +45,24 @@
 
 #set page(numbering: "1") */
 
-= Intro
-
-
 
 
 = Historical Linguistics
 
 
-Historical Linguistics is arguably a really old part of linguistics. The neogrammarians found cognates between Latin, Greek and Sankrit, but more importantly they found cognacy between sound laws. This is the most important part, in which they have a system that consistently maps between. That is, the sound is regualr.
+Historical Linguistics is arguably a really old part of linguistics. The Neogrammarians found cognates between Latin, Greek, and Sanskrit, but more importantly they found cognacy between sound laws. This is the most important part, in which they have a system that consistently maps between. That is, the sound is regualr.
 
 
 A famous example is Grimm's law. This is known as a chain shift in which certain consonants correspond in other consonants.
 
-For exampls latin cognates picic fish, whatever german and lots
+For exampls latin cognates picic fish, whatever German and lots
 
 Another sound law that's really common is called paltalization.
 
-For instance spanish _caesar_
+For instance Spanish _caesar_
+
+
+== Neogrammarian Hypothesis
 
 
 - Sound Change is regular
@@ -78,7 +75,7 @@ Somehting somthing let's get started with sound laws.
 
 == Sound Laws
 
-Linguists have a conventialized representation for laws.
+Linguists have a conventionalized representation for laws.
 
 Usually they write them in teh form $A > B$ where $A$ is a phoneme that gets changed, and $B$ is the phoneme that it gets changed into. They can be changed to represent the sound laws $A > B > C$ such as the Grimm's law, which can be represeneted as #xsampa("d > t >")  ϑ
 
@@ -86,7 +83,7 @@ To represent context laws they usually
 
 $ A > B \/ X#box(width: 0.5cm, clip: true, outset: (y: 1em), underline(extent: 1000cm, sym.space.nobreak))Y $
 
-where the variables $A, B, X, Y$ can represent strings, or potentiall features. The variables $X, Y$ represent the left hand side and right hand side contexts. 
+where the variables $A, B, X, Y$ can represent strings, or potential features. The variables $X, Y$ represent the left hand side and right hand side contexts. 
 
 It is important to note that this a rough convention. The notation is inadequate to describe all types of sound law change. Authors will usually need to supplement this notation with english language explanations.
 
@@ -94,12 +91,12 @@ It is important to note that this a rough convention. The notation is inadequate
 - formal notation -> auto trandcution
 - current standrad is primitve keep in your head
 - verifcation of sound laws
-- old neogrammarian "all sound laws are regular" may be outdated and flawed
+- old Neogrammarian "all sound laws are regular" may be outdated and flawed
 
   - we want them to be ideally be regular
   - but if not regular, there may be some use after all
   - we want to say that high regularity = high evidence
-  - we want a tool to help guage how regualr theoreis are
+  - we want a tool to help gauge how regualr theoreis are
   - additionally these tools may be help us find different kinds of "relatedness"
       - Borrowing
       - Japanese readings for instance
@@ -115,7 +112,7 @@ It is important to note that this a rough convention. The notation is inadequate
   - More or less just a list
 - Otherewise no comprehensive analysis
 - Other ad hoc sound law transducers
-- Example is zompist @zompist for conlangers, which provide a forward application
+- Example is Zompist @zompist for conlangers, which provide a forward application
 
 
  = Finite State Trandsducers
@@ -271,20 +268,31 @@ Celtic is an Indo-European language family. This includes members such as Irish,
 
 === Proto-Indo-European
 
-Proto-Indo-European (PIE) is the reconstructed ancestor of many languages of Europe. Its descendants include Germanic Languages (English, German, etc), Slavic Languages (Russian, Polish, Ukranian), Romance Languages (Spanish, French, Italian, etc), and many languages of India. 
+Proto-Indo-European (PIE) is the reconstructed ancestor of many languages of Europe. Its descendants include Germanic Languages (English, German, etc), Slavic Languages (Russian, Polish, Ukranian), Romance Languages (Spanish, French, Italian, etc. ), and many languages of India. 
 
-The grammar of PIE is reconstructed to be complex. The scope is quite large, but the most relevant details will be covered.
+The grammar of PIE is reconstructed to be complex. The scope is quite large. It has a vast history and to go into full detail would take too long. Only the most relavent information will be covered here. 
+
+PIE was heavily declined. A root with a meaning could not be used by itself, but always had to be declined according its case. There were two broad declension paradigms used: the thematic and athematic declension paradigms.
 
 
+== The Celtic Dictionary
 
-The case study examines #cite(<celtic>, form: "prose").
+The case study examines a Celtic dictionary by #cite(<celtic>, form: "prose"). The dictionary begins with a short introduction, followed by a description of sound laws, and then finally the rest of the book consists of Proto-Celtic dictionary entries.
 
-  
+To test the validity of the Celtic dictionary.
+
+=== Sound Laws
+
+Given is a brief overview of the sound laws presented in the dictionary. They describe the changes from PIE to Proto-Celtic.
+
+=== Results
+
+Once these sound laws were formalized and turned into FSTs, a set of PIE etyma were then selected as test cases to see if the transduced result was the expected Proto-Celtic form. These words were more or less selected arbitrarily. Many words also required some slight modification, due to the Proto-Celtic entry containing a vowel as part of the declension, when the PIE root mentioned did not have it. Some words were also modified due to them coming from a different ablaut grade than the cited PIE root, or had a different suffix appended to it.
 
 
 #table(
   columns: 5,
-  table.header[*Pie Stem*][*Transduced Result*][*Proto Celtic Root*][*Correct*][*Notes*],
+  table.header[*Pie Stem*][*Transduced Result*][*Proto-Celtic Root*][*Correct*][*Notes*],
   [phte:r], [fatiːr], [fatiːr], [true], [no comment],
   [krdtu], [krissu], [krissu], [true], [no comment],
   [plhno], [flaːno], [flaːno], [true], [no comment],
