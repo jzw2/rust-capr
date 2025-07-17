@@ -1,29 +1,52 @@
 
 #import "@preview/ascii-ipa:2.0.0": *
 
-#set page(margin: 1in)
-#set par(leading: 0.55em, spacing: 0.55em, first-line-indent: 1.8em, justify: true)
-#set text(font: "New Computer Modern")
-#show raw: set text(font: "New Computer Modern Mono")
-#show heading: set block(above: 1.4em, below: 1em)
+// #import "@preview/casson-uom-thesis:0.1.1": *
+#import "template.typ" : *
+
+#show: uom-thesis.with(
+  title: "My Thesis",
+  author: "John Wang",
+  faculty: "philosphiakckaj intitustu",
+  school: "tuebingn",
+  departmentordivision: "Seminar fur sprachwssensvhf",
+  abstract: [Abstract goes here],
+  publications: [Publications go here.],
+  //termsandabbreviations: [Enter terms and abbreviations as table or similar], // uncomment if want in thesis
+  // layabstract: [Lay abstract goes here], // uncomment if want in thesis
+  acknowledgements: [I'd like to acknoledge myself],
+  // theauthor: [If desired, a brief statement for External Examiners giving the candidate’s degree(s) and research experience, even if the latter consists only of the work done for this thesis.], // uncomment if want in thesis
+  year: "2024",
+  font: "times", // choices are: "times", "palatino", "roboto", "noto_sans" 
+  fontsize: 11pt, // can be any reasonable value
+)
 
 
 
 
-#align(center, text(30pt)[
-*My Master Thesis*
-])
+// #set page(margin: 1in)
+// #set par(leading: 0.55em, spacing: 0.55em, first-line-indent: 1.8em, justify: true)
+// #set text(font: "New Computer Modern")
+// #show raw: set text(font: "New Computer Modern Mono")
+// #show heading: set block(above: 1.4em, below: 1em)
 
 
-#align(center, text(17pt)[
-John Wang
-])
 
 
-#pagebreak()
+// #align(center, text(30pt)[
+// *My Master Thesis*
+// ])
 
 
-#set page(numbering: "1")
+// #align(center, text(17pt)[
+// John Wang
+// ])
+
+
+/* #pagebreak()
+
+
+#set page(numbering: "1") */
 
 = Intro
 
@@ -252,7 +275,6 @@ Proto-Indo-European (PIE) is the reconstructed ancestor of many languages of Eur
 
 The grammar of PIE is reconstructed to be complex. The scope is quite large, but the most relevant details will be covered.
 
-Freqeuntly 
 
 
 The case study examines #cite(<celtic>, form: "prose").
@@ -266,10 +288,7 @@ The case study examines #cite(<celtic>, form: "prose").
   [phte:r], [fatiːr], [fatiːr], [true], [no comment],
   [krdtu], [krissu], [krissu], [true], [no comment],
   [plhno], [flaːno], [flaːno], [true], [no comment],
-  [plhno], [blaːno], [flaːno], [false], [Wrong initial],
   [grhno], [ɡraːno], [ɡraːno], [true], [no comment],
-  [grxno], [ɡraːno], [ɡraːno], [true], [no comment],
-  [grqno], [ɡraːno], [ɡraːno], [true], [no comment],
   [g_wow], [bow], [bow], [true], [no comment],
   [krd], [krid], [krid], [true], [no comment],
   [b_hero], [bero], [bero], [true], [no comment],
