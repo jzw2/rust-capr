@@ -7,7 +7,24 @@
 #show raw: set text(font: "New Computer Modern Mono")
 #show heading: set block(above: 1.4em, below: 1em)
 
+
+
+
+#align(center, text(30pt)[
+*My Master Thesis*
+])
+
+
+#align(center, text(17pt)[
+John Wang
+])
+
+
+#pagebreak()
+
+
 #set page(numbering: "1")
+
 = Intro
 
 
@@ -16,10 +33,10 @@
 = Historical Linguistics
 
 
-Historical Linguistics is arguably a really old part of linguistics. The neogrammarians found cognates between latin, greek and sankrit, but more importantly they found cognancy between sound laws. This is the most important part, in which they have a system that consistently maps between. That is, the sound is regualr.
+Historical Linguistics is arguably a really old part of linguistics. The neogrammarians found cognates between Latin, Greek and Sankrit, but more importantly they found cognacy between sound laws. This is the most important part, in which they have a system that consistently maps between. That is, the sound is regualr.
 
 
-A famous example is Grimm's law. This is known as a chain shift in which certain consontats correspond in other consonants.
+A famous example is Grimm's law. This is known as a chain shift in which certain consonants correspond in other consonants.
 
 For exampls latin cognates picic fish, whatever german and lots
 
@@ -75,6 +92,7 @@ It is important to note that this a rough convention. The notation is inadequate
   - More or less just a list
 - Otherewise no comprehensive analysis
 - Other ad hoc sound law transducers
+- Example is zompist @zompist for conlangers, which provide a forward application
 
 
  = Finite State Trandsducers
@@ -129,16 +147,16 @@ A nondeterministic finite state machine can be defined as  $(Q, s, Sigma, F, del
 - $F subset Q$ the set of final states
 - $delta: Q times Sigma -> P(Q)$, $P$ being the powerset function. The nondeterministic transition function that maps each state and character to possible states.
 
-The only difference here is the transition function, which can now map to multiple or zero states, in additon to just one state.
+The only difference here is the transition function, which can now map to multiple or zero states, in addition to just one state.
 
-The non determinstic finite state machine also has a similar accepts function. 
+The non deterministic finite state machine also has a similar accepts function. 
 
 A finite state machine $(Q, s, Sigma, F, delta)$ accepts a string $S$ when one of the following conditions are met:
 
 - $S = epsilon$ and $s in F$ 
 - $S = c dot S'$ and there exists a $q$ such that $delta(q, c) = q'$ and $M' = (Q, q', Sigma, F, delta)$ accepts $S'$
 
-A deterministic finite state machine is trivially a non deterministic finite state machine. However, it may be surprising to know the the converse is also true: any non deterministic finite state machine can be turned into a deterministic finite state machine which accepts the same language.
+A deterministic finite state machine is trivially a non deterministic finite state machine. However, it may be surprising to know the converse is also true: any non deterministic finite state machine can be turned into a deterministic finite state machine which accepts the same language.
 
 
 Additionally, a further extension of non deterministic machines can be created to also accept epsilon transitions, i.e. $delta: Q times (Sigma union { epsilon }) -> P(Q)$, $P$ being the powerset function. Note that the previous acceptance function is still valid due to the semantics of $epsilon$.
@@ -152,18 +170,20 @@ Given an alphabet $Sigma$, a regular expression can be recursively defined as
 
 - $epsilon$ the empty regular expression.
 - $c$ where $c in Sigma$ the singleton character
-- $R_1 dot R_2$ where $R_1$ and $R_2$ are also regular expressions, concatention.
+- $R_1 dot R_2$ where $R_1$ and $R_2$ are also regular expressions, concatenation.
 - $R_1 | R_2$ where $R_1$ and $R_2$ are also regular expressions, disjunction.
 - $R_1^*$ where $R_1$ is a regular expression, the Kleene Star.
 
 Given a particular expression $R$, we can define the semantics for $R$ matching a string $S$ if
 
 - $R = epsilon$ and $S = epsilon$
-- $R = c$, where $c in Sigma$ and  and $S = c$
+- $R = c$, where $c in Sigma$  and $S = c$
 - $R = R_1 dot R_2$ and there exists $S_1$ and $S_2$ such that $S = S_1 dot S_2$ and $R_1$ matches $S_1$ and $R_2$ matches $S_2$
 - $R = R_1 | R_2$ and $R_1$ matches $S$ or $R_2$ matches $S$
-- $R = R_1^*$ and $S = epsilon$ or $S = S_1 dot S_2$  and $R_1$ matches $S_1$ and $R_1*$  matches $S_2$.
+- $R = R_1^*$ and $S = epsilon$ or $S = S_1 dot S_2$ and $R_1$ matches $S_1$ and $R_1^*$ matches $S_2$.
 
+
+Regular expression are commonly used for 
 
 === Applications for fst
 
@@ -190,15 +210,26 @@ The first is simply installation. The original repository had a docker container
 
 Another potential inconvenience is the the dependence on HFST. Though it is not necessarily bad, I think there some things that could be done better. For instance it forces a server client architctue, meaning the linguist is forced to install something, or the have to rent out a server that transduces the thing for everyone or they have to like the things blah blah you know you just want liek a simple web page that does everytig locally. You got a no click install just go to a webpage and bam you are there. 
 
-You also have to learn HFST, which I guess its not bad, but i does require some getting used to. The concatenation must still be done manually and the it's also just like you hvae to type in code and whatever. It would be nicer if there was somehting more visual and like you doesn't work as bad. 
+You also have to learn HFST, which I guess its not bad, but i does require some getting used to. The concatenation must still be done manually and the it's also just like you hvae to type in code and whatever. It would be nicer if there was somehting more visual and like you doesn't work as bad. And it's also slightly annnoying you have to click transduce and it like take a second to switch everyihtng. And yeah
 
 
 
 == Project Desciption
 
+The project can be thought of as a miniature version of Capr.
 
+Basically my version of a webapp that is slightly buggy and kind of doesn't really work.
 
-The project is made using rustfst @rustfst, which is a rust language port of the C++ library @openfst. 
+However it does work for very simple stuff and has a somewhat more visual user interface.
+
+The backend is written in rust for the memes and becuase rust is fast and stuff and I don't lke c++. The project is made using rustfst @rustfst, which is a rust language port of the C++ library OpenFst.  @openfst The core functionality has been implemented in rustfst, but certain features had to be implemented that were already implemented in openfst. 
+
+Additoinally Rustfst is a rather low level library. In comparison to Capr, which depended on Hfst, some impelmentation details had to be reimplemented in the Rust library that had already came for free with Hfst. 
+
+The most important of this is the replace operator. The replace operator is surprisingly non trivial.  @karttunen1997replace
+
+The code for the replace is essentially translated from Hfst's open source code. The rust implementation only implements a subset of Hfst's replace operator. It lacks the parallel replacement operator and also the various down up thing whatever and only the does the up replacement. 
+
 
 The project tries to provide a similar function to hfst @hfst.
 
