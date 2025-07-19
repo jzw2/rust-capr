@@ -50,10 +50,11 @@
 = Historical Linguistics
 
 
-Historical Linguistics is arguably a really old part of linguistics. The Neogrammarians found cognates between Latin, Greek, and Sanskrit, but more importantly they found cognacy between sound laws. This is the most important part, in which they have a system that consistently maps between. That is, the sound is regualr.
-
-
+Historical Linguistics is arguably a really old part of linguistics. The Neogrammarians found cognates between Latin, Greek, and Sanskrit, but more importantly they found cognacy between sound laws. This is the most important part, in which they have a system that consistently maps between. That is, the sound is regualr.  
 A famous example is Grimm's law. This is known as a chain shift in which certain consonants correspond in other consonants.
+
+
+
 
 For exampls latin cognates picic fish, whatever German and lots
 
@@ -79,7 +80,9 @@ Linguists have a conventionalized representation for laws.
 
 Usually they write them in teh form $A > B$ where $A$ is a phoneme that gets changed, and $B$ is the phoneme that it gets changed into. They can be changed to represent the sound laws $A > B > C$ such as the Grimm's law, which can be represeneted as #xsampa("d > t >")  ϑ
 
-To represent context laws they usually
+To represent context laws they usually 
+@crowley2010introduction
+
 
 $ A > B \/ X#box(width: 0.5cm, clip: true, outset: (y: 1em), underline(extent: 1000cm, sym.space.nobreak))Y $
 
@@ -283,11 +286,23 @@ To test the validity of the Celtic dictionary.
 
 === Sound Laws
 
+// A > B \/ X #box(width: 0.5cm, clip: true, outset: (y: 1em), underline(extent: 1000cm, sym.space.nobreak)) Y 
+
+#let law(A, B, X, Y) = [#A > #B \/ #X #box(width: 0.5cm, clip: true, outset: (y: 1em), underline(extent: 1000cm, sym.space.nobreak)) #Y ]
+
+
+// #law([a],[b],[c],[d])
 Given is a brief overview of the sound laws presented in the dictionary. They describe the changes from PIE to Proto-Celtic.
+
+todo: actually write down these laws
 
 === Results
 
 Once these sound laws were formalized and turned into FSTs, a set of PIE etyma were then selected as test cases to see if the transduced result was the expected Proto-Celtic form. These words were more or less selected arbitrarily. Many words also required some slight modification, due to the Proto-Celtic entry containing a vowel as part of the declension, when the PIE root mentioned did not have it. Some words were also modified due to them coming from a different ablaut grade than the cited PIE root, or had a different suffix appended to it.
+
+
+
+
 
 
 #show "true": [#emoji.checkmark.box]
@@ -301,7 +316,7 @@ Once these sound laws were formalized and turned into FSTs, a set of PIE etyma w
   [ h₃eyno], [oyno], [oyno], [true], [],
   [bʰero], [bero], [bero], [true], [],
   [bʰrso], [barso], [barso], [true], [],
-  [deqno], [daːno], [daːno], [true], [c5],
+  [deqno], [daːno], [daːno], [true], [],
   [dnt], [dant], [dant], [true], [original danto],
   [dʰɡʰesi], [xɡesi], [ɡdesi], [false], [metathesis],
   [dʰɡʰo:m], [xɡaːm], [ɡdon], [false], [metathesis],
@@ -312,14 +327,14 @@ Once these sound laws were formalized and turned into FSTs, a set of PIE etyma w
   [gʰyemo], [ɡyemo], [ɡyemo], [true], [],
   [h₁epirom], [efirom], [efirom], [true], [],
   [h₁ludʰ], [lud], [lud], [true], [],
-  [h₁re:g], [riːɡ], [riːɡ], [true], [b8],
+  [h₁re:g], [riːɡ], [riːɡ], [true], [],
   [h₁rewdʰ], [rowd], [rowd], [true], [original rowdo],
   [h₁su], [su], [su], [true], [],
   [h₂mlgto], [amlixto], [mlixto], [false], [Incorrectly feeds _a_ insertion],
-  [h₂ste:r], [stiːr], [steraː], [false], [],
+  [h₂ste:r], [stiːr], [steraː], [false], [Incorrect vowel and extra a],
   [h₂weh₁nto], [winto], [winto], [true], [],
-  [h₂weh₁nto], [winto], [winto], [true], [b11],
-  [h₃ektoh₁], [oxto], [oxtuː], [false], [],
+  [h₂weh₁nto], [winto], [winto], [true], [],
+  [h₃ektoh₁], [oxto], [oxtuː], [false], [Incorrect vowel],
   [kapr], [kabr], [ɡabro], [false], [initial consonant is irregular],
   [kewh₂ro], [kowaro], [kawaro], [false], [Incorrect vowel],
   [kleh₂ro], [klaːro], [klaːro], [true], [],
@@ -328,7 +343,7 @@ Once these sound laws were formalized and turned into FSTs, a set of PIE etyma w
   [kmti], [kanti], [kanti], [true], [],
   [krd], [krid], [krid], [true], [],
   [krdtu], [krissu], [krissu], [true], [],
-  [krewx], [krow], [kruː], [false], [],
+  [krewh₂], [krow], [kruː], [false], [Incorrect vowel],
   [kwo:n], [kwaːn], [kʷon], [false], [Incorrect vowel],
   [kʷendʰ], [kʷend], [kʷend], [true], [so element at the end seems to be an addition kwendso],
   [kʷetwores], [kʷetwores], [kʷetwores], [true], [],
@@ -339,69 +354,71 @@ Once these sound laws were formalized and turned into FSTs, a set of PIE etyma w
   [leyd], [leːd], [loydo], [false], [incorrect vowel, may be from _o_ grade],
   [linkʷ], [linkʷ], [linkʷ], [true], [original linkʷo original leykʷ, but n infix added],
   [medʰyo], [medyo], [medyo], [true], [],
-  [mel], [mel], [mall], [false], [Does not account for double vowel],
-  [mexk], [maːk], [mak], [false], [original mako, incorrect vowel length],
-  [mexte:r], [maːtiːr], [maːtiː], [false], [],
-  [mrgʷto], [mrixto], [mrixto], [true], [c1],
-  [nebʰos], [nebos], [nemos], [false], [],
+  [mel], [mel], [mall], [false], [Does not account for double consonant],
+  [meh₂k], [maːk], [mak], [false], [original mako, incorrect vowel length],
+  [meh₂te:r], [maːtiːr], [maːtiː], [false], [Somehow the _r_ is dropped],
+  [mrgʷto], [mrixto], [mrixto], [true], [],
+  [nebʰos], [nebos], [nemos], [false], [Alternation between _m_ and _b_ ],
   [nem], [nem], [nem], [true], [original nemo],
   [newos], [nowos], [nowyo], [false], [],
   [newyo], [nowyo], [nowyo], [true], [],
-  [nexu], [naːu], [naːwaː], [false], [],
+  [neh₂u], [naːu], [naːwaː], [false], [Due to switching from _u_ to an _a_ declension paradigm],
   [nokʷt], [noxt], [noxt], [true], [],
   [pelh₁u], [felu], [filu], [false], [says it preserves e grade, but don't know where i comes from],
   [ph₁te:r], [fatiːr], [fatiːr], [true], [],
-  [piprqse], [fibraːse], [fibrase], [false], [c2],
-  [plew], [blow], [flow], [false], [],
+  [piprqse], [fibraːse], [fibrase], [false], [Vowel length],
   [plew], [flow], [flow], [true], [],
   [plh₁no], [flaːno], [flaːno], [true], [],
   [potr], [fotr], [fatar], [false], [cannot account for a vocalism],
   [prptu], [brixtu], [frixtu], [false], [Wrong initial],
-  [prptu], [frixtu], [frixtu], [true], [c1],
+  [prptu], [frixtu], [frixtu], [true], [],
   [re:g], [riːɡ], [riːɡ], [true], [],
-  [re:gnih₂], [riːɡni], [riːɡaniː], [false], [],
+  [re:gnih₂], [riːɡni], [riːɡaniː], [false], [Extra _a_ epenthesis],
   [reyd], [reːd], [reːd], [true], [],
   [reydʰ], [reːd], [reːd], [true], [original re:do],
-  [reyh₁], [reː], [reːno], [false], [],
+  [reyh₁], [reː], [reːno], [false], [_no_ suffix],
   [sed], [sed], [sed], [true], [original sedo],
-  [seh₂l], [saːl], [salano], [false], [],
+  [seh₂l], [saːl], [salano], [false], [Incorrect vowel length along with _no_ suffix],
   [seh₂t], [saːt], [saːt], [true], [original sa:ti],
-  [sekʷ], [sekʷ], [skʷetlo], [false], [],
+  [sekʷ], [sekʷ], [skʷetlo], [false], [Some sort of metathesis with _lo_ suffix],
   [seno], [seno], [seno], [true], [],
   [sent], [sent], [sent], [true], [original sentu],
   [septm], [sextm], [sextam], [false], [Fails to append add an _a_],
-  [sexg], [saːɡ], [saɡyo], [false], [],
+  [seh₂g], [saːɡ], [saɡyo], [false], [Wrong vowel length and _yo_ suffix],
   [sih₂mdo], [siando], [sindo], [false], [Law incorrectly feeds],
-  [siskʷo], [siskʷo], [sisku], [false], [],
+  [siskʷo], [siskʷo], [sisku], [false], [Failed to delabialize],
   [skeh₃t], [skaːt], [skaːt], [true], [original ska:to],
   [skribʰ], [skrib], [skriːbbaː], [false], [],
   [slunk], [slunk], [slunko], [false], [original slewk],
   [smh₂el], [smal], [samali], [false], [],
   [sneh₂], [snaː], [snaː], [true], [],
-  [sney], [sneːb], [sniɡʷ], [false], [],
-  [soru], [soru], [serwaː], [false], [],
-  [spelh₁ɡʰ], [sfelaɡ], [sfelɡaː], [false], [],
-  [sperxg], [sferaɡ], [sfraxto], [false], [],
+  [sney], [sneːb], [sniɡʷ], [false], [Incorrect feeding rule],
+  [soru], [soru], [serwaː], [false], [Incorrect vowel],
+  [spelh₁ɡʰ], [sfelaɡ], [sfelɡaː], [false], [Metathesis of vowel and consonant],
+  [sperh₂g], [sferaɡ], [sfraxto], [false], [Metathesis and _to_ suffix],
   [srewm], [srowm], [srowman], [false], [n suffixed onto end],
-  [sterk], [sterk], [stronko], [false], [],
-  [stex], [staː], [sista], [false], [],
+  [sterk], [sterk], [stronko], [false], [_o_ grade and metatesis],
+  [steh₂], [staː], [sista], [false], [],
   [stomn], [stomn], [stamnaː], [false], [Wrong vowel with long a at end],
-  [supno], [sowno], [sowno], [true], [p is not accounted for],
+  [supno], [sowno], [sowno], [true], [],
   [sweh₂du], [swaːdu], [swaːdu], [true], [],
-  [sxl], [sal], [sal], [true], [original saltro],
+  [sh₂l], [sal], [sal], [true], [original saltro],
   [tenh₁], [ten], [torano], [false], [A suffix of ro followed by a metathesis has been applied],
   [terh₁tro], [teratro], [taratro], [false], [Spurious _e_ to _a_],
-  [treyes], [treːes], [triːs], [false], [],
+  [treyes], [treːes], [triːs], [false], [Multiple vowels combining],
   [tuh], [tu], [tu], [true], [],
   [uper], [ufer], [ufor], [false], [Incorrect vowel, could be from _o_ grade],
   [widʰu], [widu], [widu], [true], [],
   [wirh₁o], [wiro], [wiro], [true], [],
   [wlh₁o], [walo], [walo], [true], [],
-  [yemh₁o], [yemo], [yemono], [false], [],
+  [yemh₁o], [yemo], [yemono], [false], [_no_ suffix],
   [ɡʰeh₂ns], [ɡans], [ɡans], [true], [original gansi],
-  [ɡʰelq], [ɡel], [ɡel], [true], [original gelo],
+  [ɡʰelh₃], [ɡel], [ɡel], [true], [original gelo],
   [ɡʷow], [bow], [bow], [true], [],
 )
+
+
+== Discussion
 
 #bibliography(("bib.bib", "bib.yaml"))
 
