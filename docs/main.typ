@@ -7,7 +7,7 @@
 #show: uom-thesis.with(
   title: "My Thesis",
   author: "John Wang",
-  faculty: "philosphiakckaj intitustu",
+  faculty: "Philosophische intitustu",
   school: "tuebingn",
   departmentordivision: "Seminar fur sprachwssensvhf",
   //termsandabbreviations: [Enter terms and abbreviations as table or similar], // uncomment if want in thesis
@@ -49,30 +49,67 @@
 
 = Historical Linguistics
 
+People have been noticing that language changes. Historical Linguistics is the study of change in language. @hock2021principles
 
-Historical Linguistics is arguably a really old part of linguistics. The Neogrammarians found cognates between Latin, Greek, and Sanskrit, but more importantly they found cognacy between sound laws. This is the most important part, in which they have a system that consistently maps between. That is, the sound is regualr.  
-A famous example is Grimm's law. This is known as a chain shift in which certain consonants correspond in other consonants.
-
-
+The living pieces of evidence that language changes is simply examing the English language. The English lanuguage is notoriously known for its freqently arbitrary spelling rules. @silentk shows a list of _k_ words that do not have the _k_ sound. 
 
 
-For exampls latin cognates picic fish, whatever German and lots
+#figure(
+  table(
+    columns: 2,
+    table.header([English Orthography], [IPA transcription]),
+    [knee], [niːd],
+    [knight], [naɪt],
+    [knead], [niːd],
+    [knuckle], [nʌkəl],
+    [know], [noʊ]
 
-Another sound law that's really common is called paltalization.
+  ), 
+  caption: [Illogical English Spelling]
+) <silentk>
 
-For instance Spanish _caesar_
+
+A partial reason is because of the effects of sound change. English spelling often reflects earlier stage of the language, where things were pronounced differently. The spoken language changed, but the written language had failed to update to the newer pronunciattion. 
+
+This evidence is further supported when we look at some words from German, which happen to have similar meanings, shown in @silentkgerman. In the German words, the \<k\> is pronounced, unlike in English. 
+
+
+#figure(
+  table(
+    columns: 3,
+    table.header([English Word], [German Word], [Meaning]),
+    [knee], [Knie], [knee],
+    [knight], [Knecht], [Male Servant],
+    [knead], [kneten], [to knead],
+    [knuckle], [Knochen], [bone]
+  ), 
+  caption: [German Words]
+) <silentkgerman>
+
+It can be theorized that German and English were once the same language. However, through the many years of being apart, various changes in pronunciation, grammar and meaning have effected both languages, making them non mutually intelligable. One of these changes that happened relatively recently was the change shown in @silentk, of deleting \<k\> when before \<n\>, which happened in English, but did not happen in German. 
+
 
 
 == Neogrammarian Hypothesis
 
 
-- Sound Change is regular
-- Well, probably not that regular
-- Context based sound law changes
-- Also that certain sound changes are universal
+As a child learning how to read English, seeing the spelling of the the words listed in @silentk for a general rule: \<kn\> gets pronounced as \<n\>. This generalization parallels the developement of the development of English, so what initially seems to be a pronunciation rule may be more accurately described as a _sound change rule_ or a _sound law_, a term used by the Neogrammarians. 
+
+Additionally, this particular sound law is observable because of the conservative orthography of English. But English has only (relativly speaking) recently been written down. If, for instance, English and German had written down their language back when they were one language, would it be possible for a learner of the language to similarly form a large list of rules to derive the English pronunciation, and a different set of rules to derive the German pronunciation?
 
 
-Somehting somthing let's get started with sound laws.
+The Neogrammarians had a similar thought, and believed
+
+
+Latin, Greek, and Sanskrit, but more importantly they found cognacy between sound laws. This is the most important part, in which they have a system that consistently maps between. That is, the sound is regualr.  @hock2021principles 
+
+The Neogrammarians believed that sound change was absolutely regular. @hock2021principles They believed what exception that they encountered were merely sound laws that had been not sufficiently generalized, or had been regularized by analogy. 
+
+However this is probably not a very realisitic model of language. Unlike the physical world, which has laws written in the language of mathematics that will predict exactly what will happen, languages are full of arbitrariness.
+
+There are examples of changes that are _sporadic_ and effect only one word. Or maybe non determinsitcs behavior, where a single word splits. 
+
+
 
 == Sound Laws
 
@@ -90,6 +127,12 @@ where the variables $A, B, X, Y$ can represent strings, or potential features. T
 
 It is important to note that this a rough convention. The notation is inadequate to describe all types of sound law change. Authors will usually need to supplement this notation with english language explanations.
 
+
+== Computational Linguistics
+
+It would seem that this notation would easily be read by a computer. Indeed, it is not hard to write a computer program that, given a set of words, and the sound laws that are known, to then write a computer program that transduces this. 
+
+There are many benefits of this doing this. Is that we now have _verification_ of the sound laws. A linguist would otherwise be the only source of trust. As the amount of sound changes is usually non trivial, it is not hard to accidentally forget to apply a law, or apply it in the wrong order. 
 
 - formal notation -> auto trandcution
 - current standrad is primitve keep in your head
@@ -299,18 +342,17 @@ todo: actually write down these laws
 === Results
 
 Once these sound laws were formalized and turned into FSTs, a set of PIE etyma were then selected as test cases to see if the transduced result was the expected Proto-Celtic form. These words were more or less selected arbitrarily. Many words also required some slight modification, due to the Proto-Celtic entry containing a vowel as part of the declension, when the PIE root mentioned did not have it. Some words were also modified due to them coming from a different ablaut grade than the cited PIE root, or had a different suffix appended to it.
-
-
-
+ @transducetable shows the results. 
 
 
 
 #show "true": [#emoji.checkmark.box]
 #show "false": [❌]
 
+#show figure: set block(breakable: true)
 
-
-#table(
+#figure(
+ table(
   columns: 5,
   table.header[*Pie Stem*][*Transduced Result*][*Proto-Celtic Root*][*Correct*][*Notes*],
   [ h₃eyno], [oyno], [oyno], [true], [],
@@ -415,7 +457,11 @@ Once these sound laws were formalized and turned into FSTs, a set of PIE etyma w
   [ɡʰeh₂ns], [ɡans], [ɡans], [true], [original gansi],
   [ɡʰelh₃], [ɡel], [ɡel], [true], [original gelo],
   [ɡʷow], [bow], [bow], [true], [],
-)
+),
+caption: [Transduction table]
+) <transducetable>
+
+
 
 
 == Discussion
