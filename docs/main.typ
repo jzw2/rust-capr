@@ -1,4 +1,5 @@
 
+#import "@preview/linphon:0.1.0" as lp
 #import "@preview/ascii-ipa:2.0.0": *
 
 // #import "@preview/casson-uom-thesis:0.1.1": *
@@ -51,7 +52,7 @@
 
 People have been noticing that language changes. Historical Linguistics is the study of change in language. @hock2021principles
 
-The living pieces of evidence that language changes is simply examing the English language. The English lanuguage is notoriously known for its freqently arbitrary spelling rules. @silentk shows a list of _k_ words that do not have the _k_ sound. 
+The living pieces of evidence that language changes is simply examining the English language. The English language is notoriously known for its frequently arbitrary spelling rules. @silentk shows a list of _k_ words that do not have the _k_ sound. 
 
 
 #figure(
@@ -69,7 +70,7 @@ The living pieces of evidence that language changes is simply examing the Englis
 ) <silentk>
 
 
-A partial reason is because of the effects of sound change. English spelling often reflects earlier stage of the language, where things were pronounced differently. The spoken language changed, but the written language had failed to update to the newer pronunciattion. 
+A partial reason is because of the effects of sound change. English spelling often reflects earlier stage of the language, where things were pronounced differently. The spoken language changed, but the written language had failed to update to the newer pronunciation. 
 
 This evidence is further supported when we look at some words from German, which happen to have similar meanings, shown in @silentkgerman. In the German words, the \<k\> is pronounced, unlike in English. 
 
@@ -86,26 +87,29 @@ This evidence is further supported when we look at some words from German, which
   caption: [German Words]
 ) <silentkgerman>
 
-It can be theorized that German and English were once the same language. However, through the many years of being apart, various changes in pronunciation, grammar and meaning have effected both languages, making them non mutually intelligable. One of these changes that happened relatively recently was the change shown in @silentk, of deleting \<k\> when before \<n\>, which happened in English, but did not happen in German. 
+It can be theorized that German and English were once the same language. However, through the many years of being apart, various changes in pronunciation, grammar, and meaning have effected both languages, making them non mutually intelligible. One of these changes that happened relatively recently was the change shown in @silentk, of deleting \<k\> when before \<n\>, which happened in English, but did not happen in German. 
 
 
 
 == Neogrammarian Hypothesis
 
 
-As a child learning how to read English, seeing the spelling of the the words listed in @silentk for a general rule: \<kn\> gets pronounced as \<n\>. This generalization parallels the developement of the development of English, so what initially seems to be a pronunciation rule may be more accurately described as a _sound change rule_ or a _sound law_, a term used by the Neogrammarians. 
+As a child learning how to read English, seeing the spelling of the words listed in @silentk for a general rule: \<kn\> gets pronounced as \<n\>. This generalization parallels the development of the development of English, so what initially seems to be a pronunciation rule may be more accurately described as a _sound change rule_ or a _sound law_, a term used by the Neogrammarians. 
 
 Additionally, this particular sound law is observable because of the conservative orthography of English. But English has only (relativly speaking) recently been written down. If, for instance, English and German had written down their language back when they were one language, would it be possible for a learner of the language to similarly form a large list of rules to derive the English pronunciation, and a different set of rules to derive the German pronunciation?
 
 
-The Neogrammarians had a similar thought, and believed
+The Neogrammarians had a similar thought, and believed not only that English and German could be derived from a common ancestor like this, but that they could project even further back, relating most language of Europe along with many languages of India. These languages included English, German, French, Spanish, Greek, Russian, Hindi, and more. 
+
+The oldest literarly languages known to Neogrammarians: Latin, Greek, and Sanskrit, not only had correspondences in vocabulary, but also similarities in Grammar. This led them to postulate the existance of the Proto-Indo-European (PIE) language, which then diversified and split into various daughter languages.  Similar to the example of English and German, often one language might have had a sound law apply, but another language might have preserved a more archaic form.   @hock2021principles 
+
+The Neogrammarians craeted these sound laws under the Neogrammarian assumption: Sound Laws are completely regular. In this, they tried to bring linguistics in line with the the laws of the natural world. This may be roughly equivalent to saying that all languages consist of a mathematical function taking a protoword and outputs a modern reflex. This function would then be composed of smaller functions, the sound laws, that could then be combined under function composition.
+
+Like any science, the actual data will not 100%.  They believed what exception that they encountered were merely sound laws that had been not sufficiently generalized.
 
 
-Latin, Greek, and Sanskrit, but more importantly they found cognacy between sound laws. This is the most important part, in which they have a system that consistently maps between. That is, the sound is regualr.  @hock2021principles 
 
-The Neogrammarians believed that sound change was absolutely regular. @hock2021principles They believed what exception that they encountered were merely sound laws that had been not sufficiently generalized, or had been regularized by analogy. 
-
-However this is probably not a very realisitic model of language. Unlike the physical world, which has laws written in the language of mathematics that will predict exactly what will happen, languages are full of arbitrariness.
+However this is probably not a very realistic model of language. Unlike the physical world, which has laws written in the language of mathematics that will predict exactly what will happen, languages are full of arbitrariness.
 
 There are examples of changes that are _sporadic_ and effect only one word. Or maybe non determinsitcs behavior, where a single word splits. 
 
@@ -115,17 +119,40 @@ There are examples of changes that are _sporadic_ and effect only one word. Or m
 
 Linguists have a conventionalized representation for laws.
 
-Usually they write them in teh form $A > B$ where $A$ is a phoneme that gets changed, and $B$ is the phoneme that it gets changed into. They can be changed to represent the sound laws $A > B > C$ such as the Grimm's law, which can be represeneted as #xsampa("d > t >")  ϑ
+Usually they write them in teh form $A > B$ where $A$ is a phoneme that gets changed, and $B$ is the phoneme that it gets changed into. Another common notation is shown in @contextfree.  It cal be chagined such as  $A > B > C$, which can be viewed as a short hand of two laws, $A > B$ and $B > C$. 
 
-To represent context laws they usually 
+
+
+#figure(lp.rule([A], [B])) <contextfree>
+
+
+@contextfree reprents a sound law that happens reguardless of the context it appears in. An example would be *whine-wine* merger, which can be formerly notated as @whinewine
+
+#figure(lp.rule([ʍ], [w]), caption: [The Whine Wine merger]) <whinewine>
+
+
+However, it is more common that sounds change in only restricted contexts. This is exemplified in @withcontext
 @crowley2010introduction
 
+#figure(lp.rule([A], [B], [X #lp.dash() Y]), caption: [Sound Law with context]) <withcontext>
 
-$ A > B \/ X#box(width: 0.5cm, clip: true, outset: (y: 1em), underline(extent: 1000cm, sym.space.nobreak))Y $
 
 where the variables $A, B, X, Y$ can represent strings, or potential features. The variables $X, Y$ represent the left hand side and right hand side contexts. 
 
+Phonetic features sometimes allow for a more succinct pattern in expressing a sound law, and may also reveal a more general pattern. For instance, Grimm's law is a sound change that involves 12 phonemes that change places
+
+
+#figure(
+  table(
+    columns: 3,
+lp.rule([p], [f]) ,  lp.rule([b], [p]), lp.rule([bʰ], [b])
+  ), 
+  caption: [Grimm's law]
+) <grimm>
+
 It is important to note that this a rough convention. The notation is inadequate to describe all types of sound law change. Authors will usually need to supplement this notation with english language explanations.
+
+
 
 
 == Computational Linguistics

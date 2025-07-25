@@ -3,3 +3,13 @@ rustfst:
   type: Repository
   title: rustfst
   url: https://github.com/garvys-org/rustfst
+
+
+diachronica:
+  type: web
+  url: https://chridd.nfshost.com/diachronica/all
+
+
+zompist:
+  type: web
+  url: https://zompist.com/sca2.html
