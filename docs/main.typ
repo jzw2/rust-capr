@@ -8,9 +8,9 @@
 #show: uom-thesis.with(
   title: "My Thesis",
   author: "John Wang",
-  faculty: "Philosophische intitustu",
-  school: "tuebingn",
-  departmentordivision: "Seminar fur sprachwssensvhf",
+  faculty: "Philosophische Fakultät",
+  school: "Tübingen",
+  departmentordivision: " Seminar für Sprachwissenschaft",
   //termsandabbreviations: [Enter terms and abbreviations as table or similar], // uncomment if want in thesis
   // layabstract: [Lay abstract goes here], // uncomment if want in thesis
   // theauthor: [If desired, a brief statement for External Examiners giving the candidate’s degree(s) and research experience, even if the latter consists only of the work done for this thesis.], // uncomment if want in thesis
@@ -139,20 +139,59 @@ However, it is more common that sounds change in only restricted contexts. This 
 
 where the variables $A, B, X, Y$ can represent strings, or potential features. The variables $X, Y$ represent the left hand side and right hand side contexts. 
 
-Phonetic features sometimes allow for a more succinct pattern in expressing a sound law, and may also reveal a more general pattern. For instance, Grimm's law is a sound change that involves 12 phonemes that change places
+Phonetic features sometimes allow for a more succinct pattern in expressing a sound law, and may also reveal a more general pattern. For instance, Grimm's law is a sound change encompasses 12 smaller sound laws as shown in @grimm
 
 
 #figure(
   table(
     columns: 3,
-lp.rule([p], [f]) ,  lp.rule([b], [p]), lp.rule([bʰ], [b])
+lp.rule([p], [f]) ,  lp.rule([b], [p]), lp.rule([bʰ], [b]),
+lp.rule([t], [#sym.theta]) ,  lp.rule([d], [t]), lp.rule([dʰ], [d]),
+lp.rule([k], [x]) ,  lp.rule([g], [k]), lp.rule([gʰ], [g]),
+lp.rule([kʷ], [xʷ]) ,  lp.rule([gʷ], [kʷ]), lp.rule([gʰʷ], [gʷ]),
   ), 
   caption: [Grimm's law]
 ) <grimm>
 
-It is important to note that this a rough convention. The notation is inadequate to describe all types of sound law change. Authors will usually need to supplement this notation with english language explanations.
+This can be rewritten in a more concisely using features as seen in @grimmfeature 
 
+#figure(
+  [
+  + #lp.rule(
+  lp.fmat(
+    ("+", "stop"),
+    ("-", "voice"),
+  ),
+  lp.fmat(
+    ("+", "fric"),
+  )
+) 
+  + #lp.rule(
+  lp.fmat(
+    ("+", "stop"),
+    ("+", "voice"),
+  ),
+    lp.fmat(
+      ("-", "voice"),
+    )
+  )
+  
+  + #lp.rule(
+  lp.fmat(
+    ("+", "stop"),
+    ("+", "asp"),
+  ),
+  lp.fmat(
+    ("+", "voice"),
+    ("-", "asp"),
+  )
+)
+]
+,
+  caption: [Grimm's law with features]
+) <grimmfeature>
 
+It is important to note that this a rough convention. The notation is inadequate to describe all types of sound law change. Authors will usually need to supplement this notation with english language explanations. However, for simple cases, it is possible to a sound change unambiguously. 
 
 
 == Computational Linguistics
@@ -161,34 +200,71 @@ It would seem that this notation would easily be read by a computer. Indeed, it 
 
 There are many benefits of this doing this. Is that we now have _verification_ of the sound laws. A linguist would otherwise be the only source of trust. As the amount of sound changes is usually non trivial, it is not hard to accidentally forget to apply a law, or apply it in the wrong order. 
 
-- formal notation -> auto trandcution
-- current standrad is primitve keep in your head
-- verifcation of sound laws
-- old Neogrammarian "all sound laws are regular" may be outdated and flawed
+In theory, the idea that sound laws can be written in a formal notation allows for a sort of algorithm to be created that will automatically.
 
-  - we want them to be ideally be regular
-  - but if not regular, there may be some use after all
-  - we want to say that high regularity = high evidence
-  - we want a tool to help gauge how regualr theoreis are
-  - additionally these tools may be help us find different kinds of "relatedness"
-      - Borrowing
-      - Japanese readings for instance
-      - Romance doublets into latin
-      - better modelling of wave based linguistics
+It is ironic that these sorts of explorations have not been popular with linguists. In fact, in terms of technology, the linguistic community has been relatively slow in adopting computer usage. For instance, 
+it was discovered that linguists had been using a word processor to discover sound laws. @sims2018mechanising This very primative method could have been automated by a very simple program, and yet was used to discover a new sound law. Each transduction was more or less done by hand, except each phoneme was assisted using the word processor's Control-F functionality. 
 
-- Solves also a different type of problem
+In recent usage of historical linguistics 
+more attention has been drawn to different aspects of computeratial linguistics, such as _phylogenetics_: quantifying how related languages or language familes are. And _cognate detection_: given a corpuses of languages, can it be used to detect find potential words that are cognates. @sims2018mechanising  Only recently has there been approaches that return back to the Neogrammarian hypothesis created a hundred years ago. 
+
+
+== Reframing the Neogrammarian hypothesis
+
+
+The Neogrammarian hypothesis: _all sound laws are regular_ is a strong statement. And to take it literally would unfortunately very hard, once a little time is spent working with sound laws. The main problem is that language is full of _irregularity_. There are very many ways in which sound laws will give the incorrect result when applying the soundlaws without some leeway for correction.
+
+The Neogrammarians were had already known that _analogy_ was a common source of irregularities. For instance, English has leveled its verb conjugation for most verbs, only adding the _s_ to the third person singular: _I eat_, _They eat_, _We eat_,_He eats_. But the verb _to be_ has resisted this change just for the first person singular: _They are_, _We are_, but _*I am*_. 
+
+In Old English, there would have been a different verb form for all verbs in the first person singular. However, through paradigm leveling, many of the verb forms are now just the stem. If the sound laws were applied to these word form directly, it would likely create many different outcomes instead of just 
+
+// todo rewrite the above
+
+Borrowing also creates some potential problems with the Neogrammarian hypothesis. When a word is borrowed, it lacks the sound laws that would otherwise apply to the rest of the lexicon. For instance the German word _Computer_ is borrowed from the English word _computer_ which looks like it has had no sound laws applied to it. 
+
+Loan words can be especially troublesome with respect to the presence of _doublets_ which are words which essentially borrow from themselves. In Romance lanuages, the core vocabulary comes from Latin. In the natural process of time, have undergone various sound changes. However, due to Latin being used as a prestige language, the original latin word has been reborrowed along with the inherited word. An example is French _hotel_ and _hospital_ stemming from the same original Latin word _hospitalis_. Any sound change system that tries to mjodel this would require two different sound law paths. One which would require the inherited sound laws, another which would require less sound laws, that is more direct from the Latin. 
+
+Similarly, in Japanese, many Chinese words were borrowed. However, Chinese words were continuously borrowed throughout the entire history. Sometimems the same Kanji would have multiple readings depend on the compound that it was in, and from what dialect of Chinese it came from. 
+
+Even accounting for analogy and loans, sometimes sound changes do not have a predictable outcome. For instance, Mandarin Chinese is well known for not having stop codas, which used to constitute a tonal group. Due to Mandarin's phonology, where every syllable has to have a tone, the stop codas were distributed to other tones, but seemingly without any consistency. Thus, creating an algorithm to predict the outcome tone would sometimes be non deterministic. 
+
+// todo maybe give an example for this
+
+With all these exceptions, it's clear that any algorithm would potentially have problems even if the algorithm is otherwise completely accurate with respect to the sound laws. Due to the potentially large engineering feat that may be required, in additional to numerous exceptional cases, it is likely the apparent effort in constructing such a task was deemed to be too much. This expalains why many explorations into computational methods for historical linguistics have focused more tasks which require less supervision. They commonly use a general machine learning like workflow of data aggregations, followed by model that learns from the data and then compete with beating human annotated work. In contrast, building an algorithm for this requires not just a programmer, but someone who has linguistic expertise, and can examine each individual case. 
+
+Despite these problems, there is an advantage to using the Neogrammarian hypothesis. Its easy to mistake the strictness of the Neogrammarian hypothesis as a weakness, but it is instead be viewed as a strength. Its strength is that it can be "wrong", but will provide a reasoning as to why this is wrong. In this, it is parallel to other sciences. Theories can be wrong and fail, but they will have a reasoning as to why it failed.
+
+A common example is Grimm's law. The Latin word for _have_ is _habeo_. On the surface, these two words have simlar semantic meaning and phonetic strucuture. It might be logical to conclude that these two words are cognate. However, this fails to obey Grimm's law, which says that a germanic /h/ should be correspond with a Latin /k/. Indeed, the two are not cognates, but are just similar by coincidence. The true cognate of English _have_ is Latin _capio_, which has a meaning of take. 
+
+Without this udnerstanding of sound laws, it is all too easy to assign these two as cognates. And this also explains the hesitancy of traditional historical linguistics in adopting computer based approaches. A system that uses a machine learning like approach will require a simpler model of language, meaning a full sound law system is too complicated to adopt requiring simplificatons such as context free changes. 
+//cite a paper to give examples todo
+
+Additionally, this approach has been popular because of similar work being done in computational biology where essentially all changes are sporadic. Work has been done, but explicitely goes again the Neogrammarian hypothesis. Also, this hypothesis makes it intrinsicially hard to verify if theory is correct. The Neogrammarian hypothesis in theory allows all the work to be done in the linguist's head. 
+
+Most importantly, the Neogrammarian hyptothesis makes evidence explicit.  This is useful for other linguists. Meanwhile, previous approaches in autmatic reconstruction becomes not useful for linguists. The work that the autmatic constructions does is not useful for linguists. Any reconstructoin that the system does has to be reviewed by the linguist anyway. Additionally, the reasoning that the system used is not clear to the linguist. 
+
+It could be better sumarizeed that the language itself is in general not completely regular. But that a model with higher regularity is easier for linguists to work with. A linguist will find it easier to model rules that are regular, becuase this can be viewed as evidence. Under this assumption, we can also view how regular a theory is. And using this we can also 
+
+Additionally, this may also be used to better model wave based models. For instance, areal features, may also be viewed as similar as other approaches. The sound law may be applied without any dependency on the tree model. 
+
+
 
 == Sound Changes as a study of itself
 
-- Index Diachronica
-  @diachronica
-  - More or less just a list
-- Otherewise no comprehensive analysis
-- Other ad hoc sound law transducers
-- Example is Zompist @zompist for conlangers, which provide a forward application
+The use of sound laws appears to be understudied by the historical linguist. Instead, conlanguers seems to have taken a greaker interest in the study of sound changes. For instance, the Index Diachronica is a compilation of sound laws of languages that occurred throughout the world. @diachronica It's purpose is to provide conlangers with a place to view what real sound laws that have been documented to occur. This gives them a source of reference when making sound laws that occurred in their own languages. 
+
+However, the diachronica is not a very formal piece of writing, in the sense that a computer program can be automatically made from it. It is essentially a list, that likely requires a human to make inferences. 
+
+Other attempts at staying with a _sound law_ approach of historical linguistics include a reconstructing Proto-Algonquin from daughter languages using sound laws. This was made in the 1970s by John Henson. @sims2018mechanising. 
+
+Additionally, conlangers have made a tool for forward applications, in order to verify thtier own laws would work properly, or at least regularly. This provides forward applications, but it does not provide backward application. As it is just for verification. @zompist 
+
+Otherwise there have been various ad hoc tranducer, indeed there has also been various methods also using fsts. 
 
 
  = Finite State Trandsducers
+
+ In this chapter, Finite State Tranducers (FSTs) are introduced. However, in order to define FSTs and motivate their usefulness, a some background information is required. FSTs can be viewed as a generlization of Finite State Auomata (FSAs), and have important properties about their usage. Only the most important results will be listed here, and will be presented without proof. 
 
  == Finite State Automata
 
@@ -197,6 +273,7 @@ There are many benefits of this doing this. Is that we now have _verification_ o
  
  == Formal Definition
 
+ === Strings
 To talk about strings, a formal definition is required.
 
 Given a set $Sigma$ a _string_ can be defined recursively defined as being either
@@ -213,7 +290,7 @@ By convention, strings are usually put in double quotes and the $dot$ operator c
 
 A formal _language_ can be defined a (potentially infinite) set of strings. Can be used to define natural language such as English, spansih, but can also be used to define more artifical lanuages, such as all prime numbers represented in decimal. 
 
-
+=== Finite State Machine
 A deterministic finite state machine can be defined as  $(Q, s, Sigma, F, delta)$, where 
 
 - $Q$ is the set of states
@@ -224,39 +301,59 @@ A deterministic finite state machine can be defined as  $(Q, s, Sigma, F, delta)
 
 A finite state machine $M$ can then be used to define a language $L$ by stating that a word is in $L$ if and only if $M$ accepts $L$.
 
-A finite state machine $(Q, s, Sigma, F, delta)$ accepts a string $S$ when one of the following conditions are met:
+// A finite state machine $(Q, s, Sigma, F, delta)$ accepts a string $S$ when one of the following conditions are met:
 
-- $S = epsilon$ and $s in F$ 
-- $S = c dot S'$ and $delta(q, c) = q'$ and $M' = (Q, q', Sigma, F, delta)$ accepts $S'$
+// - $S = epsilon$ and $s in F$ 
+// - $S = c dot S'$ and $delta(q, c) = q'$ and $M' = (Q, q', Sigma, F, delta)$ accepts $S'$
+
+Every $delta$ can be extended to $delta^* : Q times Sigma^* -> Q $ function by defining 
+
+- $delta^*(q, epsilon) = q$
+- $delta^*(q, c dot S) = delta^*(delta(q, c), S)$ for $c in Sigma$
+
+
+Finally, a machine _accepts_ a string $S$ if and only if $delta^*(s, S) in F$. 
+
 
 todo: add an example with a picture
 
-A related construct is the nondeterministic finite state machine.
+A related construct is the nondeterministic finite state machine or automata, also known as a NFA.
 A nondeterministic finite state machine can be defined as  $(Q, s, Sigma, F, delta)$, where 
 
 - $Q$ is the set of states
 - $s in Q$ is the start state
 - $Sigma$ is the _alphabet_, a set of characters
 - $F subset Q$ the set of final states
-- $delta: Q times Sigma -> P(Q)$, $P$ being the powerset function. The nondeterministic transition function that maps each state and character to possible states.
+- $delta: Q times (Sigma union {epsilon}) -> P(Q)$, $P$ being the powerset function. The nondeterministic transition function that maps each state and character to possible states. 
 
-The only difference here is the transition function, which can now map to multiple or zero states, in addition to just one state.
+Here, the transition function is different and can now map to multiple or zero states, in addition to just one state. Additionally, it can have $epsilon$ transitions, with the intuition of non consuming parts of the string, while moving to a different state. 
 
 The non deterministic finite state machine also has a similar accepts function. 
 
-A finite state machine $(Q, s, Sigma, F, delta)$ accepts a string $S$ when one of the following conditions are met:
+Every $delta$ can be extended to $delta^* : Q times Sigma^* -> P(Q) $ function by defining 
 
-- $S = epsilon$ and $s in F$ 
-- $S = c dot S'$ and there exists a $q$ such that $delta(q, c) = q'$ and $M' = (Q, q', Sigma, F, delta)$ accepts $S'$
+- $delta^*(q, epsilon) = {q}$
+-  $ delta^*(q, c dot S) = union.big_(q' in delta(q, c)) delta^*(q', S) $ 
+
+for each $c in Sigma union {epsilon }$
+
+
+Finally, an NFA _accepts_ a string $S$ if and only if $delta^*(s, S) inter F eq.not emptyset$. 
+
+// A finite state machine $(Q, s, Sigma, F, delta)$ accepts a string $S$ when one of the following conditions are met:
+
+// - $S = epsilon$ and $s in F$ 
+// - $S = c dot S'$ and there exists a $q$ such that $q' in delta(q, c)$ and $M' = (Q, q', Sigma, F, delta)$ accepts $S'$
 
 A deterministic finite state machine is trivially a non deterministic finite state machine. However, it may be surprising to know the converse is also true: any non deterministic finite state machine can be turned into a deterministic finite state machine which accepts the same language.
 
-
-Additionally, a further extension of non deterministic machines can be created to also accept epsilon transitions, i.e. $delta: Q times (Sigma union { epsilon }) -> P(Q)$, $P$ being the powerset function. Note that the previous acceptance function is still valid due to the semantics of $epsilon$.
+Additionally, a further extension of non deterministic machines can be created to also accept epsilon transitions, i.e. $delta: Q times (Sigma union { epsilon }) -> P(Q)$, $P$ being the powerset function. 
 
 Again, this may be shown that any epsilon extended finite state machine can be turned into an equivalent machine without the epsilons. Due to this, it usually does not matter whether it is called a deterministic finite state machine or a non determinstic finite state machine and the specifics can be relegated as an implementation detail. In general, they can be referred as (FSM) finite state machines.
 
 == Elementary Results in FSMs
+
+=== Regular Expression
 
 Given an alphabet $Sigma$, a regular expression can be recursively defined as
 
@@ -276,9 +373,50 @@ Given a particular expression $R$, we can define the semantics for $R$ matching 
 - $R = R_1^*$ and $S = epsilon$ or $S = S_1 dot S_2$ and $R_1$ matches $S_1$ and $R_1^*$ matches $S_2$.
 
 
-Regular expression are commonly used for 
+A form of regular expressions is commonly used in programming languages for string matching in the form of regexes, often with various extensions and syntactic sugar. 
 
-=== Applications for fst
+Finally, an important result is that a given a language $L$, there exists a regular expression $R$ whose set of strings that match is $L$ if and only if there exists an FSA $M$ such that the set of strings that $M$ accepts is $L$.
+
+
+In this case, $L$ is called a _regular_ language. 
+
+Some various properties can be proved for regular languages. 
+
+- $Sigma^*$ is regular
+- If $L$ is finite, then $L$ is regular. 
+- If $L$ is regular under an alphabet $Sigma$, then the complement of $L$ under $Sigma^*$ is also regular, i.e. the _inverse_ is regular. 
+- If $L$ is regular, then the reverse of $L$ i.e. $ {"rev"(x) | x in L}$ where every string is reversed is also regular. 
+- If $L_1$ and $L_2$ are regular, then $L_1 union L_2$, $L_1 inter L_2$ and $L_1 \\ L_2$ are all regular. 
+
+A natural questions to ask is: are all languages regular? Consider the language under the alphabet of binary digits $L = { 0^x 1^x: x in bb(N) }$, it can be shown that $L$ is not regular. This result can be generalized to parentheses to argue that many programming lanugages are _syntactically_ not regular. 
+
+
+== Finite State Tranducers
+
+The following is adapted from #cite(<kaplan1994regular>, form: "prose") . 
+
+The previously mentioned FSMs provide a convenient way of modeling phonology. Words can be defined as strings over some alphabet, such as IPA or simple ASCII characters. Under the assumption that natural language is finite, these languages would be finite. 
+
+However, _sound laws_ describe not just how the languages are, but how they _change_. This motivates finite state transducers. 
+
+
+A Finite State Tranducer (FST or transducer for short) can be defined as  
+
+ $(Q, s, Sigma, F, delta)$, where 
+
+- $Q$ is the set of states
+- $s in Q$ is the start state
+- $Sigma$ is the _alphabet_, a set of characters
+- $F subset Q$ the set of final states
+- $delta: Q times (Sigma union { epsilon }) times (Sigma union { epsilon }) -> P(Q)$. This function now takes multple characters from the alphabet. One can be viewed as the input, the other the output. 
+
+Like an FSM, a convenient way of visualizing an FST is by viewing it as a graph. The vertices are $Q$ and the edges are  $(Sigma union { epsilon }) times (Sigma union { epsilon })$. The edges are commonly notated using the notation $u:v$, where $u$ is the input and $v$ is the output. 
+
+A $delta^*$ function can be defined as 
+
+
+
+== Applications for fst
 
 A common library is openfst @openfst.  Hfst @hfst uses openfst @openfst as a potential backend.
 
