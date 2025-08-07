@@ -1,9 +1,10 @@
-
 #import "@preview/linphon:0.1.0" as lp
 #import "@preview/ascii-ipa:2.0.0": *
 
 // #import "@preview/casson-uom-thesis:0.1.1": *
 #import "template.typ" : *
+
+
 
 #show: uom-thesis.with(
   title: "My Thesis",
@@ -22,33 +23,25 @@
 
 
 
-// #set page(margin: 1in)
-// #set par(leading: 0.55em, spacing: 0.55em, first-line-indent: 1.8em, justify: true)
-// #set text(font: "New Computer Modern")
-// #show raw: set text(font: "New Computer Modern Mono")
-// #show heading: set block(above: 1.4em, below: 1em)
+#set heading(numbering: "1.1.1")
+#import "@preview/frame-it:1.2.0": *
 
 
 
 
-// #align(center, text(30pt)[
-// *My Master Thesis*
-// ])
+ #let (definition, statement ) = frames(
+  definition: ("Definition",),
+  // For each frame kind, you have to provide its supplement title to be displayed
+  statement: ("Statement",),
+  // You can provide a color or leave it out and it will be generated
+)
 
-
-// #align(center, text(17pt)[
-// John Wang
-// ])
-
-
-/* #pagebreak()
-
-
-#set page(numbering: "1") */
-
+// This is necessary. Don't forget this!
+#show: frame-style(styles.boxy)
 
 
 = Historical Linguistics
+
 
 People have been noticing that language changes. Historical Linguistics is the study of change in language. @hock2021principles
 
@@ -98,12 +91,15 @@ As a child learning how to read English, seeing the spelling of the words listed
 
 Additionally, this particular sound law is observable because of the conservative orthography of English. But English has only (relativly speaking) recently been written down. If, for instance, English and German had written down their language back when they were one language, would it be possible for a learner of the language to similarly form a large list of rules to derive the English pronunciation, and a different set of rules to derive the German pronunciation?
 
-
 The Neogrammarians had a similar thought, and believed not only that English and German could be derived from a common ancestor like this, but that they could project even further back, relating most language of Europe along with many languages of India. These languages included English, German, French, Spanish, Greek, Russian, Hindi, and more. 
 
 The oldest literarly languages known to Neogrammarians: Latin, Greek, and Sanskrit, not only had correspondences in vocabulary, but also similarities in Grammar. This led them to postulate the existance of the Proto-Indo-European (PIE) language, which then diversified and split into various daughter languages.  Similar to the example of English and German, often one language might have had a sound law apply, but another language might have preserved a more archaic form.   @hock2021principles 
 
-The Neogrammarians craeted these sound laws under the Neogrammarian assumption: Sound Laws are completely regular. In this, they tried to bring linguistics in line with the the laws of the natural world. This may be roughly equivalent to saying that all languages consist of a mathematical function taking a protoword and outputs a modern reflex. This function would then be composed of smaller functions, the sound laws, that could then be combined under function composition.
+The Neogrammarians craeted these sound laws under the Neogrammarian Hypothesis, as shown in @neogrammarian
+
+#definition[Neogrammarian Hypothesis][Sound Laws are regular] <neogrammarian>
+
+In this, they tried to bring linguistics in line with the the laws of the natural world. This may be roughly equivalent to saying that all languages consist of a mathematical function taking a protoword and outputs a modern reflex. This function would then be composed of smaller functions, the sound laws, that could then be combined under function composition.
 
 Like any science, the actual data will not 100%.  They believed what exception that they encountered were merely sound laws that had been not sufficiently generalized.
 
@@ -115,7 +111,7 @@ There are examples of changes that are _sporadic_ and effect only one word. Or m
 
 
 
-== Sound Laws
+== Sound Laws <soundlaws>
 
 Linguists have a conventionalized representation for laws.
 
@@ -266,9 +262,11 @@ Otherwise there have been various ad hoc tranducer, indeed there has also been v
 
  In this chapter, Finite State Tranducers (FSTs) are introduced. However, in order to define FSTs and motivate their usefulness, a some background information is required. FSTs can be viewed as a generlization of Finite State Auomata (FSAs), and have important properties about their usage. Only the most important results will be listed here, and will be presented without proof. 
 
+Much of this chapter is adapted from #cite(<kaplan1994regular>, form: "prose") . 
+
  == Finite State Automata
 
- Finite state autmata (or finite state machine) are a mathematical model basic form of autmata that can be used ot model a variety of phenomona. The most relvant usage is in string recognition.
+ Finite state automata (or finite state machine) are a mathematical model basic form of autmata that can be used ot model a variety of phenomona. The most relvant usage is in string recognition.
 
  
  == Formal Definition
@@ -276,10 +274,12 @@ Otherwise there have been various ad hoc tranducer, indeed there has also been v
  === Strings
 To talk about strings, a formal definition is required.
 
+#definition[String][
 Given a set $Sigma$ a _string_ can be defined recursively defined as being either
 - $epsilon$, the empty string
 - $c dot S$ where $c in Sigma$ and $S$ is a string
-The set $Sigma$ is usually called the _alphabet_ and the members _characters_. The $dot$ operator can be extended to a concatentation operator of two strings where
+] <strings>
+The set $Sigma$ is usually called the _alphabet_ and the members _characters_. The set of strings created from this $Sigma$ can be denoted as $Sigma^*$. The $dot$ operator can be extended to a concatenation operator of two strings where
 
 - $epsilon dot S = S$
 - $(c dot S_1) dot S_2 = c dot (S_1 dot S_2)$ 
@@ -288,9 +288,15 @@ A string is a common example of a _monoid_ because the $dot$ operator is associa
 By convention, strings are usually put in double quotes and the $dot$ operator commonly ommited. Examples: todo
 
 
-A formal _language_ can be defined a (potentially infinite) set of strings. Can be used to define natural language such as English, spansih, but can also be used to define more artifical lanuages, such as all prime numbers represented in decimal. 
+#definition[Language][
+A formal _language_ can be defined a (potentially infinite) set of strings. 
+] <language>
 
-=== Finite State Machine
+Can be used to define natural language such as English, spansih, but can also be used to define more artifical lanuages, such as all prime numbers represented in decimal. 
+
+=== Finite State Machine <fsm-section>
+
+#definition[Deterministic Finite State Machine][
 A deterministic finite state machine can be defined as  $(Q, s, Sigma, F, delta)$, where 
 
 - $Q$ is the set of states
@@ -298,6 +304,7 @@ A deterministic finite state machine can be defined as  $(Q, s, Sigma, F, delta)
 - $Sigma$ is the _alphabet_, a set of characters
 - $F subset Q$ the set of final states
 - $delta: Q times Sigma -> Q$ the transition function that maps each state to its next state when given a character
+]
 
 A finite state machine $M$ can then be used to define a language $L$ by stating that a word is in $L$ if and only if $M$ accepts $L$.
 
@@ -318,6 +325,8 @@ Finally, a machine _accepts_ a string $S$ if and only if $delta^*(s, S) in F$.
 todo: add an example with a picture
 
 A related construct is the nondeterministic finite state machine or automata, also known as a NFA.
+
+#definition[Nondeterministic finite state machine][
 A nondeterministic finite state machine can be defined as  $(Q, s, Sigma, F, delta)$, where 
 
 - $Q$ is the set of states
@@ -325,6 +334,7 @@ A nondeterministic finite state machine can be defined as  $(Q, s, Sigma, F, del
 - $Sigma$ is the _alphabet_, a set of characters
 - $F subset Q$ the set of final states
 - $delta: Q times (Sigma union {epsilon}) -> P(Q)$, $P$ being the powerset function. The nondeterministic transition function that maps each state and character to possible states. 
+]
 
 Here, the transition function is different and can now map to multiple or zero states, in addition to just one state. Additionally, it can have $epsilon$ transitions, with the intuition of non consuming parts of the string, while moving to a different state. 
 
@@ -332,7 +342,7 @@ The non deterministic finite state machine also has a similar accepts function.
 
 Every $delta$ can be extended to $delta^* : Q times Sigma^* -> P(Q) $ function by defining 
 
-- $delta^*(q, epsilon) = {q}$
+- $delta^*(q, epsilon) = delta(q, epsilon)$
 -  $ delta^*(q, c dot S) = union.big_(q' in delta(q, c)) delta^*(q', S) $ 
 
 for each $c in Sigma union {epsilon }$
@@ -345,17 +355,28 @@ Finally, an NFA _accepts_ a string $S$ if and only if $delta^*(s, S) inter F eq.
 // - $S = epsilon$ and $s in F$ 
 // - $S = c dot S'$ and there exists a $q$ such that $q' in delta(q, c)$ and $M' = (Q, q', Sigma, F, delta)$ accepts $S'$
 
-A deterministic finite state machine is trivially a non deterministic finite state machine. However, it may be surprising to know the converse is also true: any non deterministic finite state machine can be turned into a deterministic finite state machine which accepts the same language.
+A deterministic finite state machine is trivially a non deterministic finite state machine. However, it may be surprising to know the converse is also true: any non deterministic finite state machine can be turned into a deterministic finite state machine which accepts the same language, stated in @nfs-equals-dfa.
 
-Additionally, a further extension of non deterministic machines can be created to also accept epsilon transitions, i.e. $delta: Q times (Sigma union { epsilon }) -> P(Q)$, $P$ being the powerset function. 
+#statement[Deterministic and Nondeterministic Finite State Machine Equivalence][
+  A language $L$ can be recognized by a a deterministic finite state mchine $F$ if and only if there exists there exists a nondeterinistic finite state mahine $F'$ that recognizes $L$.
+] <nfs-equals-dfa>
 
-Again, this may be shown that any epsilon extended finite state machine can be turned into an equivalent machine without the epsilons. Due to this, it usually does not matter whether it is called a deterministic finite state machine or a non determinstic finite state machine and the specifics can be relegated as an implementation detail. In general, they can be referred as (FSM) finite state machines.
 
+
+ Due to @nfs-equals-dfa, it usually does not matter whether it is called a deterministic finite state machine or a non determinstic finite state machine, due the set of languages they recognize being the same. In general, they can be referred as (FSM) finite state machines.
+ 
+When dealing with the theoretical properties of FSTs, whether the underlying machine is deterministic or nondeterministic can be relegated as an implementation detail. However, when dealing with real systems, the difference is more important, as determinizing a finite state machine can have a worst case performance of $O(2^n)$.
 == Elementary Results in FSMs
 
 === Regular Expression
 
-Given an alphabet $Sigma$, a regular expression can be recursively defined as
+
+Many programming languges have some sort of library for _regexes_, often used for string processing. The term _regex_ is a shortening of the term _regular expression_, which @regular-expression defines. 
+
+
+
+#definition[Regular Expression][
+Given an alphabet $Sigma$, a _regular expression_ can be recursively defined as either, 
 
 
 - $epsilon$ the empty regular expression.
@@ -363,8 +384,13 @@ Given an alphabet $Sigma$, a regular expression can be recursively defined as
 - $R_1 dot R_2$ where $R_1$ and $R_2$ are also regular expressions, concatenation.
 - $R_1 | R_2$ where $R_1$ and $R_2$ are also regular expressions, disjunction.
 - $R_1^*$ where $R_1$ is a regular expression, the Kleene Star.
+] <regular-expression>
 
-Given a particular expression $R$, we can define the semantics for $R$ matching a string $S$ if
+A regular expression is not useful unless its semantics are also defined, as shown in @regex-semantics.
+
+#definition[Regex Matching][
+
+Given a particular expression $R$, $R$ _matches_ a string $S$ under the following conditions
 
 - $R = epsilon$ and $S = epsilon$
 - $R = c$, where $c in Sigma$  and $S = c$
@@ -372,11 +398,15 @@ Given a particular expression $R$, we can define the semantics for $R$ matching 
 - $R = R_1 | R_2$ and $R_1$ matches $S$ or $R_2$ matches $S$
 - $R = R_1^*$ and $S = epsilon$ or $S = S_1 dot S_2$ and $R_1$ matches $S_1$ and $R_1^*$ matches $S_2$.
 
+] <regex-semantics>
 
-A form of regular expressions is commonly used in programming languages for string matching in the form of regexes, often with various extensions and syntactic sugar. 
 
-Finally, an important result is that a given a language $L$, there exists a regular expression $R$ whose set of strings that match is $L$ if and only if there exists an FSA $M$ such that the set of strings that $M$ accepts is $L$.
+Finally, the most important fact that relates regular expression with the FSMs in  @fsm-section.
 
+#statement[FSM and Regular Expression equivalence][
+Given a language $L$, there exists a regular expression $R$ whose set of strings that match is $L$ if and only if there exists an FST $M$ such that the set of strings that $M$ accepts is $L$.
+
+] <fsm-regex-equal>
 
 In this case, $L$ is called a _regular_ language. 
 
@@ -386,41 +416,101 @@ Some various properties can be proved for regular languages.
 - If $L$ is finite, then $L$ is regular. 
 - If $L$ is regular under an alphabet $Sigma$, then the complement of $L$ under $Sigma^*$ is also regular, i.e. the _inverse_ is regular. 
 - If $L$ is regular, then the reverse of $L$ i.e. $ {"rev"(x) | x in L}$ where every string is reversed is also regular. 
-- If $L_1$ and $L_2$ are regular, then $L_1 union L_2$, $L_1 inter L_2$ and $L_1 \\ L_2$ are all regular. 
-
-A natural questions to ask is: are all languages regular? Consider the language under the alphabet of binary digits $L = { 0^x 1^x: x in bb(N) }$, it can be shown that $L$ is not regular. This result can be generalized to parentheses to argue that many programming lanugages are _syntactically_ not regular. 
 
 
-== Finite State Tranducers
+Special attention may be paid towards @regular-closure, which will come up again in @fst-section.
 
-The following is adapted from #cite(<kaplan1994regular>, form: "prose") . 
+#statement[Regular Closure properties][
+ If $L_1$ and $L_2$ are regular, then $L_1 union L_2$, $L_1 inter L_2$ and $L_1 \\ L_2$ are all regular. 
+] <regular-closure>
+
+A natural questions to ask is: are all languages regular? The answer is no. The pumping lemma describes the exact conditions in which a language is regular, but for brevity, it will not be described here. The most important consequences 
+
+
+#statement[Non Regular Example][
+Let the alphabet be the binary digits, i.e. $Sigma = {0, 1}$ , and let the langauge $L = { 0^x 1^x: x in bb(N) }$. It can be shown that $L$ is not regular.
+] <simple-non-regular>
+
+This result can be generalized to parentheses to argue that many programming lanugages are _syntactically_ not regular. 
+
+
+== Finite State Tranducers <fst-section>
 
 The previously mentioned FSMs provide a convenient way of modeling phonology. Words can be defined as strings over some alphabet, such as IPA or simple ASCII characters. Under the assumption that natural language is finite, these languages would be finite. 
 
-However, _sound laws_ describe not just how the languages are, but how they _change_. This motivates finite state transducers. 
+However, _sound laws_ describe not just how the languages are, but how they _change_. This motivates finite state transducers, which will be able to model the laws shown in @soundlaws. 
 
 
+
+#definition[Finite State Transducer][
 A Finite State Tranducer (FST or transducer for short) can be defined as  
-
  $(Q, s, Sigma, F, delta)$, where 
 
 - $Q$ is the set of states
 - $s in Q$ is the start state
 - $Sigma$ is the _alphabet_, a set of characters
 - $F subset Q$ the set of final states
-- $delta: Q times (Sigma union { epsilon }) times (Sigma union { epsilon }) -> P(Q)$. This function now takes multple characters from the alphabet. One can be viewed as the input, the other the output. 
+- $delta: Q times (Sigma union { epsilon }) times (Sigma union { epsilon }) -> P(Q)$. The transition function
 
+] <fst-definition>
+
+
+In @fst-definition, the $delta$ function now takes multple characters from the alphabet. One can be viewed as the input, the other the output. 
 Like an FSM, a convenient way of visualizing an FST is by viewing it as a graph. The vertices are $Q$ and the edges are  $(Sigma union { epsilon }) times (Sigma union { epsilon })$. The edges are commonly notated using the notation $u:v$, where $u$ is the input and $v$ is the output. 
 
-A $delta^*$ function can be defined as 
+A $delta^*$ function can be defined as similarly, with todo figure this out
+a
+
+Each FST has two projections called the input and output projections by restricting the $delta_("input")(q, s) = union.big_(s' in Sigma union {epsilon}) delta(q, s, s')$ function and likewise for the oupput function, which can be used to create FSMs. Due to this, an FST can be thought of as a relation between two languages, i.e. a subset of $Sigma^* times Sigma^*$. An input string is related to the output string if and only if the input FSM accepts the input and the output FSM accepts the output strings. 
+
+
+Such relation is called a _regular_ relation. 
+
+Some properties of FSMs can be generalized to FSts. Concatentation, union, and reversal have corresponding constructoins in FSTs. Additionally, a very useful operator on two FSTs is the _composition_ operator. Given regular relations $R_1, R_2$, a pair $(x, y)$ is in the composition $R_1 compose R_2$ if and only if there is some $z$ such that $(x, z) in R_1$ and $(z,y) in R_2$. In terms of sound laws, this corresponds with combining one sound law after another. 
+
+Note that the input and output constructions were chosen arbitrarily to be left and right. Indeed, it does not matter which is chosen to be which because given a regular relation $R$, there is the isomorphic construction $R^(-1)$, which switches the input and the output. Although the names input and output are similar to the terminology in a function, in general, a regular relations does not need to be function, and can display non determinsitics behavior in the sense that one input could map to multiple outputs.  
+
+It was noted in @regular-closure that for regular languages, the compliment, union and intersection were all closed.  The _compliment_ construction and _intersection_, on the other hand, of two regular relations will not necessarily be regular.  @kaplan1994regular 
+
+Consider the relation $R_1 = { angle.l a^n, b^n c^* angle.r | n >= 0}$ and $R_2 = { angle.l a^n, b^* c^n angle.r  | n >= 0}$. The intersection of $R_1$ and $R_2$ is ${ angle.l a^n, b^n c^n angle.r | n >= 0 }$. Doing an output projection gives $ { b^n c^n  | n >= 0 }$, and as stated in @simple-non-regular,  this language is known to not be regular. 
+
+== The replace operator <replace-operator-section>
+
+Using FSTs, it is relatively trivial to create a transducer that corresponds to an unconditional sound laws. However, creating conditional sound laws is surprisingly non trivial. A sound law describing #lp.rule([x], [y], [a #lp.dash() b]) is not as easy as it seems. The seemingly obvious approach. todo: fill this
+
+
+
+#cite(<kaplan1994regular>, form: "prose") discuss an approach to implement this behavior. One of the key insights with this approach is to use first split it into smaller stages that are then composed together. One stage inserts _context markers_ next to the left and right contexts (_a_ and _b_ in the example), which have a special symbol. A separate stage then transduces by doing the replace only between context markers. Finally, these markers are then removed in a separate stage.  Additionally, they describe potential usages for these 
+
+#cite(<karttunen1997replace>, form: "prose") uses a similar approach, and uses syntax that is also used in HFST @hfst as shown in @four-orient. This approach introduces four different ways of potentially disambiguating sound laws rewrites, since they can be ambiguous. 
+
+#figure(
+ table(
+   columns: 2,
+   [Upper Oriented ], [`UPPER -> LOWER || LEFT _ RIGHT`],
+   [Right Oriented],[ `UPPER -> LOWER // LEFT _ RIGHT`],
+   [Left Oriented:], [`UPPER -> LOWER \\ LEFT _ RIGHT`],
+   [Downward Oriented], [ `UPPER -> LOWER \/ LEFT _ RIGHT`],
+ )
+,caption: [Types of Replace operators]
+) <four-orient>
+
+The show the difference and where the ambiguity occurs, consider the example `a b -> x || a b _ a `, and applying it to the string `abababa`. This would yield `abxxa`, because the upper oriented requires that both left and right contexts match before it can transduce.  However, the right oriented would yield `abxaba` and the left oriented would yield `ababxa`. The right oriented version requires the the right context to match first before transducing, and the left context to match after transducing. Likewise, the left oriented version must have the left context match before transducing, and the right context must match after transducing. Finally, the downward oriented version is actually has two outputs: `abxaba` and `ababxa`, since they both satisfy the condition that the left and right contexts match after transducing. 
+
+
 
 
 
 == Applications for fst
 
+The earliest approach for this 
+
 A common library is openfst @openfst.  Hfst @hfst uses openfst @openfst as a potential backend.
 
 Hfst itself is used as tool for morphological analysis. This was described using the xerox tools described in  #cite(<beesley2003finite>, form: "prose") using the 
+
+
+
 = Infastructure
 
 == CAPR
@@ -431,40 +521,42 @@ This project was initially inspired by #cite(<capr>, form: "prose"), in which th
 
 Unlike other approaches, the CAPR system allows a system closer to the traditional pen and paper process by developing a theory incrementally: initial hypothesis may be incorrect, but will be gradually refined.
 
-More concretely, the system is a web application where the linguist provides the set of data cognates. The linguist then provides the the sound laws by inputting a the sound laws in the form of transducers. The sound laws need to specify which languages the laws to apply to, since CAPR requires that there be at least two descendant languages when constructing proto forms. The sound laws get fed into a backend server that turns the HFST rules and turns them into transducers. The backend then looks at each cognate set and performs the backward transduction according to the sound laws for the respective language. The backward transduction creates potentially multiple protowords. If the protowrod appears in multiple reverse transductions for different descendant languages, then this shows that the sound laws are valid for word, and the words is displayed to the linguist. 
+More concretely, the system is a web application where the linguist provides the set of data cognates. The linguist then provides the the sound laws by inputting a the sound laws in the form of transducers. The sound laws need to specify which languages the laws to apply to, since CAPR requires that there be at least two descendant languages when constructing proto forms. The sound laws get fed into a backend server that takes the HFST rules and turns them into transducers. The backend then looks at each cognate set and performs the backward transduction according to the sound laws for the respective language. As mentioned ins @fst-section, the backward transduction creates potentially multiple protowords. If the protowrod appears in multiple reverse transductions for different descendant languages, then this shows that the sound laws are valid for word, and the words is displayed to the linguist. 
+
+The core idea of CAPR is very promising, however there were some limitations that motivated this project. 
+
+First was the difficulty in the installation. Although there was a docker container available, it was nevertheless difficult to get running. This could have come from a variety of sources: potentially, a bug on the developer end, or an error in the user configuration. This will likely be a barrier for linguists who may not be as technologically inclined or willing to invest time on setup. 
+
+Second, the dependence on HFST potentially introduces inconviences. Since rule compilation is handled server-side, the linguist must show competence by downloading the full project locally and building, or there has to be a server running somewhere to handle all the requests. This comes with additionaly infastructure and maintenance costs. A simpler, self-contained web app that runs in the browser would be a lot more convenient for linguists. 
 
 
-There are some areas which in which the original CAPR seemed to be lacking.
+Additionally, the user interface requires the linguist to learn HFST. Although not particularly difficult, the syntax is somewhat different from the typical hand written form. Also, the linguist works mostly in typing in the edit box, which, although functional, is not as interactive as other interfaces. 
 
-The first is simply installation. The original repository had a docker container. This did simplify installation somewhat, but the either the code was buggy, or I installed something wrong, or I didn't do some configuration or whatever. I don't really know something someting it like kind of just didn't work. The averae linguist is potentially not that technlogoically literate and also doesn't reall yhave that mu. Compare to like other transducers that I have to cite. 
+Additionally, it requires a strict adherance to the Neogrammarian Hypthesis. A potentially better system can be imagined that would be more accomodating to failures of the Neogrammarian hypthesis. In this sense, a system that allows the strictness for the Neogrammarian Hypothesis to be strict when necessary, but also to relax the hypothesis when necessary.
 
-
-Another potential inconvenience is the the dependence on HFST. Though it is not necessarily bad, I think there some things that could be done better. For instance it forces a server client architctue, meaning the linguist is forced to install something, or the have to rent out a server that transduces the thing for everyone or they have to like the things blah blah you know you just want liek a simple web page that does everytig locally. You got a no click install just go to a webpage and bam you are there. 
-
-You also have to learn HFST, which I guess its not bad, but i does require some getting used to. The concatenation must still be done manually and the it's also just like you hvae to type in code and whatever. It would be nicer if there was somehting more visual and like you doesn't work as bad. And it's also slightly annnoying you have to click transduce and it like take a second to switch everyihtng. And yeah
-
+Despite these drawbacks, the CAPR project makes a lot of headway by opening a new direction in the field of computational historical linguistics that seems quite understudied. The decision to put the emphasis on sound laws, indeed is still a great in comparison to the previous approaches in which older studies were lacking. 
 
 
 == Project Desciption
 
-The project can be thought of as a miniature version of Capr.
+This project can be viewed as an exploration of lightweight transduction in the spirit of CAPR. It's primary goal was to explore more user friendly approaches for sound law transduction using finite state transducers. The end result is unfortunately in a more prototype state than the original CAPR, some expreience was gained in the direction of sound law transduction, and could potentially be a starting block for other approaches in sound law transduction. 
 
-Basically my version of a webapp that is slightly buggy and kind of doesn't really work.
+Like the CAPR predecessor, the aim of this project was not create a system automatically contruct or predict word forms. Instead, focus lies in being a tool to the linguist, while not infringing on the "job" of the linguist. The linguist does what they always do, but with assistance from the computer in doing the boring, mundane parts. This means the linguist still comes up theory of the proto language and how it changes. 
 
-However it does work for very simple stuff and has a somewhat more visual user interface.
+Instead the tool has two important roles ti plays. In addition to doing fulfilling the idea of making the linguist's life easier  of transducing sound laws, the idea behind it is potentially more general: which is verification of ideas. Frequently, words will have etymology entries in dictionary's, but rarely is there any explicite verfication on this. In some cases such as for the dictionaries of proto languages, a list of sound changes may be supplied to discuss general the history of the language and potentially the sound changes that occurred for various daughter languages. This is relatively rare when discussing every day dictionaries, and the user is often assumed to just believe the entry. Rarer still is for the user to be able to see some intermediate sound changes, which is occasionally seen in some Wiktionary entries. By making the tool explicitely see sound changes, it forces the process to be transparent to the reader along with teh author. This can be seen as also proof reading the author. The author makes claims, but the tool produces the evidence.
 
-The backend is written in rust for the memes and becuase rust is fast and stuff and I don't lke c++. The project is made using rustfst @rustfst, which is a rust language port of the C++ library OpenFst.  @openfst The core functionality has been implemented in rustfst, but certain features had to be implemented that were already implemented in openfst. 
+Following these ideas, the first main goal was to create a minimum working version of a transduction system to be used for historical linguisti construction. Tghis should improve upon the CAPR predecessor by reducing barriers for those without technical background. It also should try to create a simpler to user UI and provide a simpler syntax that is more familiar than teh HFST rule syntax. To accomplish this, it was orginally envisioned to be a standalone, browser based applicatin requiring minimal setup. Whiel the technical goals were only partially achieved, the effort has left some expierence t o reflect on.
 
-Additoinally Rustfst is a rather low level library. In comparison to Capr, which depended on Hfst, some impelmentation details had to be reimplemented in the Rust library that had already came for free with Hfst. 
+The core functionality is opened in Rust. Rust is a relatively new programming language that aims to be as fast as C or C++. The language does not have to deal with the 40 years of languages features that C and C++ have to suupport in order to be backwards compatible, and as a result, has a very modern exprerience when programming in it, while also not sacrificing in performance.  It achieves this high performance by using a unique memory management system that does not require a garbage collector, but uses compile time checks to prevent memory errors. 
 
-The most important of this is the replace operator. The replace operator is surprisingly non trivial.  @karttunen1997replace
+The library was built using rustfst @rustfst, a rust port of the OpenFst @openfst that is a C++ transduccer library. While rustfst provides many low level FST operations, it lacks some higher level operations that are included in HFST. 
 
-The code for the replace is essentially translated from Hfst's open source code. The rust implementation only implements a subset of Hfst's replace operator. It lacks the parallel replacement operator and also the various down up thing whatever and only the does the up replacement. 
+As a result, a considerable amount of development was devoted to reimplementing HFST functionality. The most important is the _replace operator_ as discussed in @replace-operator-section, which is required in expressing context sensitive rewrite rules. As discussed in @karttunen1997replace, the replace operator is decnetly complex. The currently implementation is based off the HFST source code, but Most importantly, the _complement_ operator is a crucial operator that is missing in rustfst. Of the four types mentioned in @four-orient, the project only implements the upper oriented replace operator. 
 
 
-The project tries to provide a similar function to hfst @hfst.
 
-The original project was to provide a similar function to the one given in capr @capr
+
+
 
 
 
@@ -502,7 +594,24 @@ To test the validity of the Celtic dictionary.
 // #law([a],[b],[c],[d])
 Given is a brief overview of the sound laws presented in the dictionary. They describe the changes from PIE to Proto-Celtic.
 
-todo: actually write down these laws
+
+#let C = lp.fmat([consonant])
+#let V = lp.fmat([vowel])
+#let H = lp.fmat([laryngeal])
+
+#figure(
+  [
+    + #lp.rule([h₁e], [e]), #lp.rule([h₂e], [a]), #lp.rule([h₃e], [o])
+    + #lp.rule([eh₁], [ē]), #lp.rule([eh₂], [ā]), #lp.rule([eh₃], [ō])
+    + #lp.rule(lp.fmat[laryngeal], [a], [#C #lp.dash() #lp.fmat([consonant]) ])
+    + #lp.rule[#lp.fmat[laryngeal]][#sym.emptyset][#lp.fmat[stop] #lp.dash() #lp.fmat[stop]]
+    + #lp.rule[#lp.fmat[coronal][stop]#lp.fmat[coronal][stop]][s s ]
+    + #lp.rule[#sym.emptyset][a][#lp.fmat[consonant] #lp.fmat[resonant] #lp.dash() #lp.fmat[laryngeal] #lp.fmat[resonant] ]
+    + #lp.rule[#H][#sym.emptyset][#V #lp.dash() #lp.fmat[laryngeal] #lp.fmat[resonant] ] // lookup how they did verners law in the book
+    
+  ],
+  caption:[Dialectical Indo-European Changes]
+)
 
 === Results
 
