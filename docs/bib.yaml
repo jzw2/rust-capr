@@ -13,3 +13,14 @@ diachronica:
 zompist:
   type: web
   url: https://zompist.com/sca2.html
+
+
+hfst-repo:
+  type: Repository
+  title: hfst
+  url: https://github.com/hfst/hfst
+
+
+rsca: 
+  type: web
+  url: https://000024.org/rsca.html
