@@ -1042,7 +1042,7 @@ fn giant_test() {
         ("uper", "ufor"),
         ("wid_hu", "widu"),
         ("xwehnto", "winto"),
-        ("yemho", "yemono"),
+        ("yemhono", "yemono"), // original yemho
     ];
 
     let mut failures = vec![];

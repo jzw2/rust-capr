@@ -78,6 +78,7 @@ pub type SoundWeight = TropicalWeight;
 
 impl SoundFst {
     pub fn ignore(&mut self, label: Label) {
+        // delete all refereences first, and then add loops to all of them
         for state in self.0.states_iter() {
             let trs = self.0.get_trs(state).unwrap();
 
@@ -743,8 +744,24 @@ mod tests {
         assert_eq!(transduced[0], "q c a d d c");
 
         let transduced = law.transduce_text("caqcacac");
-        assert_eq!(transduced.len(), 2);
-        assert_eq!(transduced[0], "c a q c a d c");
-        assert_eq!(transduced[1], "c a q d d c");
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0], "c a q d d c");
+
+        let transduced = law.transduce_text("caqqqcacac");
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0], "c a q q q d d c");
+
+        let transduced = law.transduce_text("caqqqcacac");
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0], "c a q q q d d c");
+
+        let transduced = law.transduce_text("caqqqcacqac");
+
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0], "c a q q q d d q c");
+        let transduced = law.transduce_text("cqaqqqcqacqac");
+
+        assert_eq!(transduced.len(), 1);
+        assert_eq!(transduced[0], "c q a q q q d q d q c");
     }
 }
