@@ -844,6 +844,8 @@ Given is a brief overview of the sound laws presented in the dictionary. They de
 #let Stop = lp.fmat([+stop])
 #let Long = lp.fmat([+long])
 #let NoLong = lp.fmat([-long])
+#let Lab = lp.fmat([+Labial])
+#let Dental = lp.fmat([+Dental])
 
 #figure(
  table(
@@ -860,7 +862,7 @@ Given is a brief overview of the sound laws presented in the dictionary. They de
   [#lp.rule(Palat, NoPalat)]
    ),
   caption:[Dialectical Indo-European Changes]
-)
+) <changes-a>
 
 #figure(
   table(
@@ -877,7 +879,7 @@ Given is a brief overview of the sound laws presented in the dictionary. They de
     lp.rule(Long, NoLong),
   ),
   caption: [Early Changes]
-)
+) <changes-b>
 
 #figure(
   table(
@@ -894,28 +896,31 @@ Given is a brief overview of the sound laws presented in the dictionary. They de
     
   ),
   caption: [Late Changes]
-)
+) <changes-c>
 
 
 #figure(
   table(
     columns: 1,
-    lp.rule(C, [x], [ #lp.dash() #C]),
-    lp.rule([p], [b], [ #lp.dash() #L]),
-    lp.rule([p], [w], [ #lp.dash() #N]),
-    lp.rule([p], [f]),
-    lp.rule([o:], [a:]),
-    lp.rule([ey], [e:]),
-    lp.rule([ew], [ow]),
-    lp.rule([uw], [ow], [#lp.dash() #C]),
+    lp.rule([f], [r], [ r #lp.dash() ]),
+    lp.rule([f], [l], [l #lp.dash() ]),
+    lp.rule([r], [s], [r #lp.dash()]),
+    lp.rule([s], sym.emptyset, [r #lp.dash() t]),
+    lp.rule([m], [w], [#lp.dash() w]),
+    lp.rule(#NoLong, #Long, [xs #L]),
+    lp.rule([ar], [ra], [#Lab #lp.dash() #Dental #Dental]),
+    lp.rule([al], [la], [#Lab #lp.dash() #Dental #Dental]),
+    lp.rule(H, sym.emptyset, [#V y #C])
     
     
   ),
   caption: [Probable Changes]
-)
+) <changes-d>
 
 
-todo: discuss the laws and what had to be reordered
+When these laws were programmed in, it was discovered that certain laws had been incorrectly stated, or inadequately described.
+
+
 
 === Results
 
