@@ -47,7 +47,7 @@ def merge_dot_edges(filename):
 
         # Write merged edges
         for (src, dst), labels in edge_dict.items():
-            merged_label = ", ".join(labels)
+            merged_label = ", ".join(labels[:10])
             rest = edge_attrs.get((src, dst), '')
             rest_part = f" {rest}" if rest else ''
             f.write(f'    {src} -> {dst} [label = "{merged_label}"{rest_part}];\n')
