@@ -15,6 +15,7 @@
     pkgs.cargo-flamegraph
     pkgs.samply
     pkgs.graphviz
+    pkgs.typst
   ];
 
   # https://devenv.sh/languages/
