@@ -1,7 +1,7 @@
 #+title: Rust-Capr
 
 
-A tool for specifiying sound law changes by compiling to finite state transducers similar to HFST and Foma. It is written in rust.
+A tool for specifiying sound law changes by compiling to finite state transducers similar to HFST and Foma. It is written in rust, with the initial goal of being faster and easier to develop in. Whether it was sucessful in these is goal is unfortunately debatable. 
 
 This was my master's thesis for the University of Tübingen. Even though I theoretically graduated in December, I still have not gotten my grade back 🙄
 
@@ -31,7 +31,11 @@ Most of the infastructure is built on top of the library =rustfst= which is larg
 The replacement operator was surprisingly non trivial, and most code has been adapted from hfsts c++ implementation.
 The rust creates a web assembly package which is then run in the browser.
 
+* Documentation
 
+I've uploaded the actual thesis [[docs/Thesis.pdf][here]], where you can read about the project. I also spent a decent amount of pages describing the necessary theoretical background. (In feedback for the thesis, apparrently too much fo thesis was background information and not enough was the actual stuff I did. Well, at least it increased my page count by a decent amount)
+
+Hopefully, my code serves as enough documentation. But that might be quite a bit of a stretch. If you find an area that is of excessively bad documentation, open a pull request and I will consider fixing it. 
 
 * Similar projects
 
